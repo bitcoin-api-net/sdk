@@ -5,14 +5,17 @@ import { fileURLToPath } from 'node:url';
 
 import vue from '@astrojs/vue';
 import { defineConfig } from 'astro/config';
+import { loadEnv } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_DIR = path.resolve(__dirname).split(path.sep).slice(0, -2).join(path.sep);
+const { SITE_URL } = loadEnv(process.env.NODE_ENV ?? 'production', PROJECT_DIR);
 
 // https://astro.build/config
 export default defineConfig({
 	// Enable Vue to support Vue components.
 	integrations: [vue()],
-	site: "https://bitcoin-api.net",
+	site: SITE_URL,
 	vite: {
 		resolve: {
 			alias: {
