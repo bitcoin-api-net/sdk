@@ -7,4 +7,5 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
 	// Enable Vue to support Vue components.
 	integrations: [vue()],
+	site: "https://bitcoin-api.net",
 });

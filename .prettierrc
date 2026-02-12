@@ -1,4 +1,5 @@
 {
+  "plugins": ["prettier-plugin-astro"],
   "printWidth": 120,
   "tabWidth": 2,
   "useTabs": false,
@@ -39,6 +40,12 @@
         "singleAttributePerLine": false,
         "vueIndentScriptAndStyle": false,
         "parser": "vue"
+      }
+    },
+    {
+      "files": "*.astro",
+      "options": {
+        "parser": "astro"
       }
     }
   ]
