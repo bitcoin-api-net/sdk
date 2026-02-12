@@ -2,12 +2,13 @@
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist"],
-  "paths": {
-    "@components/*": ["./src/components/*"],
-    "@layouts/*": ["./src/layouts/*"]
-  },
   "compilerOptions": {
-    // Needed for TypeScript intellisense in the template inside Vue files
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["./src/components/*"],
+      "@layouts/*": ["./src/layouts/*"],
+      "@styles/*": ["./src/styles/*"]
+    },
     "jsx": "preserve"
   }
 }

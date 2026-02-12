@@ -13,10 +13,12 @@
     "@astrojs/check": "^0.9.6",
     "@astrojs/vue": "^5.1.4",
     "astro": "^5.17.1",
+    "normalize.css": "^8.0.1",
     "typescript": "^5.9.3",
     "vue": "^3.5.26"
   },
   "devDependencies": {
+    "sass": "^1.97.3",
     "vue-tsc": "^3.2.4"
   }
 }
