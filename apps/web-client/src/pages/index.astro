@@ -296,4 +296,49 @@ import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
     color: #666;
     margin: 0 0 1.5rem;
   }
+
+  @media (max-width: 768px) {
+    .hero {
+      padding: 3rem 0 4rem;
+    }
+
+    .hero__actions {
+      flex-direction: column;
+    }
+
+    .hero__actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .stats {
+      padding: 3rem 0;
+    }
+
+    .stats__grid {
+      gap: 1.5rem;
+    }
+
+    .stats__value {
+      font-size: 2rem;
+    }
+
+    .why-choose,
+    .quick-start,
+    .endpoints {
+      padding: 3rem 0;
+    }
+
+    .quick-start__code {
+      padding: 1rem;
+    }
+
+    .quick-start__code code {
+      font-size: 0.8125rem;
+    }
+
+    .cta {
+      padding: 3rem 0 4rem;
+    }
+  }
 </style>
