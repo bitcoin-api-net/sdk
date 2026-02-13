@@ -1,0 +1,36 @@
+{
+  "name": "api",
+  "version": "0.0.1",
+  "description": "Project API",
+  "author": "Bogdan",
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "license": "ISC",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "type-check": "tsc --build --noEmit",
+    "start:dev": "tsx watch src/app.ts",
+    "start:prod": "node src/app.js"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.9.0"
+  },
+  "dependencies": {
+    "@fastify/autoload": "^6.3.1",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/csrf-protection": "^7.1.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^5.2.5",
+    "@fastify/under-pressure": "^9.0.3",
+    "@fastify/websocket": "^11.2.0",
+    "fastify": "^5.7.4",
+    "lib": "^0.0.1"
+  }
+}

@@ -11,8 +11,8 @@
     "typecheck": "npm run typecheck --workspace apps/web-client"
   },
   "workspaces": [
-    "corejs",
-    "libjs",
+    "lib",
+    "apps/api",
     "apps/web-client"
   ],
   "author": "Bogdan",
