@@ -1,7 +1,7 @@
 ---
 import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
 import { getCollection } from 'astro:content';
-import { getLocaleByPath, getRelativeLocaleUrl } from 'astro:i18n';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 import { type Locale } from '@i18n/types';
 import { getLangFromCollectionEntry } from '@i18n/utils';
 
@@ -59,9 +59,7 @@ const page = Astro.props;
       <div class="container">
         <h2 class="why-choose__title">{page.data.whyChoose.title}</h2>
         <ul class="why-choose__list">
-          {page.data.whyChoose.items.map((item) => (
-            <li class="why-choose__item">{item}</li>
-          ))}
+          {page.data.whyChoose.items.map((item) => <li class="why-choose__item">{item}</li>)}
         </ul>
       </div>
     </section>
@@ -223,7 +221,7 @@ const page = Astro.props;
   }
 
   .why-choose__item::before {
-    content: "✓";
+    content: '✓';
     position: absolute;
     left: 0;
     color: #22c55e;

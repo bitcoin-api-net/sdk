@@ -33,7 +33,7 @@ const t = useTranslations(lang);
     <header class="header">
       <div class="header__inner">
         <a href={getRelativeLocaleUrl(lang)} class="logo">
-          <span class="logo__icon">B</span>
+          <img src="/favicon.svg" alt="" class="logo__icon" width="32" height="32" />
           <span class="logo__text">Bitcoin API</span>
         </a>
 
@@ -357,14 +357,9 @@ const t = useTranslations(lang);
   }
 
   .logo__icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 2rem;
     height: 2rem;
-    background: var(--color-accent);
-    color: white;
-    border-radius: 0.375rem;
+    object-fit: contain;
   }
 
   .nav {
