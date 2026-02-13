@@ -1,31 +1,43 @@
 ---
 import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import { useTranslations, useTranslatedPath } from '@i18n/utils';
+import { type Locale } from '@i18n/types';
+
+const lang = Astro.currentLocale as Locale;
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
 ---
 
-<PublicPagesLayout
-  title="404 — BitAPI"
-  description="Page not found. Return to BitAPI home."
->
+<PublicPagesLayout title="404 — BitAPI" description="Page not found. Return to BitAPI home.">
   <main class="page-404">
     <div class="container">
       <p class="page-404__code">404</p>
-      <h1 class="page-404__title">Block not found</h1>
+      <h1 class="page-404__title">{t('Block not found')}</h1>
       <p class="page-404__text">
-        This address doesn't exist in our mempool. The page you're looking for may have been moved or
-        never confirmed.
+        {
+          t(
+            "This address doesn't exist in our mempool. The page you're looking for may have been moved or never confirmed."
+          )
+        }
       </p>
       <div class="page-404__actions">
-        <a href="/" class="btn btn--primary">
-          Back to Home
+        <a href={translatePath('/')} class="btn btn--primary">
+          {t('Back to Home')}
           <span class="page-404__arrow">→</span>
         </a>
-        <a href="/docs" class="btn btn--secondary">View Docs</a>
+        <a href={translatePath('/docs')} class="btn btn--secondary">{t('View Docs')}</a>
       </div>
     </div>
   </main>
 </PublicPagesLayout>
 
 <style lang="scss">
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
   .page-404 {
     padding: 6rem 0;
     text-align: center;

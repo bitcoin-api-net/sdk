@@ -1,16 +1,26 @@
 ---
 import '@styles/global.scss';
+import { languages } from '@i18n/ui';
+import { useTranslations, useTranslatedPath } from '@i18n/utils';
+import { getLocaleByPath, getRelativeLocaleUrl } from 'astro:i18n';
+import { type Locale } from '@i18n/types';
 
 interface Props {
   title: string;
   description?: string;
 }
 
-const { title, description = "Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees." } = Astro.props;
+const {
+  title,
+  description = 'Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.',
+} = Astro.props;
+const lang = Astro.currentLocale as Locale;
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -23,7 +33,7 @@ const { title, description = "Access comprehensive Bitcoin data with the most co
   <body>
     <header class="header">
       <div class="header__inner">
-        <a href="/" class="logo">
+        <a href={getRelativeLocaleUrl(lang)} class="logo">
           <span class="logo__icon">B</span>
           <span class="logo__text">BitAPI</span>
         </a>
@@ -37,14 +47,23 @@ const { title, description = "Access comprehensive Bitcoin data with the most co
 
         <div class="header__menu">
           <nav class="nav">
-            <a href="/features" class="nav__link">Features</a>
-            <a href="/pricing" class="nav__link">Pricing</a>
-            <a href="/endpoints" class="nav__link">Endpoints</a>
-            <a href="/docs" class="nav__link">Docs</a>
+            <a href={getRelativeLocaleUrl(lang, '/features')} class="nav__link">{t('Features')}</a>
+            <a href={getRelativeLocaleUrl(lang, '/pricing')} class="nav__link">{t('Pricing')}</a>
+            <a href={getRelativeLocaleUrl(lang, '/endpoints')} class="nav__link">{t('Endpoints')}</a>
+            <a href={getRelativeLocaleUrl(lang, '/docs')} class="nav__link">{t('Docs')}</a>
           </nav>
           <div class="header__actions">
-            <a href="/signin" class="header__link">Sign In</a>
-            <a href="/signup" class="btn btn--primary">Get Started</a>
+            <span class="lang-switcher">
+              {
+                Object.entries(languages).map(([l, label]) => (
+                  <a href={getRelativeLocaleUrl(l)} class={lang === l ? 'lang-switcher__active' : ''}>
+                    {label}
+                  </a>
+                ))
+              }
+            </span>
+            <a href={getRelativeLocaleUrl(lang, '/signin')} class="header__link">{t('Sign In')}</a>
+            <a href={getRelativeLocaleUrl(lang, '/signup')} class="btn btn--primary">{t('Get Started')}</a>
           </div>
         </div>
       </div>
@@ -56,38 +75,38 @@ const { title, description = "Access comprehensive Bitcoin data with the most co
       <div class="footer__inner">
         <div class="footer__grid">
           <div class="footer__col">
-            <h4 class="footer__heading">Product</h4>
+            <h4 class="footer__heading">{t('Product')}</h4>
             <ul class="footer__links">
-              <li><a href="/features">Features</a></li>
-              <li><a href="/pricing">Pricing</a></li>
-              <li><a href="/endpoints">Endpoints</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/features')}>{t('Features')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/pricing')}>{t('Pricing')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/endpoints')}>{t('Endpoints')}</a></li>
             </ul>
           </div>
           <div class="footer__col">
-            <h4 class="footer__heading">Resources</h4>
+            <h4 class="footer__heading">{t('Resources')}</h4>
             <ul class="footer__links">
-              <li><a href="/docs">Documentation</a></li>
-              <li><a href="/docs/api">API Reference</a></li>
-              <li><a href="/changelog">Changelog</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/docs')}>{t('Documentation')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/docs/api')}>{t('API Reference')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/changelog')}>{t('Changelog')}</a></li>
             </ul>
           </div>
           <div class="footer__col">
-            <h4 class="footer__heading">Company</h4>
+            <h4 class="footer__heading">{t('Company')}</h4>
             <ul class="footer__links">
-              <li><a href="/about">About</a></li>
-              <li><a href="/contact">Contact</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/about')}>{t('About')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/contact')}>{t('Contact')}</a></li>
             </ul>
           </div>
           <div class="footer__col">
-            <h4 class="footer__heading">Legal</h4>
+            <h4 class="footer__heading">{t('Legal')}</h4>
             <ul class="footer__links">
-              <li><a href="/privacy">Privacy</a></li>
-              <li><a href="/terms">Terms</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/privacy')}>{t('Privacy')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/terms')}>{t('Terms')}</a></li>
             </ul>
           </div>
         </div>
         <div class="footer__bottom">
-          <p class="footer__copyright">© {new Date().getFullYear()} BitAPI. All rights reserved.</p>
+          <p class="footer__copyright">© {new Date().getFullYear()} BitAPI. {t('All rights reserved')}.</p>
         </div>
       </div>
     </footer>
@@ -95,6 +114,23 @@ const { title, description = "Access comprehensive Bitcoin data with the most co
 </html>
 
 <style lang="scss">
+  .lang-switcher {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .lang-switcher a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .lang-switcher a:hover,
+  .lang-switcher__active {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
   .header {
     border-bottom: 1px solid #eee;
     padding: 1rem 0;
@@ -145,7 +181,9 @@ const { title, description = "Access comprehensive Bitcoin data with the most co
     height: 2px;
     background: var(--color-text);
     border-radius: 1px;
-    transition: transform 0.2s, opacity 0.2s;
+    transition:
+      transform 0.2s,
+      opacity 0.2s;
   }
 
   .header__menu {
@@ -182,7 +220,9 @@ const { title, description = "Access comprehensive Bitcoin data with the most co
       max-height: 0;
       overflow: hidden;
       opacity: 0;
-      transition: max-height 0.3s ease, opacity 0.2s;
+      transition:
+        max-height 0.3s ease,
+        opacity 0.2s;
       margin: 1rem -1.5rem 0;
     }
 

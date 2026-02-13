@@ -7,7 +7,9 @@
     "paths": {
       "@components/*": ["./src/components/*"],
       "@layouts/*": ["./src/layouts/*"],
-      "@styles/*": ["./src/styles/*"]
+      "@styles/*": ["./src/styles/*"],
+      "@content/*": ["./src/content/*"],
+      "@i18n/*": ["./src/i18n/*"]
     },
     "jsx": "preserve"
   }

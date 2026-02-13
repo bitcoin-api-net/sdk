@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 import vue from '@astrojs/vue';
 import { defineConfig } from 'astro/config';
-import { loadEnv } from "vite";
+import { loadEnv } from 'vite';
+import { Locales } from './src/i18n/types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_DIR = path.resolve(__dirname).split(path.sep).slice(0, -2).join(path.sep);
@@ -13,16 +14,25 @@ const { SITE_URL } = loadEnv(process.env.NODE_ENV ?? 'production', PROJECT_DIR);
 
 // https://astro.build/config
 export default defineConfig({
-	// Enable Vue to support Vue components.
-	integrations: [vue()],
-	site: SITE_URL,
-	vite: {
-		resolve: {
-			alias: {
-				'@styles': path.resolve(__dirname, 'src/styles'),
-				'@components': path.resolve(__dirname, 'src/components'),
-				'@layouts': path.resolve(__dirname, 'src/layouts'),
-			},
-		},
-	},
+  // Enable Vue to support Vue components.
+  integrations: [vue()],
+  site: SITE_URL,
+  i18n: {
+    locales: Object.values(Locales),
+    defaultLocale: Locales.en,
+    routing: {
+      prefixDefaultLocale: false,
+      fallbackType: 'redirect',
+    },
+  },
+  vite: {
+    resolve: {
+      alias: {
+        '@styles': path.resolve(__dirname, 'src/styles'),
+        '@components': path.resolve(__dirname, 'src/components'),
+        '@layouts': path.resolve(__dirname, 'src/layouts'),
+        '@i18n': path.resolve(__dirname, 'src/i18n'),
+      },
+    },
+  },
 });
