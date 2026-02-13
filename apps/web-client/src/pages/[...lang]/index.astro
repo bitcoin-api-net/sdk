@@ -58,7 +58,11 @@ const page = Astro.props;
     <section class="why-choose">
       <div class="container">
         <h2 class="why-choose__title">{page.data.whyChoose.title}</h2>
-        <p class="why-choose__text">{page.data.whyChoose.text}</p>
+        <ul class="why-choose__list">
+          {page.data.whyChoose.items.map((item) => (
+            <li class="why-choose__item">{item}</li>
+          ))}
+        </ul>
       </div>
     </section>
 
@@ -200,12 +204,30 @@ const page = Astro.props;
     margin: 0 0 1rem;
   }
 
-  .why-choose__text {
-    font-size: 1.125rem;
-    color: #666;
-    max-width: 32rem;
+  .why-choose__list {
+    list-style: none;
+    padding: 0;
     margin: 0 auto;
-    line-height: 1.7;
+    max-width: 28rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .why-choose__item {
+    font-size: 1.125rem;
+    color: #444;
+    line-height: 1.6;
+    padding-left: 1.5rem;
+    position: relative;
+  }
+
+  .why-choose__item::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #22c55e;
+    font-weight: 700;
   }
 
   .section-title {

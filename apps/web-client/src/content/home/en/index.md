@@ -1,5 +1,5 @@
 ---
-title: "BitAPI — Bitcoin API for Developers"
+title: "Bitcoin API — Bitcoin API for Developers"
 description: "Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees."
 hero:
   badge: "⚡ The Most Complete Bitcoin API"
@@ -13,8 +13,13 @@ stats:
   - { value: "<100ms", label: "Response Time" }
   - { value: "50+", label: "Endpoints" }
 whyChoose:
-  title: "Why Choose BitAPI?"
-  text: "Built by developers for developers. Get the most comprehensive Bitcoin API with flexible pricing."
+  title: "Why Choose Bitcoin API?"
+  items:
+    - "Convenient API"
+    - "Detailed endpoint documentation"
+    - "Wide variety of data"
+    - "Pay only for endpoint groups you need"
+    - "MCP with documentation for AI"
 quickStart:
   title: "Quick Start"
   text: "Get Bitcoin data in seconds. Just add your API key and make a request."

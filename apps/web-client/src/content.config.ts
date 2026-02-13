@@ -26,7 +26,7 @@ const homeCollection = defineCollection({
     stats: z.array(statsItemSchema),
     whyChoose: z.object({
       title: z.string(),
-      text: z.string(),
+      items: z.array(z.string()),
     }),
     quickStart: z.object({
       title: z.string(),
