@@ -1,8 +1,8 @@
 ---
 import '@styles/global.scss';
 import { languages } from '@i18n/ui';
-import { useTranslations, useTranslatedPath } from '@i18n/utils';
-import { getLocaleByPath, getRelativeLocaleUrl } from 'astro:i18n';
+import { useTranslations } from '@i18n/utils';
+import { getRelativeLocaleUrl } from 'astro:i18n';
 import { type Locale } from '@i18n/types';
 
 interface Props {
@@ -16,7 +16,6 @@ const {
 } = Astro.props;
 const lang = Astro.currentLocale as Locale;
 const t = useTranslations(lang);
-const translatePath = useTranslatedPath(lang);
 ---
 
 <!doctype html>
@@ -53,15 +52,26 @@ const translatePath = useTranslatedPath(lang);
             <a href={getRelativeLocaleUrl(lang, '/docs')} class="nav__link">{t('Docs')}</a>
           </nav>
           <div class="header__actions">
-            <span class="lang-switcher">
-              {
-                Object.entries(languages).map(([l, label]) => (
-                  <a href={getRelativeLocaleUrl(l)} class={lang === l ? 'lang-switcher__active' : ''}>
-                    {label}
-                  </a>
-                ))
-              }
-            </span>
+            <details class="lang-dropdown">
+              <summary class="lang-dropdown__trigger" aria-label="Select language">
+                {languages[lang]}
+                <span class="lang-dropdown__chevron" aria-hidden="true">▼</span>
+              </summary>
+              <ul class="lang-dropdown__list">
+                {
+                  Object.entries(languages).map(([l, label]) => (
+                    <li>
+                      <a
+                        href={getRelativeLocaleUrl(l)}
+                        class={lang === l ? 'lang-dropdown__active' : ''}
+                      >
+                        {label}
+                      </a>
+                    </li>
+                  ))
+                }
+              </ul>
+            </details>
             <a href={getRelativeLocaleUrl(lang, '/signin')} class="header__link">{t('Sign In')}</a>
             <a href={getRelativeLocaleUrl(lang, '/signup')} class="btn btn--primary">{t('Get Started')}</a>
           </div>
@@ -114,20 +124,76 @@ const translatePath = useTranslatedPath(lang);
 </html>
 
 <style lang="scss">
-  .lang-switcher {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 0.875rem;
+  .lang-dropdown {
+    position: relative;
   }
 
-  .lang-switcher a {
+  .lang-dropdown__trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .lang-dropdown__trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .lang-dropdown__trigger:hover {
+    color: var(--color-text);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .lang-dropdown__chevron {
+    font-size: 0.625rem;
+    transition: transform 0.2s;
+  }
+
+  .lang-dropdown[open] .lang-dropdown__chevron {
+    transform: rotate(180deg);
+  }
+
+  .lang-dropdown__list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin: 0.25rem 0 0;
+    padding: 0.25rem 0;
+    min-width: 8rem;
+    background: var(--color-bg);
+    border: 1px solid #eee;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    z-index: 100;
+  }
+
+  .lang-dropdown__list li {
+    margin: 0;
+  }
+
+  .lang-dropdown__list a {
+    display: block;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
     color: var(--color-text-muted);
     text-decoration: none;
   }
 
-  .lang-switcher a:hover,
-  .lang-switcher__active {
+  .lang-dropdown__list a:hover {
     color: var(--color-text);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .lang-dropdown__active {
+    color: var(--color-text) !important;
     font-weight: 600;
   }
 
@@ -227,8 +293,9 @@ const translatePath = useTranslatedPath(lang);
     }
 
     .nav-toggle:checked ~ .header__menu {
-      max-height: 20rem;
+      max-height: 28rem;
       opacity: 1;
+      overflow-y: auto;
     }
 
     .nav-toggle:checked ~ .nav-toggle__btn .nav-toggle__line:nth-child(1) {
@@ -265,6 +332,17 @@ const translatePath = useTranslatedPath(lang);
 
     .header__actions .btn {
       justify-content: center;
+    }
+
+    .lang-dropdown {
+      position: static;
+    }
+
+    .lang-dropdown__list {
+      position: static;
+      margin: 0.5rem 0 0;
+      box-shadow: none;
+      border: 1px solid #eee;
     }
   }
 
