@@ -16,7 +16,6 @@ import { registerSecurityHeadersPlugin } from './plugins/headers.js';
 import { registerRateLimitPlugin } from './plugins/rate-limit.js';
 import { registerSwaggerPlugin } from './plugins/swagger.js';
 import { registerRoutesAutoloadPlugin } from './plugins/routes.js';
-import { registerPingRoute } from './plugins/healthcheck.js';
 
 errorsHandler.handleProcessErrors();
 
@@ -43,7 +42,6 @@ async function main() {
   registerRateLimitPlugin(apiServer);
   registerSwaggerPlugin(apiServer);
   registerRoutesAutoloadPlugin(apiServer, { prefix: 'api', dir: join(SRC_DIR, 'routes') });
-  registerPingRoute(apiServer, { prefix: 'api' });
   await apiServer.listen({ host: '0.0.0.0', port: API_PORT });
 }
 
