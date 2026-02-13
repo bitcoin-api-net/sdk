@@ -1,4 +1,4 @@
 {
-  "references": [{ "path": "./libjs" }, { "path": "./corejs" }, { "path": "./apps/web-client" }],
+  "references": [{ "path": "./lib" }, { "path": "./apps/api" }, { "path": "./apps/web-client" }],
   "files": []
 }
