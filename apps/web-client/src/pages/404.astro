@@ -1,36 +1,31 @@
 ---
 import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import { getRelativeLocaleUrl } from 'astro:i18n';
 import { type Locale } from 'src/types';
 import { i18nService } from 'src/services/i18n';
+import assert from 'node:assert';
 
-export async function getStaticPaths() {
-  const collection = await getCollection('ui');
-  return collection.map((page) => ({
-    params: { lang: i18nService.collectionIdToLocale(page.id) },
-    props: page,
-  }));
-}
 const lang = Astro.currentLocale as Locale;
-const page = Astro.props;
-const pageData = page.data;
+const uiCollection = await getEntry('ui', lang);
+assert(uiCollection?.data, 'UI collection not found');
+const uiContent = uiCollection.data;
 ---
 
-<PublicPagesLayout title="404 — Bitcoin API" description="Page not found. Return to Bitcoin API home.">
+<PublicPagesLayout title={uiContent.notFoundTitle} description={uiContent.notFoundDescription}>
   <main class="page-404">
     <div class="container">
       <p class="page-404__code">404</p>
-      <h1 class="page-404__title">Not Found</h1>
+      <h1 class="page-404__title">{uiContent.notFoundTitle}</h1>
       <p class="page-404__text">
-        {pageData.thisAddressDoesntExistInOurMempool}
+        {uiContent.notFoundDescription}
       </p>
       <div class="page-404__actions">
         <a href={getRelativeLocaleUrl(lang, '/')} class="btn btn--primary">
-          {pageData.backToHome}
+          {uiContent.backToHome}
           <span class="page-404__arrow">→</span>
         </a>
-        <a href={getRelativeLocaleUrl(lang, '/docs')} class="btn btn--secondary">{pageData.viewDocs}</a>
+        <a href={getRelativeLocaleUrl(lang, '/docs')} class="btn btn--secondary">{uiContent.viewDocs}</a>
       </div>
     </div>
   </main>

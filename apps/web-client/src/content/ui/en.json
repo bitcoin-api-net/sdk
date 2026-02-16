@@ -1,4 +1,8 @@
 {
+  "defaultTitle": "Bitcoin API",
+  "defaultDescription": "Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.",
+  "notFoundTitle": "404 — Bitcoin API",
+  "notFoundDescription": "Page not found. Return to Bitcoin API home.",
   "features": "Features",
   "pricing": "Pricing",
   "endpoints": "Endpoints",

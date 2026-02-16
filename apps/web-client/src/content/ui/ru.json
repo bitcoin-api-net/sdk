@@ -1,4 +1,8 @@
 {
+  "defaultTitle": "Bitcoin API",
+  "defaultDescription": "Доступ к полным данным Bitcoin через удобный API. Платите только за то, что используете. Без скрытых комиссий.",
+  "notFoundTitle": "404 — Bitcoin API",
+  "notFoundDescription": "Страница не найдена. Вернитесь на главную страницу Bitcoin API.",
   "features": "Возможности",
   "pricing": "Тарифы",
   "endpoints": "Эндпоинты",

@@ -5,6 +5,10 @@ import { z } from 'astro/zod';
 export const uiCollection = defineCollection({
   loader: glob({ pattern: './*.json', base: './src/content/ui' }),
   schema: z.object({
+    defaultTitle: z.string(),
+    defaultDescription: z.string(),
+    notFoundTitle: z.string(),
+    notFoundDescription: z.string(),
     features: z.string(),
     pricing: z.string(),
     endpoints: z.string(),

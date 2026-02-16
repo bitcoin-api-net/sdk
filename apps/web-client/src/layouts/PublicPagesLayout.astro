@@ -11,15 +11,12 @@ interface Props {
   description?: string;
 }
 
-const {
-  title = 'Bitcoin API',
-  description = 'Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.',
-} = Astro.props;
-
 const lang = Astro.currentLocale as Locale;
 const uiCollection = await getEntry('ui', lang);
 assert(uiCollection?.data, 'UI collection not found');
 const uiContent = uiCollection.data;
+
+const { title = uiContent.defaultTitle, description = uiContent.defaultDescription } = Astro.props;
 ---
 
 <!doctype html>
