@@ -9,7 +9,7 @@
       "@layouts/*": ["./src/layouts/*"],
       "@styles/*": ["./src/styles/*"],
       "@content/*": ["./src/content/*"],
-      "@i18n/*": ["./src/i18n/*"]
+      "@services/*": ["./src/services/*"]
     },
     "jsx": "preserve"
   }

@@ -1,21 +1,25 @@
 ---
 import '@styles/global.scss';
-import { languages } from '@i18n/ui';
-import { useTranslations } from '@i18n/utils';
 import { getRelativeLocaleUrl } from 'astro:i18n';
-import { type Locale } from '@i18n/types';
+import { type Locale } from 'src/types';
+import { getEntry } from 'astro:content';
+import { LOCALES_LABELS } from 'src/constants';
+import assert from 'node:assert';
 
 interface Props {
-  title: string;
+  title?: string;
   description?: string;
 }
 
 const {
-  title,
+  title = 'Bitcoin API',
   description = 'Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.',
 } = Astro.props;
+
 const lang = Astro.currentLocale as Locale;
-const t = useTranslations(lang);
+const uiCollection = await getEntry('ui', lang);
+assert(uiCollection?.data, 'UI collection not found');
+const uiContent = uiCollection.data;
 ---
 
 <!doctype html>
@@ -46,25 +50,22 @@ const t = useTranslations(lang);
 
         <div class="header__menu">
           <nav class="nav">
-            <a href={getRelativeLocaleUrl(lang, '/features')} class="nav__link">{t('Features')}</a>
-            <a href={getRelativeLocaleUrl(lang, '/pricing')} class="nav__link">{t('Pricing')}</a>
-            <a href={getRelativeLocaleUrl(lang, '/endpoints')} class="nav__link">{t('Endpoints')}</a>
-            <a href={getRelativeLocaleUrl(lang, '/docs')} class="nav__link">{t('Docs')}</a>
+            <a href={getRelativeLocaleUrl(lang, '/features')} class="nav__link">{uiContent.features}</a>
+            <a href={getRelativeLocaleUrl(lang, '/pricing')} class="nav__link">{uiContent.pricing}</a>
+            <a href={getRelativeLocaleUrl(lang, '/endpoints')} class="nav__link">{uiContent.endpoints}</a>
+            <a href={getRelativeLocaleUrl(lang, '/docs')} class="nav__link">{uiContent.docs}</a>
           </nav>
           <div class="header__actions">
             <details class="lang-dropdown">
               <summary class="lang-dropdown__trigger" aria-label="Select language">
-                {languages[lang]}
+                {LOCALES_LABELS[lang]}
                 <span class="lang-dropdown__chevron" aria-hidden="true">▼</span>
               </summary>
               <ul class="lang-dropdown__list">
                 {
-                  Object.entries(languages).map(([l, label]) => (
+                  Object.entries(LOCALES_LABELS).map(([l, label]) => (
                     <li>
-                      <a
-                        href={getRelativeLocaleUrl(l)}
-                        class={lang === l ? 'lang-dropdown__active' : ''}
-                      >
+                      <a href={getRelativeLocaleUrl(l)} class={lang === l ? 'lang-dropdown__active' : ''}>
                         {label}
                       </a>
                     </li>
@@ -72,8 +73,8 @@ const t = useTranslations(lang);
                 }
               </ul>
             </details>
-            <a href={getRelativeLocaleUrl(lang, '/signin')} class="header__link">{t('Sign In')}</a>
-            <a href={getRelativeLocaleUrl(lang, '/signup')} class="btn btn--primary">{t('Get Started')}</a>
+            <a href={getRelativeLocaleUrl(lang, '/signin')} class="header__link">{uiContent.signIn}</a>
+            <a href={getRelativeLocaleUrl(lang, '/signup')} class="btn btn--primary">{uiContent.getStarted}</a>
           </div>
         </div>
       </div>
@@ -85,38 +86,40 @@ const t = useTranslations(lang);
       <div class="footer__inner">
         <div class="footer__grid">
           <div class="footer__col">
-            <h4 class="footer__heading">{t('Product')}</h4>
+            <h4 class="footer__heading">{uiContent.product}</h4>
             <ul class="footer__links">
-              <li><a href={getRelativeLocaleUrl(lang, '/features')}>{t('Features')}</a></li>
-              <li><a href={getRelativeLocaleUrl(lang, '/pricing')}>{t('Pricing')}</a></li>
-              <li><a href={getRelativeLocaleUrl(lang, '/endpoints')}>{t('Endpoints')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/features')}>{uiContent.features}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/pricing')}>{uiContent.pricing}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/endpoints')}>{uiContent.endpoints}</a></li>
             </ul>
           </div>
           <div class="footer__col">
-            <h4 class="footer__heading">{t('Resources')}</h4>
+            <h4 class="footer__heading">{uiContent.resources}</h4>
             <ul class="footer__links">
-              <li><a href={getRelativeLocaleUrl(lang, '/docs')}>{t('Documentation')}</a></li>
-              <li><a href={getRelativeLocaleUrl(lang, '/docs/api')}>{t('API Reference')}</a></li>
-              <li><a href={getRelativeLocaleUrl(lang, '/changelog')}>{t('Changelog')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/docs')}>{uiContent.documentation}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/docs/api')}>{uiContent.apiReference}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/changelog')}>{uiContent.changelog}</a></li>
             </ul>
           </div>
           <div class="footer__col">
-            <h4 class="footer__heading">{t('Company')}</h4>
+            <h4 class="footer__heading">{uiContent.company}</h4>
             <ul class="footer__links">
-              <li><a href={getRelativeLocaleUrl(lang, '/about')}>{t('About')}</a></li>
-              <li><a href={getRelativeLocaleUrl(lang, '/contact')}>{t('Contact')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/about')}>{uiContent.about}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/contact')}>{uiContent.contact}</a></li>
             </ul>
           </div>
           <div class="footer__col">
-            <h4 class="footer__heading">{t('Legal')}</h4>
+            <h4 class="footer__heading">{uiContent.legal}</h4>
             <ul class="footer__links">
-              <li><a href={getRelativeLocaleUrl(lang, '/privacy')}>{t('Privacy')}</a></li>
-              <li><a href={getRelativeLocaleUrl(lang, '/terms')}>{t('Terms')}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/privacy')}>{uiContent.privacy}</a></li>
+              <li><a href={getRelativeLocaleUrl(lang, '/terms')}>{uiContent.terms}</a></li>
             </ul>
           </div>
         </div>
         <div class="footer__bottom">
-          <p class="footer__copyright">© {new Date().getFullYear()} Bitcoin API. {t('All rights reserved')}.</p>
+          <p class="footer__copyright">
+            © {new Date().getFullYear()} Bitcoin API. {uiContent.allRightsReserved}.
+          </p>
         </div>
       </div>
     </footer>
