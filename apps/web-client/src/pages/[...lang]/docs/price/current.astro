@@ -1,0 +1,19 @@
+---
+import DocsLayout from '@layouts/DocsLayout.astro';
+import { LOCALES_LABELS } from 'src/constants';
+import { type Locale } from 'src/types';
+import { i18nService } from 'src/services/i18n';
+
+export async function getStaticPaths() {
+  return Object.entries(LOCALES_LABELS).map(([l, label]) => ({
+    params: { lang: i18nService.localeToPrefix(l) },
+    props: {},
+  }));
+}
+const lang = Astro.currentLocale as Locale;
+const page = Astro.props;
+---
+
+<DocsLayout>
+  <h1>Current Price</h1>
+</DocsLayout>

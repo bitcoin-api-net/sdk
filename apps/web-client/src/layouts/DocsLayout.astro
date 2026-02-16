@@ -1,0 +1,171 @@
+---
+import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import { getEntry } from 'astro:content';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { type Locale } from 'src/types';
+import assert from 'node:assert';
+
+const lang = Astro.currentLocale as Locale;
+const uiCollection = await getEntry('ui', lang);
+assert(uiCollection?.data, 'UI collection not found');
+const uiContent = uiCollection.data;
+
+const docGroups = [
+  {
+    title: 'Price',
+    links: [{ label: 'Current Price', href: '/docs/price/current' }],
+  },
+] as const;
+---
+
+<PublicPagesLayout title={uiContent.defaultTitle} description={uiContent.defaultDescription}>
+  <div class="docs-layout">
+    <aside class="docs-layout__sidebar">
+      <nav class="docs-nav">
+        <div class="docs-nav__actions">
+          <button type="button" class="docs-nav__toggle" data-action="expand" aria-label="Expand all">
+            Expand all
+          </button>
+          <button type="button" class="docs-nav__toggle" data-action="collapse" aria-label="Collapse all">
+            Collapse all
+          </button>
+        </div>
+        <ul class="docs-nav__list">
+          {
+            docGroups.map((group) => (
+              <li class="docs-nav__group">
+                <details class="docs-nav__details" open>
+                  <summary class="docs-nav__summary">{group.title}</summary>
+                  <ul class="docs-nav__links">
+                    {group.links.map((link) => (
+                      <li>
+                        <a href={getRelativeLocaleUrl(lang, link.href)}>{link.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </aside>
+    <main class="docs-layout__content">
+      <slot />
+    </main>
+  </div>
+</PublicPagesLayout>
+
+<style>
+  .docs-layout {
+    display: grid;
+    grid-template-columns: minmax(200px, 280px) 1fr;
+    gap: 2rem;
+    width: 100%;
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .docs-layout__sidebar {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+  }
+
+  .docs-nav__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .docs-nav__toggle {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    background: none;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+
+  .docs-nav__toggle:hover {
+    opacity: 1;
+  }
+
+  .docs-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .docs-nav__group {
+    margin-bottom: 0.5rem;
+  }
+
+  .docs-nav__details {
+    border-radius: 4px;
+  }
+
+  .docs-nav__summary {
+    padding: 0.5rem 0;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .docs-nav__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .docs-nav__summary::before {
+    content: '▼ ';
+    font-size: 0.7em;
+    opacity: 0.7;
+  }
+
+  .docs-nav__details:not([open]) .docs-nav__summary::before {
+    content: '▶ ';
+  }
+
+  .docs-nav__links {
+    list-style: none;
+    margin: 0;
+    padding-left: 1rem;
+  }
+
+  .docs-nav__links a {
+    display: block;
+    padding: 0.35rem 0;
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .docs-nav__links a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    .docs-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .docs-layout__sidebar {
+      position: static;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.docs-nav__toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const details = document.querySelectorAll<HTMLDetailsElement>('.docs-nav__details');
+      const expand = btn.dataset.action === 'expand';
+      details.forEach((el) => {
+        el.open = expand;
+      });
+    });
+  });
+</script>

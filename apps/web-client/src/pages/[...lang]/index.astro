@@ -8,7 +8,7 @@ import { type Locale } from 'src/types';
 export async function getStaticPaths() {
   const collection = await getCollection('home');
   return collection.map((item) => ({
-    params: { lang: i18nService.collectionIdToLocale(item.id) },
+    params: { lang: i18nService.localeToPrefix(item.id) },
     props: item,
   }));
 }
