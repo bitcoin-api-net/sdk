@@ -1,0 +1,24 @@
+{
+  "name": "exchanges",
+  "version": "0.0.1",
+  "description": "Project Exchanges application",
+  "author": "Bogdan",
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "license": "ISC",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "type-check": "tsc --build --noEmit"
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.9.0"
+  },
+  "dependencies": {
+    "lib": "^0.0.1",
+    "core": "^0.0.1"
+  }
+}

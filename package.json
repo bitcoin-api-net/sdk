@@ -12,6 +12,7 @@
   },
   "workspaces": [
     "lib",
+    "core",
     "apps/api",
     "apps/web-client"
   ],

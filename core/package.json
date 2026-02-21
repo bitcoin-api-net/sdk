@@ -1,0 +1,15 @@
+{
+  "name": "core",
+  "version": "0.0.1",
+  "description": "Core package for project. Contains shared core logic and utilities.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "type-check": "tsc --build --noEmit"
+  },
+  "dependencies": {
+    "lib": "^0.0.1"
+  }
+}
