@@ -10,6 +10,8 @@ const uiCollection = await getEntry('ui', lang);
 assert(uiCollection?.data, 'UI collection not found');
 const uiContent = uiCollection.data;
 
+const currentPath = Astro.url.pathname.replace(/\/$/, '');
+
 const docGroups = [
   {
     title: 'Price',
@@ -32,34 +34,57 @@ const docGroups = [
         </div>
         <ul class="docs-nav__list">
           {
-            docGroups.map((group) => (
-              <li class="docs-nav__group">
-                <details class="docs-nav__details" open>
-                  <summary class="docs-nav__summary">{group.title}</summary>
-                  <ul class="docs-nav__links">
-                    {group.links.map((link) => (
-                      <li>
-                        <a href={getRelativeLocaleUrl(lang, link.href)}>{link.label}</a>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              </li>
-            ))
+            docGroups.map((group) => {
+              const linkHrefs = group.links.map((l) => getRelativeLocaleUrl(lang, l.href).replace(/\/$/, ''));
+              const groupHasActive = linkHrefs.includes(currentPath);
+
+              return (
+                <li class="docs-nav__group">
+                  <details class="docs-nav__details" open={groupHasActive}>
+                    <summary class="docs-nav__summary">{group.title}</summary>
+                    <ul class="docs-nav__links">
+                      {group.links.map((link) => {
+                        const href = getRelativeLocaleUrl(lang, link.href);
+                        const isActive = href.replace(/\/$/, '') === currentPath;
+                        return (
+                          <li>
+                            <a
+                              href={href}
+                              class:list={[{ 'docs-nav__link--active': isActive }]}
+                              aria-current={isActive ? 'page' : undefined}
+                            >
+                              {link.label}
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </details>
+                </li>
+              );
+            })
           }
         </ul>
       </nav>
     </aside>
+
     <main class="docs-layout__content">
       <slot />
     </main>
+
+    <aside class="docs-toc">
+      <nav class="docs-toc__nav">
+        <h4 class="docs-toc__title">On this page</h4>
+        <ul class="docs-toc__list" id="toc-list"></ul>
+      </nav>
+    </aside>
   </div>
 </PublicPagesLayout>
 
 <style>
   .docs-layout {
     display: grid;
-    grid-template-columns: minmax(200px, 280px) 1fr;
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr) 220px;
     gap: 2rem;
     width: 100%;
     max-width: var(--container-max);
@@ -67,10 +92,14 @@ const docGroups = [
     padding: 2rem 1rem;
   }
 
+  /* ── Left sidebar ── */
+
   .docs-layout__sidebar {
     position: sticky;
     top: 2rem;
     align-self: start;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
   }
 
   .docs-nav__actions {
@@ -81,16 +110,17 @@ const docGroups = [
 
   .docs-nav__toggle {
     padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     background: none;
-    border: 1px solid currentColor;
+    border: 1px solid #ddd;
     border-radius: 4px;
     cursor: pointer;
-    opacity: 0.8;
+    color: var(--color-text-muted);
   }
 
   .docs-nav__toggle:hover {
-    opacity: 1;
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
   }
 
   .docs-nav__list {
@@ -100,7 +130,7 @@ const docGroups = [
   }
 
   .docs-nav__group {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
   .docs-nav__details {
@@ -109,10 +139,12 @@ const docGroups = [
 
   .docs-nav__summary {
     padding: 0.5rem 0;
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     list-style: none;
     user-select: none;
+    color: var(--color-text);
   }
 
   .docs-nav__summary::-webkit-details-marker {
@@ -120,31 +152,123 @@ const docGroups = [
   }
 
   .docs-nav__summary::before {
-    content: '▼ ';
-    font-size: 0.7em;
-    opacity: 0.7;
+    content: '▶ ';
+    display: inline-block;
+    font-size: 0.6em;
+    margin-right: 0.35rem;
+    opacity: 0.5;
+    transition: transform 0.15s;
   }
 
-  .docs-nav__details:not([open]) .docs-nav__summary::before {
-    content: '▶ ';
+  .docs-nav__details[open] > .docs-nav__summary::before {
+    transform: rotate(90deg);
   }
 
   .docs-nav__links {
     list-style: none;
     margin: 0;
-    padding-left: 1rem;
+    padding: 0 0 0 0.25rem;
   }
 
   .docs-nav__links a {
     display: block;
-    padding: 0.35rem 0;
-    color: inherit;
+    padding: 0.3rem 0.75rem;
+    margin-left: 0.5rem;
+    color: var(--color-text-muted);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
+    border-left: 2px solid transparent;
+    border-radius: 0 4px 4px 0;
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      border-color 0.15s;
   }
 
   .docs-nav__links a:hover {
-    text-decoration: underline;
+    color: var(--color-text);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .docs-nav__link--active {
+    color: var(--color-accent) !important;
+    background: rgba(249, 115, 22, 0.08) !important;
+    border-left-color: var(--color-accent) !important;
+    font-weight: 500;
+  }
+
+  /* ── Right sidebar (TOC) ── */
+
+  .docs-toc {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+
+  .docs-toc__title {
+    margin: 0 0 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text);
+  }
+
+  .docs-toc__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid #eee;
+  }
+
+  .docs-toc__list :global(li) {
+    margin: 0;
+  }
+
+  .docs-toc__list :global(a) {
+    display: block;
+    padding: 0.25rem 0 0.25rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    margin-left: -2px;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  .docs-toc__list :global(a:hover) {
+    color: var(--color-text);
+  }
+
+  .docs-toc__list :global(a.toc-active) {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+  }
+
+  .docs-toc__list :global(a[data-level="3"]) {
+    padding-left: 1.5rem;
+  }
+
+  /* ── Content ── */
+
+  .docs-layout__content {
+    min-width: 0;
+  }
+
+  /* ── Responsive ── */
+
+  @media (max-width: 1024px) {
+    .docs-layout {
+      grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+    }
+
+    .docs-toc {
+      display: none;
+    }
   }
 
   @media (max-width: 768px) {
@@ -154,6 +278,7 @@ const docGroups = [
 
     .docs-layout__sidebar {
       position: static;
+      max-height: none;
     }
   }
 </style>
@@ -168,4 +293,54 @@ const docGroups = [
       });
     });
   });
+
+  function buildTOC() {
+    const content = document.querySelector('.docs-layout__content');
+    const tocList = document.getElementById('toc-list');
+    if (!content || !tocList) return;
+
+    const headings = content.querySelectorAll<HTMLHeadingElement>('h2, h3');
+    if (headings.length === 0) {
+      const tocNav = tocList.closest<HTMLElement>('.docs-toc');
+      if (tocNav) tocNav.style.display = 'none';
+      return;
+    }
+
+    for (const heading of headings) {
+      if (!heading.id) {
+        heading.id = heading.textContent!
+          .trim()
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
+      }
+
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `#${heading.id}`;
+      a.textContent = heading.textContent!.trim();
+      a.dataset.level = heading.tagName === 'H3' ? '3' : '2';
+      li.appendChild(a);
+      tocList.appendChild(li);
+    }
+
+    const tocLinks = tocList.querySelectorAll<HTMLAnchorElement>('a');
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach((link) => link.classList.remove('toc-active'));
+            const active = tocList.querySelector(`a[href="#${entry.target.id}"]`);
+            if (active) active.classList.add('toc-active');
+          }
+        }
+      },
+      { rootMargin: '0px 0px -70% 0px', threshold: 0.1 },
+    );
+
+    headings.forEach((h) => observer.observe(h));
+  }
+
+  buildTOC();
 </script>
