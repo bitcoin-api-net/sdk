@@ -16,6 +16,7 @@ import { registerSecurityHeadersPlugin } from './plugins/headers.js';
 import { registerRateLimitPlugin } from './plugins/rate-limit.js';
 import { registerSwaggerPlugin } from './plugins/swagger.js';
 import { registerRoutesAutoloadPlugin } from './plugins/routes.js';
+import { redis } from 'lib/src/redis.js';
 
 errorsHandler.handleProcessErrors();
 
@@ -24,6 +25,7 @@ const APP_DIR = import.meta.dirname.split(path.sep).slice(0, -1).join(path.sep);
 const SRC_DIR = join(APP_DIR, 'src');
 
 async function main() {
+  await redis.connect();
   const apiServer = Fastify({
     logger: loggerOptions,
     ajv: {

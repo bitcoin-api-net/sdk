@@ -1,25 +1,42 @@
-import { Exchange } from '#src/types.js';
+import { Exchange } from 'core/src/types.js';
 
 import { Symbol } from 'core/src/types.js';
 import { Decimal } from 'lib/src/decimal.js';
 import { redis } from 'lib/src/redis.js';
+import { AppError } from 'lib/src/errors.js';
+
+export type LastPrice = {
+  price: Decimal;
+  time: Date;
+  exchange: Exchange;
+  symbol: Symbol;
+};
 
 class PricesRepository {
-  readonly storageBaseKey = 'exchanges:prices';
+  readonly storageBaseKey = 'core:prices';
 
   getSymbolExchangeStorageKey(symbol: Symbol, exchange: Exchange) {
     return `${this.storageBaseKey}:${symbol}:${exchange}` as const;
   }
 
-  async saveLastPrice(symbol: Symbol, exchange: Exchange, data: { price: Decimal; time: Date }) {
+  async saveLastPrice(data: LastPrice) {
+    const { symbol, exchange } = data;
     const redisKey = this.getSymbolExchangeStorageKey(symbol, exchange);
     await redis.client.hSet(redisKey, 'price', JSON.stringify(data));
   }
 
   async getLastPrice(symbol: Symbol, exchange: Exchange) {
     const redisKey = this.getSymbolExchangeStorageKey(symbol, exchange);
-    const price = await redis.client.hGet(redisKey, 'price');
-    return price ? JSON.parse(price) : null;
+    const data = await redis.client.hGet(redisKey, 'price');
+    if (!data) throw new AppError('No price found. Pleas check if price monitoring is running.');
+    const parsedData = JSON.parse(data);
+    const lastPrice: LastPrice = {
+      price: new Decimal(parsedData.price),
+      time: new Date(parsedData.time),
+      exchange: parsedData.exchange,
+      symbol: parsedData.symbol,
+    };
+    return lastPrice;
   }
 }
 
