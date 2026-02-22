@@ -4,6 +4,8 @@ import { Symbol } from 'core/src/types.js';
 import { Symbols } from 'core/src/constants.js';
 import { Exchanges } from 'core/src/constants.js';
 import { pricesRepository } from 'core/src/repositories/prices.repository.js';
+import { validator } from 'lib/src/validation.js';
+import { sendJSON } from '#src/utils/websocket.js';
 
 export type RequestData = {
   symbol: Symbol;
@@ -31,25 +33,29 @@ const responseSchema: JSONSchemaType<ResponseData> = {
   required: ['price', 'time'],
 };
 
+const validateResponse = validator.compile(responseSchema);
+
 export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
-  app.get<{
-    Querystring: RequestData;
-    Reply: ResponseData;
-  }>(
-    '/current',
-    {
-      schema: {
-        querystring: querySchema,
-        response: {
-          200: responseSchema,
-        },
+  app.route<{ Querystring: RequestData; Reply: ResponseData }>({
+    method: 'GET',
+    url: '/current',
+    schema: {
+      querystring: querySchema,
+      response: {
+        200: responseSchema,
       },
-      config: { auth: 'optional' },
+      description: `For websocket use: wscat -c ${process.env.WS_API_BROWSER_URL}/v1/prices/current/ws?symbol=btcusdt`,
     },
-    async (req, res) => {
+    handler: async (req, reply) => {
       const { symbol } = req.query;
       const price = await pricesRepository.getLastPrice(symbol, Exchanges.binance);
-      return res.status(200).send({ price: price.price.toString(), time: price.time.toISOString() });
-    }
-  );
+      return reply.status(200).send({ price: price.price.toString(), time: price.time.toISOString() });
+    },
+    wsHandler: async (socket, req) => {
+      const { symbol } = req.query;
+      const price = await pricesRepository.getLastPrice(symbol, Exchanges.binance);
+      const resp = { price: price.price.toString(), time: price.time.toISOString() };
+      sendJSON(socket, resp, validateResponse);
+    },
+  });
 }

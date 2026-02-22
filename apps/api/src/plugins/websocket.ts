@@ -22,23 +22,24 @@ export function handleWebSocketError(connection: WebSocket, error: unknown) {
     responsePayload.code = ValidationError.code;
     responsePayload.message = error.message;
     statusCode = 1008;
+    logger.error({ statusCode, responsePayload, data: error.data }, 'WebSocket error');
   } else if (error instanceof ForbiddenError) {
     responsePayload.code = ForbiddenError.code;
     responsePayload.message = error.message;
     statusCode = 1008;
+    logger.error({ statusCode, responsePayload, data: error.data }, 'WebSocket error');
   } else if (error instanceof NotFoundError) {
     responsePayload.code = NotFoundError.code;
     responsePayload.message = error.message;
     statusCode = 1003;
-  } else if (error instanceof SyntaxError) {
-    responsePayload.code = '400';
-    responsePayload.message = error.message;
+    logger.error({ statusCode, responsePayload, data: error.data }, 'WebSocket error');
   } else if (error instanceof AppError) {
     responsePayload.code = error.code;
     responsePayload.message = error.message;
+    statusCode = 1011;
+    logger.error({ statusCode, responsePayload, data: error.data }, 'WebSocket error');
   }
 
   connection.send(JSON.stringify(responsePayload));
-  logger.error(responsePayload, 'WebSocket error');
   connection.close(statusCode, responsePayload.message);
 }
