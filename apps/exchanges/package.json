@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
-    "type-check": "tsc --build --noEmit"
+    "type-check": "tsc --build --noEmit",
+    "last-price-monitoring:dev": "tsx watch src/last-price.app.ts"
   },
   "engines": {
     "node": ">=22.12.0",

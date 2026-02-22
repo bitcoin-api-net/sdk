@@ -79,7 +79,7 @@ export class BinanceProvider {
   }
 
   private getStreamName(symbol: Symbol, stream: Stream) {
-    return `${symbol.toLowerCase()}@${stream}`;
+    return `${symbol}@${stream}`;
   }
 
   private getRawStreamUrl(streamName: string) {
@@ -90,15 +90,15 @@ export class BinanceProvider {
 export const binanceProvider = new BinanceProvider();
 
 // For local testing
-import { Symbols } from 'core/src/constants.js';
-await binanceProvider.subscribeTradeStream(Symbols.BTCUSDT, {
-  onMessage: (message) => {
-    console.log(message);
-  },
-  onError: (error) => {
-    console.error(error);
-  },
-  onClose: (event) => {
-    console.log(event);
-  },
-});
+// import { Symbols } from 'core/src/constants.js';
+// await binanceProvider.subscribeTradeStream(Symbols.btcusdt, {
+//   onMessage: (message) => {
+//     console.log(message);
+//   },
+//   onError: (error) => {
+//     console.error(error);
+//   },
+//   onClose: (event) => {
+//     console.log(event);
+//   },
+// });
