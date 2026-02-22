@@ -1,4 +1,5 @@
 import { Symbol } from 'core/src/types.js';
+import { Decimal } from 'decimal.js';
 
 const WSS_URL = 'wss://stream.binance.com:9443';
 
@@ -16,6 +17,12 @@ export type TradeStreamMessage = {
   T: number; // Trade time
   m: boolean; // Is the buyer the market maker?
   M: boolean; // Ignore
+};
+
+export type TradeStreamMessageFormatted = {
+  price: Decimal;
+  quantity: Decimal;
+  time: Date;
 };
 
 /**
@@ -44,7 +51,7 @@ export class BinanceProvider {
   async subscribeTradeStream(
     symbol: Symbol,
     callbacks: {
-      onMessage: (message: TradeStreamMessage) => void;
+      onMessage: (message: TradeStreamMessageFormatted) => void;
       onError: (error: StreamErrorMessage) => void;
       onClose: (event: StreamCloseEvent) => void;
     }
@@ -55,7 +62,11 @@ export class BinanceProvider {
 
     socket.addEventListener('message', (event) => {
       const message = JSON.parse(event.data) as TradeStreamMessage;
-      callbacks.onMessage(message);
+      callbacks.onMessage({
+        price: new Decimal(message.p),
+        quantity: new Decimal(message.q),
+        time: new Date(message.T),
+      });
     });
 
     socket.addEventListener('error', (event) => {
