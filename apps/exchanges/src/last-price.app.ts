@@ -6,6 +6,7 @@ import { processHandler } from 'lib/src/process.js';
 import { pricesRepository } from 'core/src/repositories/prices.repository.js';
 import { Exchanges } from 'core/src/constants.js';
 import { logger } from 'lib/src/logging/server.js';
+import { pricesBroker } from 'core/src/brokers/prices.broker.js';
 
 processHandler.logErrors();
 processHandler.onExit(async () => {
@@ -19,6 +20,12 @@ async function main() {
     onMessage: (message) => {
       messageCount++;
       pricesRepository.saveLastPrice({
+        symbol: Symbols.btcusdt,
+        exchange: Exchanges.binance,
+        price: message.price,
+        time: message.time,
+      });
+      pricesBroker.broadcastLastPrice({
         symbol: Symbols.btcusdt,
         exchange: Exchanges.binance,
         price: message.price,

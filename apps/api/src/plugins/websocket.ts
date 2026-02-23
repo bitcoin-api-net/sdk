@@ -38,6 +38,8 @@ export function handleWebSocketError(connection: WebSocket, error: unknown) {
     responsePayload.message = error.message;
     statusCode = 1011;
     logger.error({ statusCode, responsePayload, data: error.data }, 'WebSocket error');
+  } else {
+    logger.error({ statusCode, responsePayload, data: error }, 'WebSocket error');
   }
 
   connection.send(JSON.stringify(responsePayload));

@@ -26,6 +26,7 @@ const SRC_DIR = join(APP_DIR, 'src');
 
 async function main() {
   await redis.connect();
+  await redis.connectSubscriber();
   const apiServer = Fastify({
     logger: loggerOptions,
     ajv: {

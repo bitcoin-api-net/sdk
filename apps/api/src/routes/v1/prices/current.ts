@@ -6,6 +6,7 @@ import { Exchanges } from 'core/src/constants.js';
 import { pricesRepository } from 'core/src/repositories/prices.repository.js';
 import { validator } from 'lib/src/validation.js';
 import { sendJSON } from '#src/utils/websocket.js';
+import { pricesBroker } from 'core/src/brokers/prices.broker.js';
 
 export type RequestData = {
   symbol: Symbol;
@@ -56,6 +57,12 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       const price = await pricesRepository.getLastPrice(symbol, Exchanges.binance);
       const resp = { price: price.price.toString(), time: price.time.toISOString() };
       sendJSON(socket, resp, validateResponse);
+      const listener = await pricesBroker.subscribeToLastPrice(symbol, Exchanges.binance, (message) => {
+        sendJSON(socket, { price: message.price.toString(), time: message.time.toISOString() }, validateResponse);
+      });
+      socket.on('close', () => {
+        pricesBroker.unsubscribeFromLastPrice(symbol, Exchanges.binance, listener);
+      });
     },
   });
 }
