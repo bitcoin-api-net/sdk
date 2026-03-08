@@ -1,0 +1,66 @@
+---
+import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import IconGoogle from '@icons/IconGoogle.astro';
+import SignInForm from '@components/sign-in/SignInForm.vue';
+---
+
+<PublicPagesLayout title="Bitcoin API - Sign In">
+  <main class="flex flex-col items-center px-4 pt-16 pb-24">
+    <div class="text-center mb-10">
+      <h1 class="text-[30px] font-semibold font-['Sora'] tracking-tight mb-2">Sign in to your account</h1>
+      <p class="text-[#8F96A3] text-base">Welcome back to Bitcoin API</p>
+    </div>
+
+    <div class="w-full max-w-[440px] bg-white rounded-[14px] p-8 auth-card">
+      <button class="w-full h-11 flex items-center justify-center gap-3 border border-[#f3f4f6] rounded-xl hover:bg-gray-50 transition-colors mb-6">
+        <IconGoogle class="w-5 h-5" />
+        <span class="text-sm font-medium">Continue with Google</span>
+      </button>
+
+      <div class="divider-text mb-8">
+        OR CONTINUE WITH EMAIL
+      </div>
+
+      <SignInForm client:load />
+    </div>
+
+    <p class="mt-8 text-sm text-[#8F96A3]">
+      Don't have an account?
+      <a href="/authorization/sign-up" class="text-[#2563EB] font-medium hover:underline">Create account</a>
+    </p>
+  </main>
+</PublicPagesLayout>
+
+<style>
+  .auth-card {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f3f4f6;
+  }
+
+  .divider-text {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    color: #8F96A3;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .divider-text::before,
+  .divider-text::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .divider-text::before {
+    margin-right: 1rem;
+  }
+
+  .divider-text::after {
+    margin-left: 1rem;
+  }
+</style>

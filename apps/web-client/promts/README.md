@@ -12,11 +12,11 @@ Use prompts from this directory for different tasks.
 
 AI Mode: Plan
 Main Goal: Create exactly the same page in project from the source page.
-Source Page: apps/web-client/raw/Sign Up Page/index.html
-Destination Page: apps/web-client/src/pages/authorization/sign-up.astro
+Source Page: apps/web-client/raw/Sign In Page/index.html
+Destination Page: apps/web-client/src/pages/authorization/sign-in.astro
 Use rules: .cursor/rules/layout-creation.mdc
 Use base layout: apps/web-client/src/layouts/PublicPagesLayout.astro
 
-### If required vue island
+### If interactive island required
 
 Use Vue: Page has to be .astro but form have to be Vue component with reactivity
