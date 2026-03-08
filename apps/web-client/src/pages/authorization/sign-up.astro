@@ -1,0 +1,61 @@
+---
+import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import IconGoogle from '@icons/IconGoogle.astro';
+import SignUpForm from '@components/sign-up/SignUpForm.vue';
+---
+
+<PublicPagesLayout title="BitConnect - Sign Up">
+  <main class="flex-grow flex items-center justify-center py-16 px-4">
+    <div class="w-full max-w-[440px] bg-white rounded-[14px] border border-[#f3f4f6] shadow-sm p-10">
+      <h1 class="text-[28px] font-semibold text-[#181B20] leading-[35px] tracking-[-0.7px] mb-3">
+        Create your account
+      </h1>
+      <p class="text-[14px] text-[#8F96A3] leading-[23px] mb-8">
+        Get an API key and start building with public endpoints. Sign up quickly or use Google for a fast start.
+      </p>
+
+      <button class="w-full h-11 flex items-center justify-center gap-3 border border-[#dee1e6] rounded-[10px] hover:bg-gray-50 transition-colors mb-6">
+        <IconGoogle class="w-5 h-5" />
+        <span class="text-[14px] font-medium text-[#181B20]">Continue with Google</span>
+      </button>
+
+      <div class="divider-text flex items-center text-[12px] font-medium text-[#8F96A3] uppercase tracking-wider mb-8">
+        or continue with email
+      </div>
+
+      <SignUpForm client:load />
+
+      <div class="mt-8 text-center">
+        <p class="text-[14px] text-[#8F96A3]">
+          Already have an account?
+          <a href="/signin" class="text-[#0983FD] font-medium hover:underline">Log in</a>
+        </p>
+      </div>
+
+      <div class="mt-12 text-center">
+        <p class="text-[12px] text-[#8F96A3] leading-[20px]">
+          By creating an account, you agree to the
+          <a href="/terms" class="underline">Terms of Service</a> and
+          <a href="/privacy" class="underline">Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+  </main>
+</PublicPagesLayout>
+
+<style>
+  .divider-text::before,
+  .divider-text::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .divider-text::before {
+    margin-right: 1rem;
+  }
+
+  .divider-text::after {
+    margin-left: 1rem;
+  }
+</style>

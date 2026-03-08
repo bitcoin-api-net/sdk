@@ -4,9 +4,15 @@ Use prompts from this directory for different tasks.
 
 ## Visily AI -> Layout
 
+### Basic prompt
+
 AI Mode: Plan
 Main Goal: Create exactly the same page in project from the source page.
-Source Page: apps/web-client/raw/Pricing Page/index.html
-Destination Page: apps/web-client/src/pages/pricing/index.astro
+Source Page: apps/web-client/raw/Sign Up Page/index.html
+Destination Page: apps/web-client/src/pages/authorization/sign-up.astro
 Use rules: .cursor/rules/layout-creation.mdc
 Use base layout: apps/web-client/src/layouts/PublicPagesLayout.astro
+
+### If required vue island
+
+Use Vue: Page has to be .astro but form have to be Vue component with reactivity
