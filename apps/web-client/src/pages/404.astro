@@ -1,31 +1,21 @@
 ---
 import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
-import { getCollection, getEntry } from 'astro:content';
-import { getRelativeLocaleUrl } from 'astro:i18n';
-import { type Locale } from 'src/types';
-import { i18nService } from 'src/services/i18n';
-import assert from 'node:assert';
-
-const lang = Astro.currentLocale as Locale;
-const uiCollection = await getEntry('ui', lang);
-assert(uiCollection?.data, 'UI collection not found');
-const uiContent = uiCollection.data;
 ---
 
-<PublicPagesLayout title={uiContent.notFoundTitle} description={uiContent.notFoundDescription}>
+<PublicPagesLayout title="404 — Bitcoin API" description="Page not found. Return to Bitcoin API home.">
   <main class="page-404">
     <div class="container">
       <p class="page-404__code">404</p>
-      <h1 class="page-404__title">{uiContent.notFoundTitle}</h1>
+      <h1 class="page-404__title">404 — Bitcoin API</h1>
       <p class="page-404__text">
-        {uiContent.notFoundDescription}
+        Page not found. Return to Bitcoin API home.
       </p>
       <div class="page-404__actions">
-        <a href={getRelativeLocaleUrl(lang, '/')} class="btn btn--primary">
-          {uiContent.backToHome}
+        <a href="/" class="btn btn--primary">
+          Back to Home
           <span class="page-404__arrow">→</span>
         </a>
-        <a href={getRelativeLocaleUrl(lang, '/docs')} class="btn btn--secondary">{uiContent.viewDocs}</a>
+        <a href="/docs" class="btn btn--secondary">View Docs</a>
       </div>
     </div>
   </main>

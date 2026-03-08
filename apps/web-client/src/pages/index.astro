@@ -1,40 +1,25 @@
 ---
 import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
-import { i18nService } from '@services/i18n';
-import { getCollection } from 'astro:content';
-import { getRelativeLocaleUrl } from 'astro:i18n';
-import { type Locale } from 'src/types';
-
-export async function getStaticPaths() {
-  const collection = await getCollection('home');
-  return collection.map((item) => ({
-    params: { lang: i18nService.localeToPrefix(item.id) },
-    props: item,
-  }));
-}
-const lang = Astro.currentLocale as Locale;
-const page = Astro.props;
-const pageData = page.data;
 ---
 
-<PublicPagesLayout title={pageData.title} description={pageData.description}>
+<PublicPagesLayout title="Bitcoin API — Bitcoin API for Developers" description="Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.">
   <main>
     <section class="hero">
       <div class="container">
-        <span class="hero__badge">{pageData.theMostCompleteBitcoinAPI}</span>
+        <span class="hero__badge">⚡ The Most Complete Bitcoin API</span>
         <h1 class="hero__title">
-          {pageData.bitcoinAPIBuiltFor}
-          <span class="hero__title-accent">{pageData.developers}</span>
+          Bitcoin API Built for
+          <span class="hero__title-accent">Developers</span>
         </h1>
-        <p class="hero__description">{pageData.accessComprehensiveBitcoinDataWithTheMostComfortableAPI}</p>
+        <p class="hero__description">Access comprehensive Bitcoin data with the most comfortable API. Pay only for the endpoint groups you use. No hidden fees, no complexity.</p>
         <div class="hero__actions">
-          <a href={getRelativeLocaleUrl(lang, '/signup')} class="btn btn--primary">
-            {pageData.startBuilding}
+          <a href="/signup" class="btn btn--primary">
+            Start Building
             <span class="hero__arrow">→</span>
           </a>
-          <a href={getRelativeLocaleUrl(lang, '/docs')} class="btn btn--secondary">
+          <a href="/docs" class="btn btn--secondary">
             <span class="hero__code-icon">&lt;/&gt;</span>
-            {pageData.viewDocumentation}
+            View Documentation
           </a>
         </div>
       </div>
@@ -44,8 +29,8 @@ const pageData = page.data;
       <div class="container">
         <div class="stats__grid">
           <div class="stats__item">
-            <span class="stats__value">{pageData.uptime}</span>
-            <span class="stats__label">{pageData.responseTime}</span>
+            <span class="stats__value">99.9%</span>
+            <span class="stats__label">&lt;100ms</span>
           </div>
         </div>
       </div>
@@ -53,56 +38,55 @@ const pageData = page.data;
 
     <section class="why-choose">
       <div class="container">
-        <h2 class="why-choose__title">{pageData.whyChooseBitcoinAPI}</h2>
+        <h2 class="why-choose__title">Why Choose Bitcoin API?</h2>
         <ul class="why-choose__list">
-          <li class="why-choose__item">{pageData.convenientAPI}</li>
-          <li class="why-choose__item">{pageData.detailedEndpointDocumentation}</li>
-          <li class="why-choose__item">{pageData.wideVarietyOfData}</li>
-          <li class="why-choose__item">{pageData.payOnlyForEndpointGroupsYouNeed}</li>
-          <li class="why-choose__item">{pageData.mcpWithDocumentationForAI}</li>
+          <li class="why-choose__item">Convenient API</li>
+          <li class="why-choose__item">Detailed endpoint documentation</li>
+          <li class="why-choose__item">Wide variety of data</li>
+          <li class="why-choose__item">Pay only for endpoint groups you need</li>
+          <li class="why-choose__item">MCP with documentation for AI</li>
         </ul>
       </div>
     </section>
 
     <section class="quick-start">
       <div class="container">
-        <h2 class="section-title">{pageData.quickStart}</h2>
-        <p class="quick-start__text">{pageData.getBitcoinDataInSeconds}</p>
+        <h2 class="section-title">Quick Start</h2>
+        <p class="quick-start__text">Get Bitcoin data in seconds. Just add your API key and make a request.</p>
         <div class="quick-start__code">
-          <pre><code>{pageData.curlExample}</code></pre>
+          <pre><code>curl -X GET "https://api.bitcoin-api.net/v1/blocks/latest" \
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
         </div>
       </div>
     </section>
 
     <section class="endpoints">
       <div class="container">
-        <h2 class="section-title">{pageData.apiEndpoints}</h2>
-        <p class="endpoints__intro">{pageData.comprehensiveDataAcrossTheBitcoinEcosystem}</p>
+        <h2 class="section-title">API Endpoints</h2>
+        <p class="endpoints__intro">Comprehensive data across the Bitcoin ecosystem.</p>
         <ul class="endpoints__list">
-          {
-            <li>
-              <strong>{pageData.blocks}</strong> — {pageData.latestBlocksBlockDetailsOrphanBlocks}
-            </li>
-            <li>
-              <strong>{pageData.mempool}</strong> — {pageData.unconfirmedTransactionsFees}
-            </li>
-            <li>
-              <strong>{pageData.addresses}</strong> — {pageData.balanceHistoryUtxos}
-            </li>
-            <li>
-              <strong>{pageData.transactions}</strong> — {pageData.decodeBroadcastFeeEstimates}
-            </li>
-          }
+          <li>
+            <strong>Blocks</strong> — Latest blocks, block details, orphan blocks
+          </li>
+          <li>
+            <strong>Mempool</strong> — Unconfirmed transactions, fees
+          </li>
+          <li>
+            <strong>Addresses</strong> — Balance, history, UTXOs
+          </li>
+          <li>
+            <strong>Transactions</strong> — Decode, broadcast, fee estimates
+          </li>
         </ul>
       </div>
     </section>
 
     <section class="cta">
       <div class="container">
-        <h2 class="cta__title">{pageData.readyToBuild}</h2>
-        <p class="cta__text">{pageData.startWithAFreeApiKey}</p>
-        <a href={getRelativeLocaleUrl(lang, '/signup')} class="btn btn--primary">
-          {pageData.getYourApiKey}
+        <h2 class="cta__title">Ready to build?</h2>
+        <p class="cta__text">Start with a free API key. No credit card required.</p>
+        <a href="/signup" class="btn btn--primary">
+          Get Your API Key
           <span class="hero__arrow">→</span>
         </a>
       </div>

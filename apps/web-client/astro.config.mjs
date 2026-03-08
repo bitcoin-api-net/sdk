@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 import vue from '@astrojs/vue';
 import { defineConfig } from 'astro/config';
 import { loadEnv } from 'vite';
-import { Locales } from './src/constants';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_DIR = path.resolve(__dirname).split(path.sep).slice(0, -2).join(path.sep);
@@ -17,14 +16,6 @@ export default defineConfig({
   // Enable Vue to support Vue components.
   integrations: [vue()],
   site: SITE_URL,
-  i18n: {
-    locales: Object.values(Locales),
-    defaultLocale: Locales.en,
-    routing: {
-      prefixDefaultLocale: false,
-      fallbackType: 'redirect',
-    },
-  },
   vite: {
     resolve: {
       alias: {
@@ -32,7 +23,6 @@ export default defineConfig({
         '@components': path.resolve(__dirname, 'src/components'),
         '@layouts': path.resolve(__dirname, 'src/layouts'),
         '@services': path.resolve(__dirname, 'src/services'),
-        '@content': path.resolve(__dirname, 'src/content'),
       },
     },
   },

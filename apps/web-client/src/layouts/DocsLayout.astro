@@ -1,14 +1,5 @@
 ---
 import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
-import { getEntry } from 'astro:content';
-import { getRelativeLocaleUrl } from 'astro:i18n';
-import { type Locale } from 'src/types';
-import assert from 'node:assert';
-
-const lang = Astro.currentLocale as Locale;
-const uiCollection = await getEntry('ui', lang);
-assert(uiCollection?.data, 'UI collection not found');
-const uiContent = uiCollection.data;
 
 const currentPath = Astro.url.pathname.replace(/\/$/, '');
 
@@ -20,7 +11,10 @@ const docGroups = [
 ] as const;
 ---
 
-<PublicPagesLayout title={uiContent.defaultTitle} description={uiContent.defaultDescription}>
+<PublicPagesLayout
+  title="Bitcoin API"
+  description="Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees."
+>
   <div class="docs-layout">
     <aside class="docs-layout__sidebar">
       <nav class="docs-nav">
@@ -35,7 +29,7 @@ const docGroups = [
         <ul class="docs-nav__list">
           {
             docGroups.map((group) => {
-              const linkHrefs = group.links.map((l) => getRelativeLocaleUrl(lang, l.href).replace(/\/$/, ''));
+              const linkHrefs = group.links.map((l) => l.href.replace(/\/$/, ''));
               const groupHasActive = linkHrefs.includes(currentPath);
 
               return (
@@ -44,7 +38,7 @@ const docGroups = [
                     <summary class="docs-nav__summary">{group.title}</summary>
                     <ul class="docs-nav__links">
                       {group.links.map((link) => {
-                        const href = getRelativeLocaleUrl(lang, link.href);
+                        const href = link.href;
                         const isActive = href.replace(/\/$/, '') === currentPath;
                         return (
                           <li>
@@ -249,7 +243,7 @@ const docGroups = [
     border-left-color: var(--color-accent);
   }
 
-  .docs-toc__list :global(a[data-level="3"]) {
+  .docs-toc__list :global(a[data-level='3']) {
     padding-left: 1.5rem;
   }
 
@@ -308,8 +302,8 @@ const docGroups = [
 
     for (const heading of headings) {
       if (!heading.id) {
-        heading.id = heading.textContent!
-          .trim()
+        heading.id = heading
+          .textContent!.trim()
           .toLowerCase()
           .replace(/[^\w\s-]/g, '')
           .replace(/\s+/g, '-');
@@ -336,7 +330,7 @@ const docGroups = [
           }
         }
       },
-      { rootMargin: '0px 0px -70% 0px', threshold: 0.1 },
+      { rootMargin: '0px 0px -70% 0px', threshold: 0.1 }
     );
 
     headings.forEach((h) => observer.observe(h));
