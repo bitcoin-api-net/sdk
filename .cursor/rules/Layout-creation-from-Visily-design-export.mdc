@@ -6,6 +6,8 @@ alwaysApply: false
 
 If Tailwind library not installed already, install it according to https://docs.astro.build/en/guides/styling/#tailwind
 
+Global styles in src/styles/global.css must be wrapped in @layer to not override Tailwind styles.
+
 ## SVG
 
 Inline svg icons have to be extracted to src/incos as .astro components and imported on the page.
