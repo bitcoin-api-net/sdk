@@ -10,7 +10,7 @@ Global styles in src/styles/global.css must be wrapped in @layer to not override
 
 ## SVG
 
-Inline svg icons have to be extracted to src/incos as .astro components and imported on the page.
+Inline svg icons have to be extracted to src/icons as .astro components and imported on the page.
 Guide for svg: https://docs.astro.build/en/guides/images/#svg-components
 
 ## Directories structure and imports
@@ -21,3 +21,11 @@ Guide for svg: https://docs.astro.build/en/guides/images/#svg-components
 - src/pages/ - Separate pages on the site
 - src/styles/ - Global styles
   - src/styles/<page_name> - Pages styles when styles on the page are over 200 lines of code
+
+## Base Layout
+
+If base layout included in prompt then skip existing in layout parts on the destination page.
+
+## Verification
+
+Verify in IDE browser that destination is exactly the same with source
