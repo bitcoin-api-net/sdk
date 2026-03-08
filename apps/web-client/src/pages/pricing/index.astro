@@ -1,0 +1,409 @@
+---
+import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import IconArrowRight from '@icons/IconArrowRight.astro';
+import IconGlobe from '@icons/IconGlobe.astro';
+import IconBolt from '@icons/IconBolt.astro';
+import IconShield from '@icons/IconShield.astro';
+import IconCheck from '@icons/IconCheck.astro';
+import IconServerRack from '@icons/IconServerRack.astro';
+import IconActivity from '@icons/IconActivity.astro';
+import IconKey from '@icons/IconKey.astro';
+import IconChevronRight from '@icons/IconChevronRight.astro';
+---
+
+<PublicPagesLayout title="Bitcoin API - Pricing">
+  <main>
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden hero-gradient pt-16 pb-24 lg:pt-32 lg:pb-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="z-10">
+          <div class="inline-flex items-center px-3 py-1 rounded-full bg-[#F1F5FE] border border-[#2463EB]/20 text-[#2463EB] text-sm font-medium mb-6">
+            Pricing Overview
+          </div>
+          <h1 class="text-5xl lg:text-6xl font-extrabold tracking-tight mb-6">
+            Pricing for Bitcoin API
+          </h1>
+          <p class="text-xl text-[#8D95A5] leading-relaxed mb-10 max-w-lg">
+            Start for free with public endpoints. Increase throughput per-endpoint with Rate Boost or request custom enterprise endpoints with SLAs.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="/signup" class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium shadow-md hover:bg-blue-600 flex items-center justify-center gap-2">
+              Get API Key
+              <IconArrowRight class="w-4 h-4" />
+            </a>
+            <a href="/docs" class="bg-white text-[#171A21] border border-[#DEE1E7] px-8 py-4 rounded-xl font-medium hover:bg-gray-50 text-center">
+              Read Documentation
+            </a>
+          </div>
+        </div>
+
+        <!-- Hero Visual -->
+        <div class="relative hidden lg:block h-[500px]">
+          <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-[#F1F5FE] rounded-full blur-[64px] opacity-50 -translate-y-1/2 translate-x-1/4"></div>
+
+          <div class="absolute top-10 right-0 w-64 h-72 bg-[#F9FAFB]/60 rounded-2xl border border-[#F3F4F7] shadow-lg backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+            <IconShield class="w-12 h-12 text-[#8D95A5]" />
+            <div class="w-24 h-2 bg-[#F3F4F7] rounded-full"></div>
+            <div class="w-16 h-2 bg-[#F3F4F7] rounded-full"></div>
+          </div>
+
+          <div class="absolute top-20 right-48 w-72 h-80 bg-[#F1F5FE]/50 rounded-2xl border border-[#2463EB]/20 shadow-xl backdrop-blur-md flex flex-col items-center justify-center gap-4">
+            <IconBolt class="w-14 h-14 text-[#2463EB]/60" />
+            <div class="w-32 h-3 bg-[#2463EB]/20 rounded-full"></div>
+            <div class="w-20 h-2 bg-[#2463EB]/10 rounded-full"></div>
+          </div>
+
+          <div class="absolute top-32 right-24 w-80 h-80 bg-white rounded-2xl border border-[#F3F4F7] shadow-2xl p-8">
+            <IconGlobe class="w-12 h-12 text-[#2463EB] mb-6" />
+            <h3 class="text-xl font-bold mb-2">Public API</h3>
+            <p class="text-sm text-[#8D95A5] mb-8">Free access to all endpoints. Instant key.</p>
+            <div class="bg-[#F9FAFB] border border-[#F3F4F7] rounded-lg p-3">
+              <span class="text-xs text-[#8D95A5]">Status: Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Overview -->
+    <section class="bg-[#F9FAFB] py-20 border-y border-[#F3F4F7]/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div class="flex flex-col gap-4">
+            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-[#F3F4F7] flex items-center justify-center">
+              <IconGlobe class="w-6 h-6 text-[#2463EB]" />
+            </div>
+            <h3 class="text-lg font-bold">Public API (Free)</h3>
+            <p class="text-[#8D95A5] leading-relaxed">All endpoints are publicly accessible and free to use.</p>
+          </div>
+          <div class="flex flex-col gap-4">
+            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-[#F3F4F7] flex items-center justify-center">
+              <IconBolt class="w-6 h-6 text-[#2463EB]" />
+            </div>
+            <h3 class="text-lg font-bold">Rate Boost</h3>
+            <p class="text-[#8D95A5] leading-relaxed">Purchase higher rate limits for any endpoint; pay only for the endpoints you need.</p>
+          </div>
+          <div class="flex flex-col gap-4">
+            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-[#F3F4F7] flex items-center justify-center">
+              <IconShield class="w-6 h-6 text-[#2463EB]" />
+            </div>
+            <h3 class="text-lg font-bold">Enterprise</h3>
+            <p class="text-[#8D95A5] leading-relaxed">Custom endpoints, dedicated rate limits and SLAs. Save developer time — order what you need.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Tiers -->
+    <section class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl font-bold mb-4">Choose your scale</h2>
+          <p class="text-lg text-[#8D95A5]">Transparent pricing designed to grow with your application's needs.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-end">
+          <!-- Public API Card -->
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-sm p-8 flex flex-col h-full">
+            <div class="mb-8">
+              <h3 class="text-2xl font-bold mb-2">Public API <span class="text-lg font-normal text-[#8D95A5]">(Free)</span></h3>
+              <p class="text-sm text-[#8D95A5] mb-6">Perfect for testing, prototyping, and low-volume applications.</p>
+              <div class="flex items-baseline gap-1">
+                <span class="text-3xl font-bold">$0</span>
+                <span class="text-[#8D95A5]">/mo</span>
+              </div>
+            </div>
+            <div class="border-t border-[#F3F4F7] pt-8 mb-10 space-y-4 flex-grow">
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">Free access to all endpoints</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">Instant API key</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">Usage subject to default rate limits</span>
+              </div>
+            </div>
+            <a href="/signup" class="w-full bg-[#5189FB] text-white py-3 rounded-xl font-medium shadow-sm hover:bg-blue-600 flex items-center justify-center gap-2">
+              Get API Key
+              <IconArrowRight class="w-5 h-5" />
+            </a>
+          </div>
+
+          <!-- Rate Boost Card (Featured) -->
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-xl relative overflow-hidden flex flex-col h-full transform lg:scale-105 z-10">
+            <div class="h-1.5 bg-[#2463EB] w-full"></div>
+            <div class="p-8 bg-[#F9FAFB]/30 border-b border-[#F3F4F7]">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="text-2xl font-bold">Rate Boost</h3>
+                <span class="bg-[#F1F5FE] text-[#2463EB] text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
+              </div>
+              <p class="text-sm text-[#8D95A5] mb-6">Scale specific endpoints precisely when you need more throughput.</p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-lg font-medium text-[#8D95A5]">Pay per</span>
+                <span class="text-2xl font-bold">Endpoint</span>
+              </div>
+            </div>
+            <div class="p-8 space-y-4 flex-grow">
+              <div class="flex items-start gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB] mt-0.5" />
+                <span class="text-sm font-medium">Buy increased monthly rate limits for any endpoint</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">No code changes required</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">Pay monthly for chosen limits</span>
+              </div>
+            </div>
+            <div class="p-8 pt-0">
+              <button class="w-full bg-white text-[#323743] border border-[#323743] py-3 rounded-xl font-medium hover:bg-gray-50">
+                Read Rate Boost Docs
+              </button>
+            </div>
+          </div>
+
+          <!-- Enterprise Card -->
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-sm p-8 flex flex-col h-full">
+            <div class="mb-8">
+              <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
+              <p class="text-sm text-[#8D95A5] mb-6">Custom solutions for high-volume, mission-critical operations.</p>
+              <div class="text-3xl font-bold">Custom</div>
+            </div>
+            <div class="border-t border-[#F3F4F7] pt-8 mb-10 space-y-4 flex-grow">
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">Custom endpoints</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">Dedicated rate limits</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">SLAs and uptime guarantees</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <IconCheck class="w-5 h-5 text-[#2463EB]" />
+                <span class="text-sm">Priority support</span>
+              </div>
+            </div>
+            <button class="w-full bg-white text-[#171A21] border border-[#DEE1E7] py-3 rounded-full font-medium hover:bg-gray-50">
+              Contact Sales
+            </button>
+          </div>
+        </div>
+        <p class="text-center text-sm text-[#8D95A5] mt-12">All Rate Boost purchases are billed monthly and applied per-endpoint.</p>
+      </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="bg-[#F9FAFB] py-24 border-y border-[#F3F4F7]/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <div class="inline-flex items-center px-3 py-1 rounded-full border border-[#F3F4F7] text-[#171A21] text-[10px] font-bold uppercase tracking-wider mb-6">
+            Flexible Scaling
+          </div>
+          <h2 class="text-3xl font-bold mb-4">Rate Boost — How it works</h2>
+          <p class="text-lg text-[#8D95A5] max-w-2xl mx-auto">
+            Increase Rate Limit directly on any endpoint page — choose the endpoint, select a monthly limit, and pay only for what you need.
+          </p>
+        </div>
+
+        <div class="relative grid grid-cols-1 md:grid-cols-3 gap-12">
+          <!-- Step 1 -->
+          <div class="flex flex-col items-center text-center relative">
+            <div class="step-line hidden md:block"></div>
+            <div class="w-24 h-24 bg-white rounded-full shadow-md border-4 border-[#F9FAFB] flex items-center justify-center mb-8 z-10">
+              <IconServerRack class="w-10 h-10 text-[#0983FD]" />
+            </div>
+            <div class="w-8 h-8 bg-[#0983FD] text-white rounded-full flex items-center justify-center font-bold text-sm mb-4">1</div>
+            <h3 class="text-lg font-bold mb-2">Find endpoint</h3>
+            <p class="text-sm text-[#8D95A5] max-w-[200px]">Navigate to the specific documentation page for the data you need.</p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex flex-col items-center text-center relative">
+            <div class="step-line hidden md:block"></div>
+            <div class="w-24 h-24 bg-white rounded-full shadow-md border-4 border-[#F9FAFB] flex items-center justify-center mb-8 z-10">
+              <IconActivity class="w-10 h-10 text-[#2463EB]" />
+            </div>
+            <div class="w-8 h-8 bg-[#0983FD] text-white rounded-full flex items-center justify-center font-bold text-sm mb-4">2</div>
+            <h3 class="text-lg font-bold mb-2">Click "Increase Limit"</h3>
+            <p class="text-sm text-[#8D95A5] max-w-[200px]">Find the boost button directly on the endpoint documentation.</p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="flex flex-col items-center text-center relative">
+            <div class="w-24 h-24 bg-white rounded-full shadow-md border-4 border-[#F9FAFB] flex items-center justify-center mb-8 z-10">
+              <IconKey class="w-10 h-10 text-[#0983FD]" />
+            </div>
+            <div class="w-8 h-8 bg-[#0983FD] text-white rounded-full flex items-center justify-center font-bold text-sm mb-4">3</div>
+            <h3 class="text-lg font-bold mb-2">Select & Pay</h3>
+            <p class="text-sm text-[#8D95A5] max-w-[200px]">Choose your required monthly limit and complete the purchase.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enterprise Section -->
+    <section class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F9FAFB] border border-[#F3F4F7] text-[#171A21] text-sm font-medium mb-6">
+            <IconShield class="w-4 h-4 text-[#2463EB]" />
+            For High-Volume Teams
+          </div>
+          <h2 class="text-4xl font-bold mb-8">Enterprise — Custom endpoints & SLAs</h2>
+          <p class="text-lg text-[#8D95A5] leading-relaxed mb-10">
+            We build dedicated endpoints and provide guaranteed throughput, priority support, and custom contracts. Stop wasting developer time piecing together standard data—request exactly the structure and volume your application needs.
+          </p>
+          <ul class="space-y-4 mb-10">
+            <li class="flex items-center gap-3">
+              <div class="w-6 h-6 bg-[#F1F5FE] rounded-full flex items-center justify-center">
+                <IconCheck class="w-4 h-4 text-[#2463EB]" />
+              </div>
+              <span class="font-medium">Custom data aggregation</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <div class="w-6 h-6 bg-[#F1F5FE] rounded-full flex items-center justify-center">
+                <IconCheck class="w-4 h-4 text-[#2463EB]" />
+              </div>
+              <span class="font-medium">Dedicated infrastructure</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <div class="w-6 h-6 bg-[#F1F5FE] rounded-full flex items-center justify-center">
+                <IconCheck class="w-4 h-4 text-[#2463EB]" />
+              </div>
+              <span class="font-medium">Account management & technical support</span>
+            </li>
+          </ul>
+          <button class="bg-[#0983FD] text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-600 flex items-center gap-2">
+            Contact Sales
+            <IconChevronRight class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div class="bg-[#F9FAFB] p-8 lg:p-12 rounded-2xl border border-[#F3F4F7] shadow-sm">
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-md overflow-hidden">
+            <div class="p-6 border-b border-[#F3F4F7]">
+              <h3 class="text-xl font-semibold mb-1">Enterprise Inquiry</h3>
+              <p class="text-sm text-[#8D95A5]">Tell us about your requirements and expected volume.</p>
+            </div>
+            <form class="p-6 space-y-6">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2">Name</label>
+                  <input type="text" value="Alex Smith" class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Company</label>
+                  <input type="text" value="TechFlow Inc." class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Work Email</label>
+                <input type="email" value="alex@techflow.inc" class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Brief description of needs</label>
+                <textarea rows="4" class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none">We need a custom websocket endpoint for aggregated order book data across 5 exchanges...</textarea>
+              </div>
+              <div class="flex items-center justify-end gap-4 pt-4 border-t border-[#F3F4F7]">
+                <button type="button" class="text-sm font-medium px-4 py-2 hover:bg-gray-50 rounded-lg">Cancel</button>
+                <button type="submit" class="bg-[#0983FD] text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-600">Submit Request</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="bg-[#F9FAFB] py-24 border-t border-[#F3F4F7]/50">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold mb-4">Billing & FAQ</h2>
+          <p class="text-lg text-[#8D95A5]">Common questions about our pricing model.</p>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white p-8 rounded-2xl border border-[#F3F4F7] shadow-sm">
+            <div class="flex gap-4">
+              <span class="text-lg font-medium text-[#2463EB]">Q.</span>
+              <div>
+                <h4 class="text-lg font-bold mb-3">Are public endpoints really free?</h4>
+                <p class="text-[#8D95A5] leading-relaxed">Yes. Public endpoints are free to access. However, they are subject to default rate limits to ensure fair usage across all users. Use Rate Boost if you need higher guaranteed throughput for specific endpoints.</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-8 rounded-2xl border border-[#F3F4F7] shadow-sm">
+            <div class="flex gap-4">
+              <span class="text-lg font-medium text-[#2463EB]">Q.</span>
+              <div>
+                <h4 class="text-lg font-bold mb-3">How is Rate Boost billed?</h4>
+                <p class="text-[#8D95A5] leading-relaxed">Rate Boosts are billed monthly. The cost is applied per-endpoint, meaning you only pay to increase the capacity of the exact endpoints your application heavily relies on, rather than upgrading to a generic, expensive global tier.</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-8 rounded-2xl border border-[#F3F4F7] shadow-sm">
+            <div class="flex gap-4">
+              <span class="text-lg font-medium text-[#2463EB]">Q.</span>
+              <div>
+                <h4 class="text-lg font-bold mb-3">Can I get invoices for my purchases?</h4>
+                <p class="text-[#8D95A5] leading-relaxed">Yes, detailed invoices are available in your account dashboard for all paid plans and individual Rate Boost purchases.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="relative bg-[#171A21] py-24 overflow-hidden">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[#5189FB]/20 rounded-full blur-[100px]"></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h2 class="text-5xl font-extrabold text-white mb-6 tracking-tight">Ready to get started?</h2>
+        <p class="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
+          Join thousands of developers building the next generation of Bitcoin applications with our robust infrastructure.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/signup" class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium shadow-lg hover:bg-blue-600">
+            Get API Key
+          </a>
+          <button class="bg-transparent text-white border border-white px-10 py-4 rounded-xl font-medium hover:bg-white/10">
+            Contact Sales
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+</PublicPagesLayout>
+
+<style lang="scss">
+  .hero-gradient {
+    background: radial-gradient(circle at 50% -20%, #eff6ff 0%, #ffffff 100%);
+  }
+
+  .step-line::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 100%;
+    height: 2px;
+    background: #F3F4F7;
+    z-index: -1;
+  }
+
+  @media (max-width: 768px) {
+    .step-line::after {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitcoin API - Pricing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@3.0.2/dist/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap" type="text/css" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      color: #171A21;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      scroll-behavior: smooth;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+      color: #171A21;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .text-balance {
+      text-wrap: balance;
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .hero-gradient {
+      background: radial-gradient(circle at 50% -20%, #eff6ff 0%, #ffffff 100%);
+    }
+
+    .footer-dark-gradient {
+      background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 100%);
+    }
+
+    .step-line::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      width: 100%;
+      height: 2px;
+      background: #F3F4F7;
+      z-index: -1;
+    }
+
+    @media (max-width: 768px) {
+      .step-line::after {
+        display: none;
+      }
+    }
+
+    ::selection {
+      background-color: #bfdbfe;
+      color: #1e40af;
+    }
+
+    a, button, input, select, textarea {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    :focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="bg-white">
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-[#dee1e6]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-[#0983FD] rounded-md flex items-center justify-center">
+          <svg data-svg-id="SVG_1" class="w-[22px] h-[22px] text-white">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.92 0 0 0.92 10.63 10.86)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-11.6, -11.85)" d="M 9.64417 2.36352 C 9.78218 1.87583 10.27 1.56267 10.7799 1.65258 C 11.3236 1.74864 11.6864 2.267 11.5905 2.81079 L 11.4166 3.79614 L 13.3864 4.14379 L 13.5612 3.15844 C 13.6572 2.61458 14.1765 2.25085 14.7203 2.34692 C 15.264 2.44315 15.6269 2.96235 15.5309 3.5061 L 15.3414 4.57446 C 16.3357 4.93464 17.1006 5.54442 17.6119 6.31372 C 18.2686 7.30173 18.4625 8.48276 18.2701 9.57348 C 18.0778 10.6642 17.4917 11.7075 16.5368 12.4114 C 16.3756 12.5301 16.2048 12.6359 16.027 12.7317 C 16.1612 12.8825 16.2854 13.0406 16.3961 13.2073 C 17.0525 14.1953 17.2448 15.3764 17.0524 16.467 C 16.86 17.5577 16.2748 18.6011 15.32 19.3049 C 14.5768 19.8527 13.6502 20.1635 12.5934 20.1623 L 12.4059 21.2317 L 12.3834 21.3313 C 12.246 21.8194 11.7578 22.1338 11.2477 22.0442 C 10.7039 21.9485 10.3406 21.4299 10.4362 20.886 L 10.609 19.8997 L 8.63734 19.552 L 8.46449 20.5373 L 7.48011 20.3635 L 6.49476 20.1907 L 6.66859 19.2043 L 5.68616 19.0315 L 5.58656 19.009 C 5.09881 18.871 4.78567 18.3832 4.87562 17.8733 C 4.97157 17.3294 5.48994 16.9658 6.03382 17.0618 L 7.01527 17.2346 L 9.09925 5.41723 L 8.11585 5.24438 L 8.01624 5.22192 C 7.5287 5.08381 7.21541 4.59598 7.30531 4.08618 C 7.39527 3.57638 7.85654 3.22585 8.36195 3.26293 L 8.46351 3.27563 L 9.44593 3.44848 L 9.62074 2.46313 L 9.64417 2.36352 Z M 8.46449 20.5373 C 8.36857 21.0812 7.85018 21.4448 7.30628 21.3489 C 6.76255 21.253 6.39912 20.7344 6.49476 20.1907 L 8.46449 20.5373 Z M 8.98499 17.5823 L 11.941 18.1038 L 12.1227 18.1321 C 13.0159 18.2496 13.6745 18.0338 14.1334 17.6956 C 14.6376 17.324 14.972 16.752 15.0836 16.1194 C 15.1951 15.4868 15.0766 14.8353 14.7301 14.3137 C 14.4146 13.839 13.8694 13.4112 12.9899 13.2161 L 12.8092 13.1799 L 12.8063 13.179 L 9.85316 12.6584 L 8.98499 17.5823 Z M 10.2008 10.6887 L 13.1578 11.2102 L 13.3395 11.2385 C 14.2328 11.3563 14.8914 11.1401 15.3502 10.802 C 15.8543 10.4305 16.1889 9.85846 16.3004 9.22583 C 16.4118 8.59347 16.2933 7.94252 15.9469 7.42114 C 15.6104 6.91477 15.0126 6.46036 14.026 6.28637 L 14.0241 6.28637 C 14.0227 6.28614 14.0215 6.28563 14.0201 6.2854 L 11.069 5.76489 L 10.2008 10.6887 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+        </div>
+        <span class="text-xl font-bold text-[#0983FD]">Bitcoin API</span>
+      </div>
+      
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#" class="text-sm font-medium text-[#565d6d] hover:text-[#0983FD]">Products</a>
+        <a href="#" class="text-sm font-medium text-[#565d6d] hover:text-[#0983FD]">Documentation</a>
+        <a href="#" class="text-sm font-medium text-[#565d6d] hover:text-[#0983FD]">Pricing</a>
+      </nav>
+
+      <div class="flex items-center gap-6">
+        <a href="#" class="hidden sm:block text-sm font-medium text-[#565d6d] hover:text-[#0983FD]">Log in</a>
+        <button class="bg-[#0983FD] text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:bg-blue-600">
+          Get Started
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="pt-20">
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden hero-gradient pt-16 pb-24 lg:pt-32 lg:pb-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="z-10">
+          <div class="inline-flex items-center px-3 py-1 rounded-full bg-[#F1F5FE] border border-[#2463EB]/20 text-[#2463EB] text-sm font-medium mb-6">
+            Pricing Overview
+          </div>
+          <h1 class="text-5xl lg:text-6xl font-extrabold tracking-tight mb-6">
+            Pricing for Bitcoin API
+          </h1>
+          <p class="text-xl text-[#8D95A5] leading-relaxed mb-10 max-w-lg">
+            Start for free with public endpoints. Increase throughput per-endpoint with Rate Boost or request custom enterprise endpoints with SLAs.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium shadow-md hover:bg-blue-600 flex items-center justify-center gap-2">
+              Get API Key
+              <svg data-svg-id="SVG_5" class="w-4 h-4">
+            <g transform="matrix(1 0 0 1 0 0)">
+              <g style="">
+                <g transform="matrix(0.67 0 0 0.67 8 8)">
+                  <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 19 11 C 19.5523 11 20 11.4477 20 12 C 20 12.5523 19.5523 13 19 13 L 5 13 C 4.44772 13 4 12.5523 4 12 C 4 11.4477 4.44772 11 5 11 L 19 11 Z" stroke-linecap="round" />
+                </g>
+                <g transform="matrix(0.67 0 0 0.67 10.33 8)">
+                  <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-15.5, -12)" d="M 11.293 4.29297 C 11.6591 3.92685 12.2381 3.90426 12.6309 4.22461 L 12.7071 4.29297 L 19.7071 11.293 C 20.0976 11.6835 20.0976 12.3165 19.7071 12.707 L 12.7071 19.707 C 12.3166 20.0976 11.6835 20.0976 11.293 19.707 C 10.9025 19.3165 10.9025 18.6835 11.293 18.293 L 17.586 12 L 11.293 5.70703 L 11.2247 5.63086 C 10.9043 5.23809 10.9269 4.65909 11.293 4.29297 Z" stroke-linecap="round" />
+                </g>
+              </g>
+            </g>
+          </svg>
+            </button>
+            <button class="bg-white text-[#171A21] border border-[#DEE1E7] px-8 py-4 rounded-xl font-medium hover:bg-gray-50">
+              Read Documentation
+            </button>
+          </div>
+        </div>
+
+        <!-- Hero Visual -->
+        <div class="relative hidden lg:block h-[500px]">
+          <!-- Decorative background elements -->
+          <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-[#F1F5FE] rounded-full blur-[64px] opacity-50 -translate-y-1/2 translate-x-1/4"></div>
+          
+          <!-- Floating Cards -->
+          <div class="absolute top-10 right-0 w-64 h-72 bg-[#F9FAFB]/60 rounded-2xl border border-[#F3F4F7] shadow-lg backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+            <svg data-svg-id="SVG_2" class="w-12 h-12 text-[#8D95A5]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(2 0 0 2 24 24)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(141,149,165); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 19 5.99955 C 16.6805 5.99955 13.9706 4.66296 12.1104 3.03959 L 12.1104 3.04057 C 12.0796 3.01427 12.0405 2.99955 12 2.99955 C 11.9595 2.99955 11.9204 3.01427 11.8896 3.04057 L 11.8887 3.03959 C 10.0971 4.60157 7.48931 5.91506 5.21875 5.99564 L 5 5.99955 L 5 12.9996 L 5.00879 13.4117 C 5.09782 15.4371 5.8465 16.9384 6.98633 18.106 C 8.07404 19.22 9.55305 20.0641 11.2539 20.7232 L 11.9961 20.9947 L 12.0186 21.0015 C 14.0236 20.3018 15.7728 19.381 17.0137 18.1079 C 18.229 16.861 19 15.2354 19 12.9996 L 19 5.99955 Z M 21 12.9996 C 21 15.7637 20.021 17.8888 18.4463 19.5044 C 16.8988 21.0921 14.8204 22.1442 12.6689 22.8941 L 12.6611 22.897 C 12.233 23.0421 11.7688 23.0369 11.3438 22.8843 L 11.3438 22.8853 C 11.3379 22.8833 11.3321 22.8805 11.3262 22.8785 C 11.3246 22.8779 11.3228 22.8781 11.3213 22.8775 L 11.3213 22.8765 C 9.17204 22.132 7.09956 21.0847 5.55566 19.5035 C 4.07782 17.9898 3.12517 16.0279 3.01172 13.5113 L 3 12.9996 L 3 5.99955 C 3.00012 5.46928 3.21097 4.96045 3.58594 4.58549 C 3.96099 4.21056 4.46967 3.99955 5 3.99955 L 5.32129 3.98783 C 6.95847 3.86731 9.05353 2.86212 10.582 1.52689 L 10.5908 1.52006 L 10.7422 1.40092 C 11.1082 1.1406 11.5477 0.99955 12 0.99955 C 12.4523 0.99955 12.8918 1.1406 13.2578 1.40092 L 13.4092 1.52006 L 13.418 1.52689 L 13.7324 1.79154 C 15.3383 3.0868 17.4277 3.99955 19 3.99955 C 19.5303 3.99955 20.039 4.21056 20.4141 4.58549 C 20.789 4.96046 20.9999 5.46928 21 5.99955 L 21 12.9996 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            <div class="w-24 h-2 bg-[#F3F4F7] rounded-full"></div>
+            <div class="w-16 h-2 bg-[#F3F4F7] rounded-full"></div>
+          </div>
+
+          <div class="absolute top-20 right-48 w-72 h-80 bg-[#F1F5FE]/50 rounded-2xl border border-[#2463EB]/20 shadow-xl backdrop-blur-md flex flex-col items-center justify-center gap-4">
+            <svg data-svg-id="SVG_3" class="w-14 h-14 text-[#2463EB]/60">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(2.33 0 0 2.33 28 28)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 13.3511 1.00426 C 13.6035 0.979434 13.8584 1.01916 14.0913 1.11949 L 14.2056 1.17516 L 14.315 1.23961 C 14.5276 1.37773 14.7014 1.56768 14.8208 1.79137 L 14.8765 1.90563 L 14.9214 2.02477 C 15.0012 2.26511 15.0193 2.52186 14.9732 2.77086 L 14.9439 2.89488 C 14.9403 2.90782 14.9372 2.92116 14.9331 2.93395 L 13.0132 8.95348 L 12.9966 9.00035 L 19.9995 9.00035 C 20.377 8.99962 20.7472 9.10533 21.0669 9.30602 C 21.3874 9.50722 21.6438 9.79572 21.8072 10.1371 C 21.9705 10.4784 22.0342 10.8589 21.9898 11.2347 C 21.9509 11.5635 21.8311 11.8768 21.6421 12.1468 L 21.5562 12.2601 L 21.4976 12.3265 L 11.5972 22.5267 L 11.5962 22.5257 C 11.3775 22.7596 11.0908 22.9195 10.7749 22.9779 C 10.4404 23.0398 10.0945 22.986 9.79446 22.8255 C 9.49446 22.6651 9.25781 22.4067 9.12356 22.0941 C 8.98947 21.7816 8.96599 21.4328 9.05618 21.1048 L 9.06692 21.0658 L 10.9868 15.0463 L 11.0034 15.0004 L 3.99954 15.0004 L 3.99954 14.9994 C 3.62242 14.9999 3.25259 14.8942 2.93313 14.6937 C 2.61282 14.4926 2.35623 14.2048 2.1929 13.8636 C 2.02953 13.5222 1.96587 13.1409 2.01028 12.765 C 2.05474 12.3893 2.2055 12.0334 2.44388 11.7396 L 2.50247 11.6732 L 12.4029 1.47399 C 12.6216 1.23994 12.9092 1.08127 13.2251 1.02281 L 13.3511 1.00426 Z M 4.00247 13.0004 L 10.9995 13.0004 C 11.3221 12.9998 11.6401 13.0771 11.9263 13.2259 C 12.2132 13.3752 12.4602 13.5914 12.645 13.8568 C 12.8299 14.1223 12.9474 14.4294 12.9878 14.7504 C 13.0261 15.055 12.9904 15.363 12.8902 15.6527 L 12.8931 15.6537 L 11.6265 19.6244 L 19.9976 11.0004 L 12.9995 11.0004 L 12.9995 10.9994 C 12.6774 10.9998 12.3596 10.9234 12.0738 10.7748 C 11.7868 10.6255 11.5399 10.4084 11.355 10.1429 C 11.1703 9.87756 11.0527 9.57115 11.0122 9.25035 C 10.9738 8.94533 11.0084 8.63614 11.1089 8.34606 L 11.107 8.34606 L 12.3726 4.37438 L 4.00247 13.0004 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            <div class="w-32 h-3 bg-[#2463EB]/20 rounded-full"></div>
+            <div class="w-20 h-2 bg-[#2463EB]/10 rounded-full"></div>
+          </div>
+
+          <div class="absolute top-32 right-24 w-80 h-80 bg-white rounded-2xl border border-[#F3F4F7] shadow-2xl p-8">
+            <svg data-svg-id="SVG_4" class="w-12 h-12 text-[#2463EB] mb-6">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(2 0 0 2 24 24)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 21 12 C 21 7.02944 16.9706 3 12 3 C 7.02944 3 3 7.02944 3 12 C 3 16.9706 7.02944 21 12 21 C 16.9706 21 21 16.9706 21 12 Z M 23 12 C 23 18.0751 18.0751 23 12 23 C 5.92487 23 1 18.0751 1 12 C 1 5.92487 5.92487 1 12 1 C 18.0751 1 23 5.92487 23 12 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(2 0 0 2 24 24)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 14.9961 11.6758 C 14.9245 8.69287 13.8664 5.82525 12 3.51562 C 10.0661 5.90881 9 8.90114 9 12 L 9.00391 12.3242 C 9.07549 15.3069 10.1339 18.1739 12 20.4834 C 13.9336 18.0903 15 15.0986 15 12 L 14.9961 11.6758 Z M 16.9951 12.373 C 16.9026 16.2184 15.3834 19.8976 12.7246 22.6895 C 12.5359 22.8876 12.2737 23 12 23 C 11.7263 23 11.4641 22.8876 11.2754 22.6895 C 8.61661 19.8976 7.09737 16.2184 7.00488 12.373 L 7 12 C 7 8.02012 8.53074 4.1926 11.2754 1.31055 L 11.3496 1.24023 C 11.5299 1.08586 11.7604 1 12 1 C 12.2737 1 12.5359 1.11237 12.7246 1.31055 C 15.4693 4.1926 17 8.02012 17 12 L 16.9951 12.373 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(2 0 0 2 24 24)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 22 11 C 22.5523 11 23 11.4477 23 12 C 23 12.5523 22.5523 13 22 13 L 2 13 C 1.44772 13 1 12.5523 1 12 C 1 11.4477 1.44772 11 2 11 L 22 11 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            <h3 class="text-xl font-bold mb-2">Public API</h3>
+            <p class="text-sm text-[#8D95A5] mb-8">Free access to all endpoints. Instant key.</p>
+            <div class="bg-[#F9FAFB] border border-[#F3F4F7] rounded-lg p-3">
+              <span class="text-xs text-[#8D95A5]">Status: Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Overview -->
+    <section class="bg-[#F9FAFB] py-20 border-y border-[#F3F4F7]/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <!-- Public API -->
+          <div class="flex flex-col gap-4">
+            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-[#F3F4F7] flex items-center justify-center">
+              <svg data-svg-id="SVG_6" class="w-6 h-6 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(1 0 0 1 12 12)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 21 12 C 21 7.02944 16.9706 3 12 3 C 7.02944 3 3 7.02944 3 12 C 3 16.9706 7.02944 21 12 21 C 16.9706 21 21 16.9706 21 12 Z M 23 12 C 23 18.0751 18.0751 23 12 23 C 5.92487 23 1 18.0751 1 12 C 1 5.92487 5.92487 1 12 1 C 18.0751 1 23 5.92487 23 12 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(1 0 0 1 12 12)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 14.9961 11.6758 C 14.9245 8.69287 13.8664 5.82525 12 3.51562 C 10.0661 5.90881 9 8.90114 9 12 L 9.00391 12.3242 C 9.07549 15.3069 10.1339 18.1739 12 20.4834 C 13.9336 18.0903 15 15.0986 15 12 L 14.9961 11.6758 Z M 16.9951 12.373 C 16.9026 16.2184 15.3834 19.8976 12.7246 22.6895 C 12.5359 22.8876 12.2737 23 12 23 C 11.7263 23 11.4641 22.8876 11.2754 22.6895 C 8.61661 19.8976 7.09737 16.2184 7.00488 12.373 L 7 12 C 7 8.02012 8.53074 4.1926 11.2754 1.31055 L 11.3496 1.24023 C 11.5299 1.08586 11.7604 1 12 1 C 12.2737 1 12.5359 1.11237 12.7246 1.31055 C 15.4693 4.1926 17 8.02012 17 12 L 16.9951 12.373 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(1 0 0 1 12 12)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 22 11 C 22.5523 11 23 11.4477 23 12 C 23 12.5523 22.5523 13 22 13 L 2 13 C 1.44772 13 1 12.5523 1 12 C 1 11.4477 1.44772 11 2 11 L 22 11 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            </div>
+            <h3 class="text-lg font-bold">Public API (Free)</h3>
+            <p class="text-[#8D95A5] leading-relaxed">All endpoints are publicly accessible and free to use.</p>
+          </div>
+          <!-- Rate Boost -->
+          <div class="flex flex-col gap-4">
+            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-[#F3F4F7] flex items-center justify-center">
+              <svg data-svg-id="SVG_7" class="w-6 h-6 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(1 0 0 1 12 12)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 13.3511 1.00426 C 13.6035 0.979434 13.8584 1.01916 14.0913 1.11949 L 14.2056 1.17516 L 14.315 1.23961 C 14.5276 1.37773 14.7014 1.56768 14.8208 1.79137 L 14.8765 1.90563 L 14.9214 2.02477 C 15.0012 2.26511 15.0193 2.52186 14.9732 2.77086 L 14.9439 2.89488 C 14.9403 2.90782 14.9372 2.92116 14.9331 2.93395 L 13.0132 8.95348 L 12.9966 9.00035 L 19.9995 9.00035 C 20.377 8.99962 20.7472 9.10533 21.0669 9.30602 C 21.3874 9.50722 21.6438 9.79572 21.8072 10.1371 C 21.9705 10.4784 22.0342 10.8589 21.9898 11.2347 C 21.9509 11.5635 21.8311 11.8768 21.6421 12.1468 L 21.5562 12.2601 L 21.4976 12.3265 L 11.5972 22.5267 L 11.5962 22.5257 C 11.3775 22.7596 11.0908 22.9195 10.7749 22.9779 C 10.4404 23.0398 10.0945 22.986 9.79446 22.8255 C 9.49446 22.6651 9.25781 22.4067 9.12356 22.0941 C 8.98947 21.7816 8.96599 21.4328 9.05618 21.1048 L 9.06692 21.0658 L 10.9868 15.0463 L 11.0034 15.0004 L 3.99954 15.0004 L 3.99954 14.9994 C 3.62242 14.9999 3.25259 14.8942 2.93313 14.6937 C 2.61282 14.4926 2.35623 14.2048 2.1929 13.8636 C 2.02953 13.5222 1.96587 13.1409 2.01028 12.765 C 2.05474 12.3893 2.2055 12.0334 2.44388 11.7396 L 2.50247 11.6732 L 12.4029 1.47399 C 12.6216 1.23994 12.9092 1.08127 13.2251 1.02281 L 13.3511 1.00426 Z M 4.00247 13.0004 L 10.9995 13.0004 C 11.3221 12.9998 11.6401 13.0771 11.9263 13.2259 C 12.2132 13.3752 12.4602 13.5914 12.645 13.8568 C 12.8299 14.1223 12.9474 14.4294 12.9878 14.7504 C 13.0261 15.055 12.9904 15.363 12.8902 15.6527 L 12.8931 15.6537 L 11.6265 19.6244 L 19.9976 11.0004 L 12.9995 11.0004 L 12.9995 10.9994 C 12.6774 10.9998 12.3596 10.9234 12.0738 10.7748 C 11.7868 10.6255 11.5399 10.4084 11.355 10.1429 C 11.1703 9.87756 11.0527 9.57115 11.0122 9.25035 C 10.9738 8.94533 11.0084 8.63614 11.1089 8.34606 L 11.107 8.34606 L 12.3726 4.37438 L 4.00247 13.0004 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            </div>
+            <h3 class="text-lg font-bold">Rate Boost</h3>
+            <p class="text-[#8D95A5] leading-relaxed">Purchase higher rate limits for any endpoint; pay only for the endpoints you need.</p>
+          </div>
+          <!-- Enterprise -->
+          <div class="flex flex-col gap-4">
+            <div class="w-12 h-12 bg-white rounded-xl shadow-sm border border-[#F3F4F7] flex items-center justify-center">
+              <svg data-svg-id="SVG_8" class="w-6 h-6 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(1 0 0 1 12 12)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 19 5.99955 C 16.6805 5.99955 13.9706 4.66296 12.1104 3.03959 L 12.1104 3.04057 C 12.0796 3.01427 12.0405 2.99955 12 2.99955 C 11.9595 2.99955 11.9204 3.01427 11.8896 3.04057 L 11.8887 3.03959 C 10.0971 4.60157 7.48931 5.91506 5.21875 5.99564 L 5 5.99955 L 5 12.9996 L 5.00879 13.4117 C 5.09782 15.4371 5.8465 16.9384 6.98633 18.106 C 8.07404 19.22 9.55305 20.0641 11.2539 20.7232 L 11.9961 20.9947 L 12.0186 21.0015 C 14.0236 20.3018 15.7728 19.381 17.0137 18.1079 C 18.229 16.861 19 15.2354 19 12.9996 L 19 5.99955 Z M 21 12.9996 C 21 15.7637 20.021 17.8888 18.4463 19.5044 C 16.8988 21.0921 14.8204 22.1442 12.6689 22.8941 L 12.6611 22.897 C 12.233 23.0421 11.7688 23.0369 11.3438 22.8843 L 11.3438 22.8853 C 11.3379 22.8833 11.3321 22.8805 11.3262 22.8785 C 11.3246 22.8779 11.3228 22.8781 11.3213 22.8775 L 11.3213 22.8765 C 9.17204 22.132 7.09956 21.0847 5.55566 19.5035 C 4.07782 17.9898 3.12517 16.0279 3.01172 13.5113 L 3 12.9996 L 3 5.99955 C 3.00012 5.46928 3.21097 4.96045 3.58594 4.58549 C 3.96099 4.21056 4.46967 3.99955 5 3.99955 L 5.32129 3.98783 C 6.95847 3.86731 9.05353 2.86212 10.582 1.52689 L 10.5908 1.52006 L 10.7422 1.40092 C 11.1082 1.1406 11.5477 0.99955 12 0.99955 C 12.4523 0.99955 12.8918 1.1406 13.2578 1.40092 L 13.4092 1.52006 L 13.418 1.52689 L 13.7324 1.79154 C 15.3383 3.0868 17.4277 3.99955 19 3.99955 C 19.5303 3.99955 20.039 4.21056 20.4141 4.58549 C 20.789 4.96046 20.9999 5.46928 21 5.99955 L 21 12.9996 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            </div>
+            <h3 class="text-lg font-bold">Enterprise</h3>
+            <p class="text-[#8D95A5] leading-relaxed">Custom endpoints, dedicated rate limits and SLAs. Save developer time — order what you need.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Tiers -->
+    <section class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl font-bold mb-4">Choose your scale</h2>
+          <p class="text-lg text-[#8D95A5]">Transparent pricing designed to grow with your application's needs.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-end">
+          <!-- Public API Card -->
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-sm p-8 flex flex-col h-full">
+            <div class="mb-8">
+              <h3 class="text-2xl font-bold mb-2">Public API <span class="text-lg font-normal text-[#8D95A5]">(Free)</span></h3>
+              <p class="text-sm text-[#8D95A5] mb-6">Perfect for testing, prototyping, and low-volume applications.</p>
+              <div class="flex items-baseline gap-1">
+                <span class="text-3xl font-bold">$0</span>
+                <span class="text-[#8D95A5]">/mo</span>
+              </div>
+            </div>
+            <div class="border-t border-[#F3F4F7] pt-8 mb-10 space-y-4 flex-grow">
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_12" class="w-5 h-5 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.83 0 0 0.83 10 9.58)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+                <span class="text-sm">Free access to all endpoints</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_13" class="w-5 h-5 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.83 0 0 0.83 10 9.58)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+                <span class="text-sm">Instant API key</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_14" class="w-5 h-5 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.83 0 0 0.83 10 9.58)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+                <span class="text-sm">Usage subject to default rate limits</span>
+              </div>
+            </div>
+            <button class="w-full bg-[#5189FB] text-white py-3 rounded-xl font-medium shadow-sm hover:bg-blue-600 flex items-center justify-center gap-2">
+              Get API Key
+              <svg data-svg-id="SVG_15" class="w-5 h-5">
+                <g transform="matrix(1 0 0 1 0 0)">
+                  <g style="">
+                    <g transform="matrix(0.83 0 0 0.83 10 10)">
+                      <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 19 11 C 19.5523 11 20 11.4477 20 12 C 20 12.5523 19.5523 13 19 13 L 5 13 C 4.44772 13 4 12.5523 4 12 C 4 11.4477 4.44772 11 5 11 L 19 11 Z" stroke-linecap="round" />
+                    </g>
+                    <g transform="matrix(0.83 0 0 0.83 12.92 10)">
+                      <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-15.5, -12)" d="M 11.293 4.29297 C 11.6591 3.92685 12.2381 3.90426 12.6309 4.22461 L 12.7071 4.29297 L 19.7071 11.293 C 20.0976 11.6835 20.0976 12.3165 19.7071 12.707 L 12.7071 19.707 C 12.3166 20.0976 11.6835 20.0976 11.293 19.707 C 10.9025 19.3165 10.9025 18.6835 11.293 18.293 L 17.586 12 L 11.293 5.70703 L 11.2247 5.63086 C 10.9043 5.23809 10.9269 4.65909 11.293 4.29297 Z" stroke-linecap="round" />
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Rate Boost Card (Featured) -->
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-xl relative overflow-hidden flex flex-col h-full transform lg:scale-105 z-10">
+            <div class="h-1.5 bg-[#2463EB] w-full"></div>
+            <div class="p-8 bg-[#F9FAFB]/30 border-b border-[#F3F4F7]">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="text-2xl font-bold">Rate Boost</h3>
+                <span class="bg-[#F1F5FE] text-[#2463EB] text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
+              </div>
+              <p class="text-sm text-[#8D95A5] mb-6">Scale specific endpoints precisely when you need more throughput.</p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-lg font-medium text-[#8D95A5]">Pay per</span>
+                <span class="text-2xl font-bold">Endpoint</span>
+              </div>
+            </div>
+            <div class="p-8 space-y-4 flex-grow">
+              <div class="flex items-start gap-3">
+                <svg data-svg-id="SVG_9" class="w-5 h-5 text-[#2463EB] mt-0.5">
+                  <g transform="matrix(1 0 0 1 0 0)">
+                    <g style="">
+                      <g transform="matrix(0.88 0 0 0.88 10.5 10.06)">
+                        <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+                <span class="text-sm font-medium">Buy increased monthly rate limits for any endpoint</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_10" class="w-5 h-5 text-[#2463EB]">
+                  <g transform="matrix(1 0 0 1 0 0)">
+                    <g style="">
+                      <g transform="matrix(0.88 0 0 0.88 10.5 10.06)">
+                        <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+                <span class="text-sm">No code changes required</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_11" class="w-5 h-5 text-[#2463EB]">
+                  <g transform="matrix(1 0 0 1 0 0)">
+                    <g style="">
+                      <g transform="matrix(0.88 0 0 0.88 10.5 10.06)">
+                        <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+                <span class="text-sm">Pay monthly for chosen limits</span>
+              </div>
+            </div>
+            <div class="p-8 pt-0">
+              <button class="w-full bg-white text-[#323743] border border-[#323743] py-3 rounded-xl font-medium hover:bg-gray-50">
+                Read Rate Boost Docs
+              </button>
+            </div>
+          </div>
+
+          <!-- Enterprise Card -->
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-sm p-8 flex flex-col h-full">
+            <div class="mb-8">
+              <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
+              <p class="text-sm text-[#8D95A5] mb-6">Custom solutions for high-volume, mission-critical operations.</p>
+              <div class="text-3xl font-bold">Custom</div>
+            </div>
+            <div class="border-t border-[#F3F4F7] pt-8 mb-10 space-y-4 flex-grow">
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_16" class="w-5 h-5 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.83 0 0 0.83 10 9.58)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+                <span class="text-sm">Custom endpoints</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_17" class="w-5 h-5 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.83 0 0 0.83 10 9.58)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+                <span class="text-sm">Dedicated rate limits</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_18" class="w-5 h-5 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.83 0 0 0.83 10 9.58)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+                <span class="text-sm">SLAs and uptime guarantees</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg data-svg-id="SVG_19" class="w-5 h-5 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.83 0 0 0.83 10 9.58)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+                <span class="text-sm">Priority support</span>
+              </div>
+            </div>
+            <button class="w-full bg-white text-[#171A21] border border-[#DEE1E7] py-3 rounded-full font-medium hover:bg-gray-50">
+              Contact Sales
+            </button>
+          </div>
+        </div>
+        <p class="text-center text-sm text-[#8D95A5] mt-12">All Rate Boost purchases are billed monthly and applied per-endpoint.</p>
+      </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="bg-[#F9FAFB] py-24 border-y border-[#F3F4F7]/50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <div class="inline-flex items-center px-3 py-1 rounded-full border border-[#F3F4F7] text-[#171A21] text-[10px] font-bold uppercase tracking-wider mb-6">
+            Flexible Scaling
+          </div>
+          <h2 class="text-3xl font-bold mb-4">Rate Boost — How it works</h2>
+          <p class="text-lg text-[#8D95A5] max-w-2xl mx-auto">
+            Increase Rate Limit directly on any endpoint page — choose the endpoint, select a monthly limit, and pay only for what you need.
+          </p>
+        </div>
+
+        <div class="relative grid grid-cols-1 md:grid-cols-3 gap-12">
+          <!-- Step 1 -->
+          <div class="flex flex-col items-center text-center relative">
+            <div class="step-line hidden md:block"></div>
+            <div class="w-24 h-24 bg-white rounded-full shadow-md border-4 border-[#F9FAFB] flex items-center justify-center mb-8 z-10">
+              <svg data-svg-id="SVG_20" class="w-10 h-10 text-[#0983FD]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(1.67 0 0 1.67 20 10)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(9,131,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -6)" d="M 21 4 C 21 3.44772 20.5523 3 20 3 L 4 3 C 3.44772 3 3 3.44772 3 4 L 3 8 C 3 8.55228 3.44772 9 4 9 L 20 9 C 20.5523 9 21 8.55228 21 8 L 21 4 Z M 23 8 C 23 9.65685 21.6569 11 20 11 L 4 11 C 2.34315 11 1 9.65685 1 8 L 1 4 C 1 2.34315 2.34315 1 4 1 L 20 1 C 21.6569 1 23 2.34315 23 4 L 23 8 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(1.67 0 0 1.67 20 30)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(9,131,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -18)" d="M 21 16 C 21 15.4477 20.5523 15 20 15 L 4 15 C 3.44772 15 3 15.4477 3 16 L 3 20 C 3 20.5523 3.44772 21 4 21 L 20 21 C 20.5523 21 21 20.5523 21 20 L 21 16 Z M 23 20 C 23 21.6569 21.6569 23 20 23 L 4 23 C 2.34315 23 1 21.6569 1 20 L 1 16 C 1 14.3431 2.34315 13 4 13 L 20 13 C 21.6569 13 23 14.3431 23 16 L 23 20 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(1.67 0 0 1.67 10.01 10)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(9,131,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-6, -6)" d="M 6.00977 5 L 6.1123 5.00488 C 6.61655 5.05611 7.00977 5.48224 7.00977 6 C 7.00977 6.51776 6.61655 6.94389 6.1123 6.99512 L 6.00977 7 L 6 7 C 5.44772 7 5 6.55228 5 6 C 5 5.44772 5.44772 5 6 5 L 6.00977 5 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(1.67 0 0 1.67 10.01 30)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(9,131,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-6, -18)" d="M 6.00977 17 L 6.1123 17.0049 C 6.61655 17.0561 7.00977 17.4822 7.00977 18 C 7.00977 18.5178 6.61655 18.9439 6.1123 18.9951 L 6.00977 19 L 6 19 C 5.44772 19 5 18.5523 5 18 C 5 17.4477 5.44772 17 6 17 L 6.00977 17 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            </div>
+            <div class="w-8 h-8 bg-[#0983FD] text-white rounded-full flex items-center justify-center font-bold text-sm mb-4">1</div>
+            <h3 class="text-lg font-bold mb-2">Find endpoint</h3>
+            <p class="text-sm text-[#8D95A5] max-w-[200px]">Navigate to the specific documentation page for the data you need.</p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex flex-col items-center text-center relative">
+            <div class="step-line hidden md:block"></div>
+            <div class="w-24 h-24 bg-white rounded-full shadow-md border-4 border-[#F9FAFB] flex items-center justify-center mb-8 z-10 relative">
+              <div class="absolute inset-0 border border-[#0983FD]/30 rounded-full opacity-80"></div>
+              <svg data-svg-id="SVG_21" class="w-10 h-10 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(1.67 0 0 1.67 20 20)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 9.10059 1.00391 C 9.30178 1.02014 9.49627 1.08471 9.66699 1.19238 L 9.75 1.25 L 9.82812 1.31348 C 9.97922 1.44708 10.096 1.61531 10.168 1.80371 L 10.2031 1.90918 L 15 18.9775 L 16.627 13.1895 C 16.804 12.5584 17.1834 12.0028 17.7061 11.6074 C 18.2281 11.2125 18.865 10.9992 19.5195 11 L 22 11 C 22.5523 11 23 11.4477 23 12 C 23 12.5523 22.5523 13 22 13 L 19.5176 13 C 19.2992 12.9996 19.0863 13.0704 18.9121 13.2021 C 18.7815 13.301 18.6779 13.4302 18.6094 13.5771 L 18.5527 13.7305 L 16.2031 22.0908 L 16.168 22.1963 C 16.084 22.416 15.9392 22.6081 15.75 22.75 C 15.5336 22.9123 15.2705 23 15 23 C 14.7295 23 14.4664 22.9123 14.25 22.75 C 14.0608 22.6081 13.916 22.416 13.832 22.1963 L 13.7969 22.0908 L 8.99902 5.02148 L 7.37305 10.8105 C 7.19669 11.4391 6.81945 11.9925 6.2998 12.3877 C 5.78012 12.7828 5.14601 12.9981 4.49316 13 L 2 13 C 1.44772 13 1 12.5523 1 12 C 1 11.4477 1.44772 11 2 11 L 4.4873 11 C 4.70491 10.9993 4.91663 10.9276 5.08984 10.7959 C 5.26298 10.6642 5.38852 10.479 5.44727 10.2695 L 7.79688 1.90918 L 7.83203 1.80371 C 7.91597 1.58404 8.06078 1.39192 8.25 1.25 L 8.33301 1.19238 C 8.53204 1.06686 8.76332 1 9 1 L 9.10059 1.00391 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            </div>
+            <div class="w-8 h-8 bg-[#0983FD] text-white rounded-full flex items-center justify-center font-bold text-sm mb-4">2</div>
+            <h3 class="text-lg font-bold mb-2">Click "Increase Limit"</h3>
+            <p class="text-sm text-[#8D95A5] max-w-[200px]">Find the boost button directly on the endpoint documentation.</p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="flex flex-col items-center text-center relative">
+            <div class="w-24 h-24 bg-white rounded-full shadow-md border-4 border-[#F9FAFB] flex items-center justify-center mb-8 z-10">
+              <svg data-svg-id="SVG_22" class="w-10 h-10 text-[#0983FD]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(1.67 0 0 1.67 30.91 11.74)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(9,131,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-18.54, -7.04)" d="M 18.293 3.29298 C 18.6591 2.92686 19.2381 2.90427 19.6309 3.22462 L 19.707 3.29298 L 22.0068 5.59278 L 22.0147 5.59962 L 22.0137 5.59962 C 22.3801 5.97347 22.5859 6.4765 22.5859 7.00001 L 22.5762 7.19532 C 22.5318 7.64728 22.3343 8.07332 22.0137 8.4004 L 19.9072 10.5068 L 19.9004 10.5147 L 19.8994 10.5137 C 19.5256 10.8801 19.0235 11.0859 18.5 11.0859 C 18.0419 11.0859 17.5999 10.9284 17.2461 10.6436 L 17.0996 10.5137 L 14.793 8.20704 L 14.7246 8.13087 C 14.4043 7.7381 14.4269 7.15909 14.793 6.79298 C 15.1591 6.42686 15.7381 6.40427 16.1309 6.72462 L 16.207 6.79298 L 18.5 9.08595 L 20.5859 7.00001 L 18.293 4.70704 L 18.2246 4.63087 C 17.9043 4.2381 17.9269 3.65909 18.293 3.29298 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(1.67 0 0 1.67 27 11.33)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(9,131,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-16.2, -6.8)" d="M 20.2926 1.29292 C 20.683 0.902458 21.3161 0.902589 21.7066 1.29292 C 22.0971 1.68344 22.0971 2.31646 21.7066 2.70698 L 12.107 12.3066 C 11.7165 12.6971 11.0835 12.6971 10.6929 12.3066 C 10.3026 11.916 10.3025 11.283 10.6929 10.8925 L 20.2926 1.29292 Z" stroke-linecap="round" />
+                  </g>
+                  <g transform="matrix(1.67 0 0 1.67 12.5 25.83)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(9,131,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-7.5, -15.5)" d="M 12 15.5 C 12 13.0147 9.98528 11 7.5 11 C 5.01472 11 3 13.0147 3 15.5 C 3 17.9853 5.01472 20 7.5 20 C 9.98528 20 12 17.9853 12 15.5 Z M 14 15.5 C 14 19.0899 11.0899 22 7.5 22 C 3.91015 22 1 19.0899 1 15.5 C 1 11.9101 3.91015 9 7.5 9 C 11.0899 9 14 11.9101 14 15.5 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            </div>
+            <div class="w-8 h-8 bg-[#0983FD] text-white rounded-full flex items-center justify-center font-bold text-sm mb-4">3</div>
+            <h3 class="text-lg font-bold mb-2">Select & Pay</h3>
+            <p class="text-sm text-[#8D95A5] max-w-[200px]">Choose your required monthly limit and complete the purchase.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enterprise Section -->
+    <section class="py-24 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F9FAFB] border border-[#F3F4F7] text-[#171A21] text-sm font-medium mb-6">
+            <svg data-svg-id="SVG_23" class="w-4 h-4 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.67 0 0 0.67 8 8)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 19 5.99955 C 16.6805 5.99955 13.9706 4.66296 12.1104 3.03959 L 12.1104 3.04057 C 12.0796 3.01427 12.0405 2.99955 12 2.99955 C 11.9595 2.99955 11.9204 3.01427 11.8896 3.04057 L 11.8887 3.03959 C 10.0971 4.60157 7.48931 5.91506 5.21875 5.99564 L 5 5.99955 L 5 12.9996 L 5.00879 13.4117 C 5.09782 15.4371 5.8465 16.9384 6.98633 18.106 C 8.07404 19.22 9.55305 20.0641 11.2539 20.7232 L 11.9961 20.9947 L 12.0186 21.0015 C 14.0236 20.3018 15.7728 19.381 17.0137 18.1079 C 18.229 16.861 19 15.2354 19 12.9996 L 19 5.99955 Z M 21 12.9996 C 21 15.7637 20.021 17.8888 18.4463 19.5044 C 16.8988 21.0921 14.8204 22.1442 12.6689 22.8941 L 12.6611 22.897 C 12.233 23.0421 11.7688 23.0369 11.3438 22.8843 L 11.3438 22.8853 C 11.3379 22.8833 11.3321 22.8805 11.3262 22.8785 C 11.3246 22.8779 11.3228 22.8781 11.3213 22.8775 L 11.3213 22.8765 C 9.17204 22.132 7.09956 21.0847 5.55566 19.5035 C 4.07782 17.9898 3.12517 16.0279 3.01172 13.5113 L 3 12.9996 L 3 5.99955 C 3.00012 5.46928 3.21097 4.96045 3.58594 4.58549 C 3.96099 4.21056 4.46967 3.99955 5 3.99955 L 5.32129 3.98783 C 6.95847 3.86731 9.05353 2.86212 10.582 1.52689 L 10.5908 1.52006 L 10.7422 1.40092 C 11.1082 1.1406 11.5477 0.99955 12 0.99955 C 12.4523 0.99955 12.8918 1.1406 13.2578 1.40092 L 13.4092 1.52006 L 13.418 1.52689 L 13.7324 1.79154 C 15.3383 3.0868 17.4277 3.99955 19 3.99955 C 19.5303 3.99955 20.039 4.21056 20.4141 4.58549 C 20.789 4.96046 20.9999 5.46928 21 5.99955 L 21 12.9996 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            For High-Volume Teams
+          </div>
+          <h2 class="text-4xl font-bold mb-8">Enterprise — Custom endpoints & SLAs</h2>
+          <p class="text-lg text-[#8D95A5] leading-relaxed mb-10">
+            We build dedicated endpoints and provide guaranteed throughput, priority support, and custom contracts. Stop wasting developer time piecing together standard data—request exactly the structure and volume your application needs.
+          </p>
+          <ul class="space-y-4 mb-10">
+            <li class="flex items-center gap-3">
+              <div class="w-6 h-6 bg-[#F1F5FE] rounded-full flex items-center justify-center">
+                <svg data-svg-id="SVG_24" class="w-4 h-4 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.67 0 0 0.67 8 7.67)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+              </div>
+              <span class="font-medium">Custom data aggregation</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <div class="w-6 h-6 bg-[#F1F5FE] rounded-full flex items-center justify-center">
+                <svg data-svg-id="SVG_25" class="w-4 h-4 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.67 0 0 0.67 8 7.67)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+              </div>
+              <span class="font-medium">Dedicated infrastructure</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <div class="w-6 h-6 bg-[#F1F5FE] rounded-full flex items-center justify-center">
+                <svg data-svg-id="SVG_26" class="w-4 h-4 text-[#2463EB]">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.67 0 0 0.67 8 7.67)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(36,99,235); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -11.5)" d="M 19.293 5.29295 C 19.6835 4.90243 20.3165 4.90243 20.707 5.29295 C 21.0976 5.68348 21.0976 6.31649 20.707 6.70702 L 9.70703 17.707 C 9.31651 18.0975 8.68349 18.0975 8.29297 17.707 L 3.29297 12.707 L 3.22461 12.6308 C 2.90426 12.2381 2.92685 11.6591 3.29297 11.293 C 3.65908 10.9268 4.23809 10.9042 4.63086 11.2246 L 4.70703 11.293 L 9 15.5859 L 19.293 5.29295 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+              </div>
+              <span class="font-medium">Account management & technical support</span>
+            </li>
+          </ul>
+          <button class="bg-[#0983FD] text-white px-8 py-3 rounded-xl font-medium hover:bg-blue-600 flex items-center gap-2">
+            Contact Sales
+            <svg data-svg-id="SVG_27" class="w-5 h-5">
+            <g transform="matrix(1 0 0 1 0 0)">
+              <g style="">
+                <g transform="matrix(0.83 0 0 0.83 10 10)">
+                  <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 8.29295 5.29298 C 8.65907 4.92686 9.23807 4.90427 9.63084 5.22462 L 9.70702 5.29298 L 15.707 11.293 C 16.0975 11.6835 16.0975 12.3165 15.707 12.707 L 9.70702 18.707 C 9.31649 19.0976 8.68348 19.0976 8.29295 18.707 C 7.90243 18.3165 7.90243 17.6835 8.29295 17.293 L 13.5859 12 L 8.29295 6.70704 L 8.22459 6.63087 C 7.90424 6.2381 7.92684 5.65909 8.29295 5.29298 Z" stroke-linecap="round" />
+                </g>
+              </g>
+            </g>
+          </svg>
+          </button>
+        </div>
+
+        <div class="bg-[#F9FAFB] p-8 lg:p-12 rounded-2xl border border-[#F3F4F7] shadow-sm">
+          <div class="bg-white rounded-2xl border border-[#F3F4F7] shadow-md overflow-hidden">
+            <div class="p-6 border-b border-[#F3F4F7]">
+              <h3 class="text-xl font-semibold mb-1">Enterprise Inquiry</h3>
+              <p class="text-sm text-[#8D95A5]">Tell us about your requirements and expected volume.</p>
+            </div>
+            <form class="p-6 space-y-6">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2">Name</label>
+                  <input type="text" value="Alex Smith" class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Company</label>
+                  <input type="text" value="TechFlow Inc." class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Work Email</label>
+                <input type="email" value="alex@techflow.inc" class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">Brief description of needs</label>
+                <textarea rows="4" class="w-full px-4 py-2 bg-white border border-[#DEE1E7] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none">We need a custom websocket endpoint for aggregated order book data across 5 exchanges...</textarea>
+              </div>
+              <div class="flex items-center justify-end gap-4 pt-4 border-t border-[#F3F4F7]">
+                <button type="button" class="text-sm font-medium px-4 py-2 hover:bg-gray-50 rounded-lg">Cancel</button>
+                <button type="submit" class="bg-[#0983FD] text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-600">Submit Request</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="bg-[#F9FAFB] py-24 border-t border-[#F3F4F7]/50">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold mb-4">Billing & FAQ</h2>
+          <p class="text-lg text-[#8D95A5]">Common questions about our pricing model.</p>
+        </div>
+
+        <div class="space-y-6">
+          <!-- FAQ 1 -->
+          <div class="bg-white p-8 rounded-2xl border border-[#F3F4F7] shadow-sm">
+            <div class="flex gap-4">
+              <span class="text-lg font-medium text-[#2463EB]">Q.</span>
+              <div>
+                <h4 class="text-lg font-bold mb-3">Are public endpoints really free?</h4>
+                <p class="text-[#8D95A5] leading-relaxed">Yes. Public endpoints are free to access. However, they are subject to default rate limits to ensure fair usage across all users. Use Rate Boost if you need higher guaranteed throughput for specific endpoints.</p>
+              </div>
+            </div>
+          </div>
+          <!-- FAQ 2 -->
+          <div class="bg-white p-8 rounded-2xl border border-[#F3F4F7] shadow-sm">
+            <div class="flex gap-4">
+              <span class="text-lg font-medium text-[#2463EB]">Q.</span>
+              <div>
+                <h4 class="text-lg font-bold mb-3">How is Rate Boost billed?</h4>
+                <p class="text-[#8D95A5] leading-relaxed">Rate Boosts are billed monthly. The cost is applied per-endpoint, meaning you only pay to increase the capacity of the exact endpoints your application heavily relies on, rather than upgrading to a generic, expensive global tier.</p>
+              </div>
+            </div>
+          </div>
+          <!-- FAQ 3 -->
+          <div class="bg-white p-8 rounded-2xl border border-[#F3F4F7] shadow-sm">
+            <div class="flex gap-4">
+              <span class="text-lg font-medium text-[#2463EB]">Q.</span>
+              <div>
+                <h4 class="text-lg font-bold mb-3">Can I get invoices for my purchases?</h4>
+                <p class="text-[#8D95A5] leading-relaxed">Yes, detailed invoices are available in your account dashboard for all paid plans and individual Rate Boost purchases.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="relative bg-[#171A21] py-24 overflow-hidden">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[#5189FB]/20 rounded-full blur-[100px]"></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h2 class="text-5xl font-extrabold text-white mb-6 tracking-tight">Ready to get started?</h2>
+        <p class="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
+          Join thousands of developers building the next generation of Bitcoin applications with our robust infrastructure.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium shadow-lg hover:bg-blue-600">
+            Get API Key
+          </button>
+          <button class="bg-transparent text-white border border-white px-10 py-4 rounded-xl font-medium hover:bg-white/10">
+            Contact Sales
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white pt-20 pb-10 border-t border-[#F3F4F7]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-20">
+        <div class="lg:col-span-2">
+          <div class="flex items-center gap-2 mb-6">
+            <div class="w-6 h-6 bg-[#0983FD] rounded flex items-center justify-center">
+              <svg data-svg-id="SVG_28" class="w-3.5 h-3.5 text-white">
+              <g transform="matrix(1 0 0 1 0 0)">
+                <g style="">
+                  <g transform="matrix(0.58 0 0 0.58 7 7)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 9.10059 1.00391 C 9.30178 1.02014 9.49627 1.08471 9.66699 1.19238 L 9.75 1.25 L 9.82812 1.31348 C 9.97922 1.44708 10.096 1.61531 10.168 1.80371 L 10.2031 1.90918 L 15 18.9775 L 16.627 13.1895 C 16.804 12.5584 17.1834 12.0028 17.7061 11.6074 C 18.2281 11.2125 18.865 10.9992 19.5195 11 L 22 11 C 22.5523 11 23 11.4477 23 12 C 23 12.5523 22.5523 13 22 13 L 19.5176 13 C 19.2992 12.9996 19.0863 13.0704 18.9121 13.2021 C 18.7815 13.301 18.6779 13.4302 18.6094 13.5771 L 18.5527 13.7305 L 16.2031 22.0908 L 16.168 22.1963 C 16.084 22.416 15.9392 22.6081 15.75 22.75 C 15.5336 22.9123 15.2705 23 15 23 C 14.7295 23 14.4664 22.9123 14.25 22.75 C 14.0608 22.6081 13.916 22.416 13.832 22.1963 L 13.7969 22.0908 L 8.99902 5.02148 L 7.37305 10.8105 C 7.19669 11.4391 6.81945 11.9925 6.2998 12.3877 C 5.78012 12.7828 5.14601 12.9981 4.49316 13 L 2 13 C 1.44772 13 1 12.5523 1 12 C 1 11.4477 1.44772 11 2 11 L 4.4873 11 C 4.70491 10.9993 4.91663 10.9276 5.08984 10.7959 C 5.26298 10.6642 5.38852 10.479 5.44727 10.2695 L 7.79688 1.90918 L 7.83203 1.80371 C 7.91597 1.58404 8.06078 1.39192 8.25 1.25 L 8.33301 1.19238 C 8.53204 1.06686 8.76332 1 9 1 L 9.10059 1.00391 Z" stroke-linecap="round" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            </div>
+            <span class="text-lg font-bold tracking-tight">Bitcoin API</span>
+          </div>
+          <p class="text-[#8D95A5] text-sm leading-relaxed max-w-xs">
+            The most reliable, scalable, and customizable data infrastructure for Bitcoin applications.
+          </p>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-6">Product</h4>
+          <ul class="space-y-4 text-sm text-[#8D95A5]">
+            <li><a href="#" class="hover:text-[#0983FD]">Endpoints</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">Rate Boost</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">Enterprise</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">Status</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold mb-6">Company</h4>
+          <ul class="space-y-4 text-sm text-[#8D95A5]">
+            <li><a href="#" class="hover:text-[#0983FD]">About</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">Blog</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">Careers</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">Contact</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold mb-6">Resources</h4>
+          <ul class="space-y-4 text-sm text-[#8D95A5]">
+            <li><a href="#" class="hover:text-[#0983FD]">Documentation</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">API Reference</a></li>
+            <li><a href="#" class="hover:text-[#0983FD]">Community</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-8 border-t border-[#F3F4F7] flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm text-[#8D95A5]">© 2026 Bitcoin API. All rights reserved.</p>
+        <div class="flex gap-8 text-sm text-[#8D95A5]">
+          <a href="#" class="hover:text-[#0983FD]">Privacy Policy</a>
+          <a href="#" class="hover:text-[#0983FD]">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
