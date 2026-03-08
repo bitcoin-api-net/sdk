@@ -1,0 +1,104 @@
+@import 'normalize.css';
+@import 'tailwindcss';
+
+:root {
+  --color-bg: #fff;
+  --color-text: #171a1f;
+  --color-text-muted: #565d6d;
+  --color-accent: #0983fd;
+  --color-accent-hover: #076ed4;
+  --container-max: 1280px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    'Inter',
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--color-text-muted);
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  scroll-behavior: smooth;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  color: var(--color-text);
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-weight: 800;
+}
+h2 {
+  font-weight: 700;
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::selection {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #1d4ed8;
+}
+
+.code-window-shadow {
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(59, 130, 246, 0.1);
+}
+
+.syntax-keyword {
+  color: #c678dd;
+}
+.syntax-function {
+  color: #61afef;
+}
+.syntax-string {
+  color: #98c379;
+}
+.syntax-variable {
+  color: #e5c07b;
+}
+.syntax-operator {
+  color: #56b6c2;
+}
+.syntax-comment {
+  color: #5c6370;
+  font-style: italic;
+}
+.syntax-number {
+  color: #d19a66;
+}

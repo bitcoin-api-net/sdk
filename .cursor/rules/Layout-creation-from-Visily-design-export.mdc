@@ -1,0 +1,21 @@
+---
+alwaysApply: false
+---
+
+## Tailwind
+
+If Tailwind library not installed already, install it according to https://docs.astro.build/en/guides/styling/#tailwind
+
+## SVG
+
+Inline svg icons have to be extracted to src/incos as .astro components and imported on the page.
+Guide for svg: https://docs.astro.build/en/guides/images/#svg-components
+
+## Directories structure and imports
+
+- src/components/ - Reusable components that repeats on one or multiple pages
+- src/icons/ - SVG icons
+- src/layouts/ - Base layouts used for group of pages with same base layout but different content
+- src/pages/ - Separate pages on the site
+- src/styles/ - Global styles
+  - src/styles/<page_name> - Pages styles when styles on the page are over 200 lines of code

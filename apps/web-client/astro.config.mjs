@@ -3,6 +3,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@astrojs/vue';
 import { defineConfig } from 'astro/config';
 import { loadEnv } from 'vite';
@@ -13,16 +14,17 @@ const { SITE_URL } = loadEnv(process.env.NODE_ENV ?? 'production', PROJECT_DIR);
 
 // https://astro.build/config
 export default defineConfig({
-  // Enable Vue to support Vue components.
   integrations: [vue()],
   site: SITE_URL,
   vite: {
+    plugins: [tailwindcss()],
     resolve: {
       alias: {
         '@styles': path.resolve(__dirname, 'src/styles'),
         '@components': path.resolve(__dirname, 'src/components'),
         '@layouts': path.resolve(__dirname, 'src/layouts'),
         '@services': path.resolve(__dirname, 'src/services'),
+        '@icons': path.resolve(__dirname, 'src/icons'),
       },
     },
   },
