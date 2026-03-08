@@ -4,6 +4,10 @@ Use prompts from this directory for different tasks.
 
 ## Visily AI -> Layout
 
+### Tips:
+
+- Do not forget to open new chat for each page in order to keep context low and reduce tokens consumption.
+
 ### Basic prompt
 
 AI Mode: Plan
