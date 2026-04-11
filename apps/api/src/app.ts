@@ -8,6 +8,7 @@ import Fastify from 'fastify';
 import env, { required } from 'shared/src/env.js';
 import { AppError } from 'shared/src/errors.js';
 import { defaultOptions, logProcessErrors } from 'shared/src/logging.js';
+import { redis } from 'shared/src/redis.js';
 import path from 'node:path';
 
 const API_PORT = required(env.API_PORT);
@@ -16,6 +17,9 @@ const RUN_FILE_EXTENSION = required(env.RUN_FILE_EXTENSION);
 
 async function main() {
   logProcessErrors();
+
+  await redis.connect();
+  await redis.connectSubscriber();
 
   const app = Fastify({ logger: defaultOptions });
 
