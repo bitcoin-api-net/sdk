@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
-import path from 'node:path';
 import assert from 'node:assert/strict';
+import path from 'node:path';
 
 const ENV_FILE = path.join(import.meta.dirname.split(path.sep).slice(0, -2).join(path.sep), '.env');
 

@@ -1,5 +1,5 @@
-import { pino, Logger } from 'pino';
-import env, { required } from 'lib/src/env.js';
+import env, { required } from 'shared/src/env.js';
+import { Logger, pino } from 'pino';
 
 const NODE_ENV = required(env.NODE_ENV);
 const LOG_LEVEL = required(env.LOG_LEVEL);

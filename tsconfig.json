@@ -1,4 +1,4 @@
 {
-  "references": [{ "path": "./lib" }, { "path": "./core" }, { "path": "./apps/api" }, { "path": "./apps/web-client" }],
+  "references": [{ "path": "./shared" }],
   "files": []
 }

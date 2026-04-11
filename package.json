@@ -5,16 +5,16 @@
   "type": "module",
   "engines": {
     "node": ">=22.12.0",
-    "npm": ">=10.8.2"
+    "npm": ">=10.9.0"
   },
   "scripts": {
-    "typecheck": "npm run typecheck --workspace apps/web-client"
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "type-check": "tsc --build --noEmit"
   },
   "workspaces": [
-    "lib",
-    "core",
-    "apps/api",
-    "apps/web-client"
+    "shared",
+    "apps/*"
   ],
   "author": "Bogdan",
   "license": "ISC",
@@ -26,6 +26,7 @@
     "eslint": "9.12.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-prettier": "5.2.1",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "prettier": "3.3.3",
     "prettier-plugin-astro": "^0.14.1",
     "tsx": "^4.19.1",
