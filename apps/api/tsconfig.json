@@ -5,5 +5,5 @@
     "declaration": true,
     "noEmit": false
   },
-  "include": ["../../lib/src/**/*", "./src/**/*"]
+  "include": ["../../shared/src/**/*", "./src/**/*"]
 }
