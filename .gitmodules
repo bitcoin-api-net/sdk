@@ -1,0 +1,6 @@
+[submodule ".cursor/rules/shared/development"]
+	path = .cursor/rules/shared/development
+	url = git@bitbucket.org:iaft/development-rules.git
+[submodule ".cursor/rules/shared/devops"]
+	path = .cursor/rules/shared/devops
+	url = git@bitbucket.org:iaft/devops-rules.git

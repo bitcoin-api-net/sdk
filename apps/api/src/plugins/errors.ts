@@ -4,7 +4,6 @@ import Fastify, { FastifyInstance } from 'fastify';
 import { JSONSchemaType } from 'lib/src/validation.js';
 
 export type DefaultResponseErrorPayload = {
-  success: false;
   code: string;
   message: string;
 };
@@ -103,5 +102,3 @@ export function setErrorHandler(fastify: FastifyInstance) {
     });
   });
 }
-
-

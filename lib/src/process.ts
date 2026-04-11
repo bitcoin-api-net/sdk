@@ -1,7 +1,7 @@
 import { logger } from 'lib/src/logging/server.js';
 
 export class Process {
-  nodeProcess: typeof process = process;
+  nodeProcess = process;
 
   private exiting = false;
 

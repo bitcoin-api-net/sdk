@@ -12,8 +12,8 @@ Use prompts from this directory for different tasks.
 
 AI Mode: Plan
 Main Goal: Create exactly the same page in project from the source page.
-Source Page: apps/web-client/raw/Sign In Page/index.html
-Destination Page: apps/web-client/src/pages/authorization/sign-in.astro
+Source Page: apps/web-client/raw/Reset Password - Input Registered Email/index.html
+Destination Page: apps/web-client/src/pages/authorization/forgot-password.astro
 Use rules: .cursor/rules/layout-creation.mdc
 Use base layout: apps/web-client/src/layouts/PublicPagesLayout.astro
 
