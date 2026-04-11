@@ -1,5 +1,5 @@
-import { Symbol } from 'core/src/types.js';
-import { Decimal } from 'decimal.js';
+import { Decimal } from 'shared/src/decimal.js';
+import type { Symbol } from 'shared/src/types.js';
 
 const WSS_URL = 'wss://stream.binance.com:9443';
 
@@ -90,7 +90,7 @@ export class BinanceProvider {
 export const binanceProvider = new BinanceProvider();
 
 // For local testing
-// import { Symbols } from 'core/src/constants.js';
+// import { Symbols } from 'shared/src/constants.js';
 // await binanceProvider.subscribeTradeStream(Symbols.btcusdt, {
 //   onMessage: (message) => {
 //     console.log(message);

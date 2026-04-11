@@ -1,20 +1,20 @@
-import { Symbols } from 'core/src/constants.js';
-import { errorsHandler } from 'lib/src/errors.js';
+import { Symbols, Exchanges } from 'shared/src/constants.js';
+import { logProcessErrors, logger } from 'shared/src/logging.js';
+import { redis } from 'shared/src/redis.js';
+import { pricesRepository } from 'shared/src/repositories/prices.repository.js';
+import { pricesBroker } from 'shared/src/brokers/prices.broker.js';
 import { binanceProvider } from '#src/providers/binance.provider.js';
-import { redis } from 'lib/src/redis.js';
-import { processHandler } from 'lib/src/process.js';
-import { pricesRepository } from 'core/src/repositories/prices.repository.js';
-import { Exchanges } from 'core/src/constants.js';
-import { logger } from 'lib/src/logging/server.js';
-import { pricesBroker } from 'core/src/brokers/prices.broker.js';
 
-processHandler.logErrors();
-processHandler.onExit(async () => {
-  await redis.disconnect();
+logProcessErrors();
+
+process.on('SIGINT', async () => {
+  await redis.disconnectAll();
+  process.exit(0);
 });
 
 async function main() {
   await redis.connect();
+
   let messageCount = 0;
   binanceProvider.subscribeTradeStream(Symbols.btcusdt, {
     onMessage: (message) => {
@@ -43,4 +43,4 @@ async function main() {
   logger.info('Subscribed to trade stream');
 }
 
-await main();
+main();

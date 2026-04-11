@@ -1,9 +1,7 @@
 {
   "extends": "../../tsconfig.server.json",
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "noEmit": false
+    "composite": true
   },
-  "include": ["../../lib/src/**/*", "./src/**/*", "../../core/src/repositories"]
+  "include": ["../../shared/src/**/*", "./src/**/*"]
 }
