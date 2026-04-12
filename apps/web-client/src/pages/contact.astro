@@ -1,0 +1,42 @@
+---
+import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import IconArrowRight from '@icons/IconArrowRight.astro';
+---
+
+<PublicPagesLayout
+  title="Contact — Bitcoin API"
+  description="Get in touch with the Bitcoin API team. We'd love to hear from you.">
+  <main class="py-16 lg:py-24">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h1 class="text-4xl font-extrabold tracking-tight mb-4">Contact Us</h1>
+        <p class="text-lg text-[#565d6d] max-w-2xl mx-auto">
+          Have a question, feedback, or just want to say hi? We'd love to hear from you.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-20">
+        <a href="mailto:support@bitcoin-api.dev" class="group bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow text-center">
+          <h3 class="text-lg font-semibold mb-2 group-hover:text-[#0983FD] transition-colors">Email</h3>
+          <p class="text-sm text-[#565d6d] mb-4">For general inquiries and support</p>
+          <span class="text-sm text-[#0983FD] font-medium">support@bitcoin-api.dev</span>
+        </a>
+        <a href="/help" class="group bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow text-center">
+          <h3 class="text-lg font-semibold mb-2 group-hover:text-[#0983FD] transition-colors">Help Center</h3>
+          <p class="text-sm text-[#565d6d] mb-4">Browse FAQs and common questions</p>
+          <span class="text-sm text-[#0983FD] font-medium inline-flex items-center gap-1">
+            Visit Help Center
+            <IconArrowRight class="w-3 h-3" />
+          </span>
+        </a>
+      </div>
+
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="text-2xl font-bold mb-4">Response Time</h2>
+        <p class="text-[#565d6d] leading-relaxed">
+          We typically respond within 24 hours on business days. For urgent issues affecting your production integration, please include "URGENT" in your email subject.
+        </p>
+      </div>
+    </div>
+  </main>
+</PublicPagesLayout>
