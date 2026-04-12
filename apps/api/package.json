@@ -23,6 +23,7 @@
     "@fastify/autoload": "^6.3.1",
     "@fastify/swagger": "^9.7.0",
     "@fastify/swagger-ui": "^5.2.5",
+    "@fastify/websocket": "^11.2.0",
     "fastify": "^5.7.4",
     "fastify-plugin": "^5.1.0",
     "shared": "^0.0.1"

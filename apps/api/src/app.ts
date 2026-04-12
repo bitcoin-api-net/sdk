@@ -4,6 +4,7 @@ import type { ResponseErrorPayload } from '#src/shared/errors.js';
 import fastifyAutoload from '@fastify/autoload';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
+import fastifyWebsocket from '@fastify/websocket';
 import Fastify from 'fastify';
 import env, { required } from 'shared/src/env.js';
 import { AppError } from 'shared/src/errors.js';
@@ -42,6 +43,8 @@ async function main() {
   await app.register(loggingPlugin);
 
   if (NODE_ENV === 'development') await app.register(corsPlugin);
+
+  await app.register(fastifyWebsocket);
 
   await app.register(fastifySwagger);
   await app.register(fastifySwaggerUi, {

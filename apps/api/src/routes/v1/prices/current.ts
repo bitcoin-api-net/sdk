@@ -1,9 +1,13 @@
-import { JSONSchemaType } from '@fastify/ajv-compiler/node_modules/ajv';
+import { sendJSON } from '#src/shared/websocket.js';
+import Ajv, { JSONSchemaType } from '@fastify/ajv-compiler/node_modules/ajv/dist/ajv.js';
 import { FastifyInstance } from 'fastify';
-import type { Symbol } from 'shared/src/types.js';
+import { pricesBroker } from 'shared/src/brokers/prices.broker.js';
 import { Symbols } from 'shared/src/constants.js';
 import { Exchanges } from 'shared/src/constants.js';
 import { pricesRepository } from 'shared/src/repositories/prices.repository.js';
+import type { Symbol } from 'shared/src/types.js';
+
+const validator = new Ajv.default();
 
 export type RequestData = {
   symbol: Symbol;
@@ -31,6 +35,8 @@ const responseSchema: JSONSchemaType<ResponseData> = {
   required: ['price', 'time'],
 };
 
+const validateResponse = validator.compile(responseSchema);
+
 export default async function (fastify: FastifyInstance) {
   fastify.route<{ Querystring: RequestData; Reply: ResponseData }>({
     method: 'GET',
@@ -40,6 +46,7 @@ export default async function (fastify: FastifyInstance) {
       response: {
         200: responseSchema,
       },
+      description: `For websocket use: wscat -c ${process.env.WS_API_BROWSER_URL}/v1/prices/current?symbol=btcusdt`,
     },
     handler: async (req, reply) => {
       const { symbol } = req.query;
@@ -47,6 +54,18 @@ export default async function (fastify: FastifyInstance) {
       return reply.status(200).send({
         price: price.price.toString(),
         time: price.time.toISOString(),
+      });
+    },
+    wsHandler: async (socket, req) => {
+      const { symbol } = req.query;
+      const price = await pricesRepository.getLastPrice(symbol, Exchanges.binance);
+      const resp = { price: price.price.toString(), time: price.time.toISOString() };
+      sendJSON(socket, resp, validateResponse);
+      const listener = await pricesBroker.subscribeToLastPrice(symbol, Exchanges.binance, (message) => {
+        sendJSON(socket, { price: message.price.toString(), time: message.time.toISOString() }, validateResponse);
+      });
+      socket.on('close', () => {
+        pricesBroker.unsubscribeFromLastPrice(symbol, Exchanges.binance, listener);
       });
     },
   });
