@@ -1,7 +1,7 @@
 ---
 import '@styles/global.css';
 import Logo from '@icons/Logo.astro';
-import { CircleUserRound } from '@lucide/astro';
+import HeaderAuth from '@components/layout/HeaderAuth.vue';
 interface Props {
   title?: string;
   description?: string;
@@ -44,11 +44,7 @@ const {
           <a href="/pricing" class="text-sm font-medium hover:text-[#0983FD]">Pricing</a>
         </nav>
 
-        <div class="flex items-center gap-6">
-          <a href="/profile/home" class="profile-icon-link" aria-label="Profile">
-            <CircleUserRound size={28} color="#565d6d" />
-          </a>
-        </div>
+        <HeaderAuth client:load />
       </div>
     </header>
 
@@ -111,17 +107,3 @@ const {
     </footer>
   </body>
 </html>
-
-<style>
-  .profile-icon-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    padding: 4px;
-    transition: background-color 0.2s;
-  }
-  .profile-icon-link:hover {
-    background-color: #f0f2f5;
-  }
-</style>

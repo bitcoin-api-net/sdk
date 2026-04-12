@@ -9,7 +9,8 @@
       "@layouts/*": ["./src/layouts/*"],
       "@styles/*": ["./src/styles/*"],
       "@services/*": ["./src/services/*"],
-      "@icons/*": ["./src/icons/*"]
+      "@icons/*": ["./src/icons/*"],
+      "@stores/*": ["./src/stores/*"]
     },
     "jsx": "preserve"
   }

@@ -1,6 +1,7 @@
 ---
 import '@styles/global.css';
 import Logo from '@icons/Logo.astro';
+import SidebarUser from '@components/layout/SidebarUser.vue';
 import { CircleUserRound, Home, Settings, LogOut } from '@lucide/astro';
 
 interface Props {
@@ -44,10 +45,7 @@ const {
           <div class="sidebar-avatar">
             <CircleUserRound size={36} color="#0983FD" />
           </div>
-          <div class="sidebar-user-info">
-            <span class="sidebar-user-name">My Account</span>
-            <span class="sidebar-user-email">user@example.com</span>
-          </div>
+          <SidebarUser client:load />
         </div>
 
         <nav class="sidebar-nav">
@@ -135,26 +133,6 @@ const {
     display: flex;
   }
 
-  .sidebar-user-info {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .sidebar-user-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #171a1f;
-  }
-
-  .sidebar-user-email {
-    font-size: 12px;
-    color: #565d6d;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
   /* ── Navigation ── */
   .sidebar-nav {
     display: flex;
@@ -182,7 +160,9 @@ const {
     font-weight: 500;
     color: #565d6d;
     text-decoration: none;
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
   }
 
   .sidebar-nav-item:hover {
