@@ -13,7 +13,8 @@
     "type-check": "tsc --build --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "web-client+api": "npm run dev --workspace=apps/web-client & npm run start:dev --workspace=apps/api"
   },
   "workspaces": [
     "shared",

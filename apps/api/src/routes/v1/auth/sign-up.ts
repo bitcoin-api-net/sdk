@@ -1,6 +1,6 @@
+import { signUpUsecase } from '#src/usecases/sign-up.usecase.js';
 import { JSONSchemaType } from '@fastify/ajv-compiler/node_modules/ajv';
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { signUpUsecase } from '#src/usecases/sign-up.usecase.js';
 
 type RequestData = {
   email: string;
@@ -14,8 +14,8 @@ type ResponseData = {
 const bodySchema: JSONSchemaType<RequestData> = {
   type: 'object',
   properties: {
-    email: { type: 'string' },
-    password: { type: 'string' },
+    email: { type: 'string', format: 'email', maxLength: 255 },
+    password: { type: 'string', minLength: 8, maxLength: 255 },
   },
   required: ['email', 'password'],
 };
@@ -43,9 +43,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
 
       await signUpUsecase.execute({ email, password });
 
-      return reply
-        .status(201)
-        .send({ message: 'Verification email sent. Please check your inbox.' });
+      return reply.status(201).send({ message: 'Verification email sent. Please check your inbox.' });
     },
   });
 }

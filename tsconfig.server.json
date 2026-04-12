@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "types": ["node"]
