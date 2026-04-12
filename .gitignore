@@ -28,6 +28,9 @@ Thumbs.db
 # Env
 .env
 
+# Generated
+generated/prisma/
+
 # Notes
 notes/
 

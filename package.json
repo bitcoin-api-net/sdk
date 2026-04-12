@@ -10,7 +10,10 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
-    "type-check": "tsc --build --noEmit"
+    "type-check": "tsc --build --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev"
   },
   "workspaces": [
     "shared",

@@ -1,7 +1,9 @@
 import corsPlugin from '#src/plugins/cors.js';
+import jwtAuthPlugin from '#src/plugins/jwt-auth.js';
 import loggingPlugin from '#src/plugins/logging.js';
 import type { ResponseErrorPayload } from '#src/shared/errors.js';
 import fastifyAutoload from '@fastify/autoload';
+import fastifyCookie from '@fastify/cookie';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyWebsocket from '@fastify/websocket';
@@ -10,10 +12,12 @@ import env, { required } from 'shared/src/env.js';
 import { AppError } from 'shared/src/errors.js';
 import { defaultOptions, logProcessErrors } from 'shared/src/logging.js';
 import { redis } from 'shared/src/redis.js';
+import { connectToDb } from 'shared/src/repositories/client.js';
 import path from 'node:path';
 
 const API_PORT = required(env.API_PORT);
 const NODE_ENV = required(env.NODE_ENV);
+const SECRET_KEY = required(env.SECRET_KEY);
 const RUN_FILE_EXTENSION = required(env.RUN_FILE_EXTENSION);
 
 async function main() {
@@ -21,6 +25,7 @@ async function main() {
 
   await redis.connect();
   await redis.connectSubscriber();
+  await connectToDb();
 
   const app = Fastify({ logger: defaultOptions });
 
@@ -43,6 +48,17 @@ async function main() {
   await app.register(loggingPlugin);
 
   if (NODE_ENV === 'development') await app.register(corsPlugin);
+
+  await app.register(fastifyCookie, {
+    secret: SECRET_KEY,
+    parseOptions: {
+      httpOnly: true,
+      secure: NODE_ENV === 'production',
+      sameSite: 'lax',
+    },
+  });
+
+  await app.register(jwtAuthPlugin);
 
   await app.register(fastifyWebsocket);
 
