@@ -239,4 +239,48 @@ import { Mail, Key, Wallet, Copy, Eye, EyeOff } from '@lucide/astro';
     color: #171a1f;
     letter-spacing: -0.02em;
   }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+    }
+
+    .cards {
+      max-width: 100%;
+    }
+
+    .card-header {
+      padding: 16px;
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    .info-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .api-key-group {
+      width: 100%;
+    }
+
+    .api-key-value {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
+    }
+
+    .balance-amount {
+      font-size: 28px;
+    }
+  }
 </style>
