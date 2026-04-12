@@ -13,10 +13,10 @@ import IconDashboard from '@icons/IconDashboard.astro';
 import IconCommunity from '@icons/IconCommunity.astro';
 
 const heroCode = `<span class="syntax-keyword">async function</span> <span class="syntax-function">getBitcoinPrice</span>() {
-  <span class="syntax-keyword">const</span> <span class="syntax-variable">response</span> <span class="syntax-operator">=</span> <span class="syntax-keyword">await</span> <span class="syntax-function">fetch</span>(<span class="syntax-string">"https://bitcoin-api/api/v1/prices/current"</span>, {
+  <span class="syntax-keyword">const</span> <span class="syntax-variable">response</span> <span class="syntax-operator">=</span> <span class="syntax-keyword">await</span> <span class="syntax-function">fetch</span>(<span class="syntax-string">"https://bitcoin-api.net/api/v1/prices/current"</span>, {
     headers: {
       <span class="syntax-string">"Content-Type"</span>: <span class="syntax-string">"application/json"</span>,
-      <span class="syntax-string">"Authorization"</span>: <span class="syntax-string">"Bearer sk_live_..."</span>
+      <span class="syntax-string">"Authorization"</span>: <span class="syntax-string">"Bearer your_api_key_from_profile"</span>
     }
   });
   <span class="syntax-keyword">const</span> <span class="syntax-variable">data</span> <span class="syntax-operator">=</span> <span class="syntax-keyword">await</span> <span class="syntax-variable">response</span>.<span class="syntax-function">json</span>();
