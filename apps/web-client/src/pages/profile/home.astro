@@ -21,7 +21,7 @@ import { Mail, Key, Wallet, Copy, Eye, EyeOff } from '@lucide/astro';
       <div class="card-body">
         <div class="info-row">
           <span class="info-label">Email</span>
-          <span class="info-value">user@example.com</span>
+          <span class="info-value" id="profile-email">user@example.com</span>
         </div>
         <div class="info-row">
           <span class="info-label">Status</span>
@@ -80,6 +80,18 @@ import { Mail, Key, Wallet, Copy, Eye, EyeOff } from '@lucide/astro';
     </div>
   </div>
 </ProfileLayout>
+
+<script>
+  import { userStore } from '@stores/auth';
+
+  const emailEl = document.getElementById('profile-email');
+
+  userStore.subscribe((user) => {
+    if (emailEl && user) {
+      emailEl.textContent = user.email;
+    }
+  });
+</script>
 
 <style>
   /* ── Page header ── */

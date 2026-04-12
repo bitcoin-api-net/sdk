@@ -61,7 +61,7 @@ const {
         </nav>
 
         <div class="sidebar-bottom">
-          <a href="/authorization/sign-in" class="sidebar-nav-item">
+          <a href="/authorization/sign-in" id="logout-btn" class="sidebar-nav-item">
             <LogOut size={18} />
             <span>Log out</span>
           </a>
@@ -74,6 +74,23 @@ const {
     </div>
   </body>
 </html>
+
+<script>
+  import { userStore, logout, fetchUser } from '@stores/auth';
+  await fetchUser();
+  console.log('userStore', userStore.get());
+  userStore.subscribe((user) => {
+    if (!user) {
+      window.location.href = '/authorization/sign-in';
+    }
+  });
+
+  document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await logout();
+    window.location.href = '/authorization/sign-in';
+  });
+</script>
 
 <style>
   /* ── Shell ── */

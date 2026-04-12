@@ -24,6 +24,13 @@ export async function fetchUser() {
   }
 }
 
-if (typeof window !== 'undefined') {
-  fetchUser();
+export async function logout() {
+  try {
+    await fetch(`${import.meta.env.PUBLIC_API_URL}/v1/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } finally {
+    userStore.set(undefined);
+  }
 }

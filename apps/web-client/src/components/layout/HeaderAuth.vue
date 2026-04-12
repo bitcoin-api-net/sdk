@@ -7,11 +7,8 @@ const $user = useStore(userStore);
 
 <template>
   <div class="flex items-center gap-4">
-    <!-- Loading -->
-    <div v-if="$user === undefined" class="w-7 h-7 rounded-full bg-gray-200 animate-pulse" />
-
     <!-- Unauthenticated -->
-    <template v-else-if="$user === null">
+    <template v-if="!$user">
       <a href="/authorization/sign-in" class="text-sm font-medium text-[#565d6d] hover:text-[#0983FD] transition-colors">
         Log in
       </a>
