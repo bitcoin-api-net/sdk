@@ -2,6 +2,7 @@
 import '@styles/global.css';
 import Logo from '@icons/Logo.astro';
 import HeaderAuth from '@components/layout/HeaderAuth.vue';
+import { Box, BookOpen, CreditCard } from '@lucide/astro';
 interface Props {
   title?: string;
   description?: string;
@@ -44,9 +45,64 @@ const {
           <a href="/pricing" class="text-sm font-medium hover:text-[#0983FD]">Pricing</a>
         </nav>
 
-        <HeaderAuth client:load />
+        <div class="hidden md:block">
+          <HeaderAuth client:load />
+        </div>
+
+        <button
+          id="mobile-menu-btn"
+          class="md:hidden flex items-center justify-center p-2 rounded-lg hover:bg-black/5 transition-colors"
+          aria-label="Open menu"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
       </div>
     </header>
+
+    <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black/30 z-[60] hidden opacity-0 transition-opacity duration-300"></div>
+    <aside id="mobile-sidebar" class="fixed top-0 right-0 bottom-0 w-72 bg-white z-[70] shadow-xl translate-x-full transition-transform duration-300 flex flex-col">
+      <div class="flex items-center justify-between px-5 h-20 border-b border-[#dee1e6]">
+        <a href="/" class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-[#0983FD] rounded-md flex items-center justify-center">
+            <Logo class="w-[22px] h-[22px] text-white" />
+          </div>
+          <span class="text-xl font-bold text-[#0983FD]">Bitcoin API</span>
+        </a>
+        <button
+          id="mobile-menu-close"
+          class="flex items-center justify-center p-2 rounded-lg hover:bg-black/5 transition-colors"
+          aria-label="Close menu"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div id="mobile-sidebar-auth" class="px-4 pt-4 pb-2">
+        <HeaderAuth variant="sidebar" client:load />
+      </div>
+
+      <nav class="flex flex-col gap-1 px-4 py-4 border-t border-[#dee1e6]">
+        <a href="/products" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#565d6d] rounded-lg hover:bg-black/5 hover:text-[#0983FD] transition-colors">
+          <Box size={18} class="flex-shrink-0" />
+          <span>Products</span>
+        </a>
+        <a href="/docs" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#565d6d] rounded-lg hover:bg-black/5 hover:text-[#0983FD] transition-colors">
+          <BookOpen size={18} class="flex-shrink-0" />
+          <span>Documentation</span>
+        </a>
+        <a href="/pricing" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-[#565d6d] rounded-lg hover:bg-black/5 hover:text-[#0983FD] transition-colors">
+          <CreditCard size={18} class="flex-shrink-0" />
+          <span>Pricing</span>
+        </a>
+      </nav>
+    </aside>
 
     <slot />
 
@@ -111,4 +167,31 @@ const {
 <script>
   import { userStore, fetchUser } from '@stores/auth';
   await fetchUser();
+
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  const closeBtn = document.getElementById('mobile-menu-close');
+  const sidebar = document.getElementById('mobile-sidebar');
+  const overlay = document.getElementById('mobile-sidebar-overlay');
+
+  function openSidebar() {
+    overlay?.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      overlay?.classList.remove('opacity-0');
+      sidebar?.classList.remove('translate-x-full');
+    });
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar() {
+    overlay?.classList.add('opacity-0');
+    sidebar?.classList.add('translate-x-full');
+    document.body.style.overflow = '';
+    sidebar?.addEventListener('transitionend', () => {
+      overlay?.classList.add('hidden');
+    }, { once: true });
+  }
+
+  menuBtn?.addEventListener('click', openSidebar);
+  closeBtn?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', closeSidebar);
 </script>
