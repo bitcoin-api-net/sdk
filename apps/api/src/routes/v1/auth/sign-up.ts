@@ -1,0 +1,51 @@
+import { JSONSchemaType } from '@fastify/ajv-compiler/node_modules/ajv';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { signUpUsecase } from '#src/usecases/sign-up.usecase.js';
+
+type RequestData = {
+  email: string;
+  password: string;
+};
+
+type ResponseData = {
+  message: string;
+};
+
+const bodySchema: JSONSchemaType<RequestData> = {
+  type: 'object',
+  properties: {
+    email: { type: 'string' },
+    password: { type: 'string' },
+  },
+  required: ['email', 'password'],
+};
+
+const responseSchema: JSONSchemaType<ResponseData> = {
+  type: 'object',
+  properties: {
+    message: { type: 'string' },
+  },
+  required: ['message'],
+};
+
+export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
+  app.route<{ Body: RequestData; Reply: ResponseData }>({
+    method: 'POST',
+    url: '/sign-up',
+    schema: {
+      body: bodySchema,
+      response: {
+        201: responseSchema,
+      },
+    },
+    handler: async (req, reply) => {
+      const { email, password } = req.body;
+
+      await signUpUsecase.execute({ email, password });
+
+      return reply
+        .status(201)
+        .send({ message: 'Verification email sent. Please check your inbox.' });
+    },
+  });
+}

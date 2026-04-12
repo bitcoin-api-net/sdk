@@ -1,14 +1,44 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+const API_URL = import.meta.env.VITE_API_BROWSER_URL
+
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
+const errorMessage = ref('')
+
+type FormStatus = 'Default' | 'Error' | 'Loading'
+const currentStatus = ref<FormStatus>('Default')
+
+async function handleSignIn() {
+  errorMessage.value = ''
+  currentStatus.value = 'Loading'
+
+  try {
+    const res = await fetch(`${API_URL}/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email: email.value, password: password.value }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Something went wrong')
+    }
+
+    window.location.href = '/'
+  } catch (err) {
+    currentStatus.value = 'Error'
+    errorMessage.value = err instanceof Error ? err.message : 'Something went wrong'
+  }
+}
 </script>
 
 <template>
-  <form @submit.prevent class="space-y-6">
+  <form @submit.prevent="handleSignIn" class="space-y-6">
     <div>
       <label class="block text-sm font-medium mb-2">Email address</label>
       <input
@@ -61,11 +91,17 @@ const showPassword = ref(false)
       <label for="remember" class="text-sm text-[#8F96A3] cursor-pointer">Remember me for 30 days</label>
     </div>
 
+    <p v-if="currentStatus === 'Error'" class="text-sm text-red-500">{{ errorMessage }}</p>
+
     <button
       type="submit"
-      class="w-full h-11 bg-[#2563EB] text-white rounded-xl text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors"
+      class="w-full h-11 bg-[#2563EB] text-white rounded-xl text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+      :disabled="currentStatus === 'Loading'"
     >
-      Sign in
+      <svg v-if="currentStatus === 'Loading'" class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+      </svg>
+      <span>{{ currentStatus === 'Loading' ? 'Signing in...' : 'Sign in' }}</span>
     </button>
   </form>
 </template>

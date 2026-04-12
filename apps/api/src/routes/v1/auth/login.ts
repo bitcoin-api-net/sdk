@@ -2,7 +2,7 @@ import { JSONSchemaType } from '@fastify/ajv-compiler/node_modules/ajv';
 import bcrypt from 'bcrypt';
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import env, { required } from 'shared/src/env.js';
-import { UnauthorizedError } from 'shared/src/errors.js';
+import { ForbiddenError, UnauthorizedError } from 'shared/src/errors.js';
 import { userRepository } from 'shared/src/repositories/user.repository.js';
 
 const NODE_ENV = required(env.NODE_ENV);
@@ -48,7 +48,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
 
       const user = await userRepository.findFirst({
         where: { email },
-        select: { password: true },
+        select: { password: true, isActive: true },
       });
 
       if (!user?.password) {
@@ -60,6 +60,10 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
         throw new UnauthorizedError('Invalid email or password');
       }
 
+      if (!user.isActive) {
+        throw new ForbiddenError('Please verify your email before signing in');
+      }
+
       const token = app.jwt.sign({ email });
 
       return reply
@@ -67,7 +71,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
           httpOnly: true,
           sameSite: 'lax',
           secure: NODE_ENV === 'production',
-          maxAge: 60 * 60 * 2,
+          maxAge: 60 * 60 * 24 * 7,
           path: '/',
         })
         .status(200)
