@@ -31,6 +31,22 @@ const docSections = [
     ],
   },
 ] as const;
+
+function getCurrentPageTitle(): string {
+  for (const section of docSections) {
+    for (const group of section.groups) {
+      if ('links' in group) {
+        const link = group.links.find((l) => l.href.replace(/\/$/, '') === currentPath);
+        if (link) return link.label;
+      } else if (group.href.replace(/\/$/, '') === currentPath) {
+        return group.title;
+      }
+    }
+  }
+  return 'Menu';
+}
+
+const currentPageTitle = getCurrentPageTitle();
 ---
 
 <PublicPagesLayout
@@ -120,6 +136,85 @@ const docSections = [
     </aside>
 
     <main class="docs-layout__content">
+      <details class="mobile-nav" id="mobile-nav">
+        <summary class="mobile-nav__trigger">
+          <span>{currentPageTitle}</span>
+          <svg
+            class="mobile-nav__chevron"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <nav class="mobile-nav__content">
+          {
+            docSections.map((section) => (
+              <div class="mobile-nav__section">
+                <h3 class="mobile-nav__heading">{section.heading}</h3>
+                <ul class="mobile-nav__list">
+                  {section.groups.map((group) => {
+                    if ('links' in group) {
+                      return group.links.map((link) => {
+                        const isActive = link.href.replace(/\/$/, '') === currentPath;
+                        return (
+                          <li>
+                            <a
+                              href={link.href}
+                              class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive }]}
+                              aria-current={isActive ? 'page' : undefined}>
+                              {link.label}
+                            </a>
+                          </li>
+                        );
+                      });
+                    }
+
+                    const isActive = group.href.replace(/\/$/, '') === currentPath;
+                    return (
+                      <li>
+                        <a
+                          href={group.href}
+                          class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive }]}
+                          aria-current={isActive ? 'page' : undefined}>
+                          {group.title}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))
+          }
+        </nav>
+      </details>
+
+      <details class="mobile-toc" id="mobile-toc">
+        <summary class="mobile-toc__trigger">
+          <span>On this page</span>
+          <svg
+            class="mobile-toc__chevron"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <nav class="mobile-toc__content">
+          <ul class="mobile-toc__list" id="mobile-toc-list"></ul>
+        </nav>
+      </details>
+
       <slot />
     </main>
 
@@ -422,6 +517,136 @@ const docSections = [
     min-width: 0;
   }
 
+  /* ── Mobile navigation dropdowns ── */
+
+  .mobile-nav,
+  .mobile-toc {
+    display: none;
+  }
+
+  .mobile-nav__trigger,
+  .mobile-toc__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: border-color 0.15s;
+  }
+
+  .mobile-nav__trigger::-webkit-details-marker,
+  .mobile-toc__trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile-nav__trigger:hover,
+  .mobile-toc__trigger:hover {
+    border-color: var(--color-accent);
+  }
+
+  .mobile-nav__chevron,
+  .mobile-toc__chevron {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: transform 0.2s ease;
+  }
+
+  .mobile-nav[open] > .mobile-nav__trigger > .mobile-nav__chevron,
+  .mobile-toc[open] > .mobile-toc__trigger > .mobile-toc__chevron {
+    transform: rotate(180deg);
+  }
+
+  .mobile-nav__content,
+  .mobile-toc__content {
+    padding: 0.5rem 0;
+    border: 1px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    background: white;
+    margin-top: -1px;
+  }
+
+  .mobile-nav__section {
+    padding: 0.5rem 0;
+  }
+
+  .mobile-nav__section:first-child {
+    padding-top: 0;
+  }
+
+  .mobile-nav__heading {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin: 0;
+    padding: 0.25rem 0.875rem;
+  }
+
+  .mobile-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-nav__link {
+    display: block;
+    padding: 0.4rem 0.875rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .mobile-nav__link:hover {
+    color: var(--color-text);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .mobile-nav__link--active {
+    color: var(--color-accent) !important;
+    background: rgba(9, 131, 253, 0.08) !important;
+    font-weight: 500;
+  }
+
+  .mobile-toc__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-toc__list :global(a) {
+    display: block;
+    padding: 0.35rem 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .mobile-toc__list :global(a:hover) {
+    color: var(--color-text);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .mobile-toc__list :global(a[data-level='3']) {
+    padding-left: 1.75rem;
+  }
+
   /* ── Responsive ── */
 
   @media (max-width: 1024px) {
@@ -432,6 +657,11 @@ const docSections = [
     .docs-toc {
       display: none;
     }
+
+    .mobile-toc {
+      display: block;
+      margin-bottom: 1.5rem;
+    }
   }
 
   @media (max-width: 768px) {
@@ -440,8 +670,17 @@ const docSections = [
     }
 
     .docs-layout__sidebar {
-      position: static;
-      max-height: none;
+      display: none;
+    }
+
+    .mobile-nav {
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+
+    .mobile-toc {
+      display: block;
+      margin-bottom: 1.5rem;
     }
   }
 </style>
@@ -450,12 +689,15 @@ const docSections = [
   function buildTOC() {
     const content = document.querySelector('.docs-layout__content');
     const tocList = document.getElementById('toc-list');
+    const mobileTocList = document.getElementById('mobile-toc-list');
+    const mobileToc = document.getElementById('mobile-toc');
     if (!content || !tocList) return;
 
     const headings = content.querySelectorAll<HTMLHeadingElement>('h2, h3');
     if (headings.length === 0) {
       const tocNav = tocList.closest<HTMLElement>('.docs-toc__nav');
       if (tocNav) tocNav.style.display = 'none';
+      if (mobileToc) mobileToc.style.display = 'none';
       return;
     }
 
@@ -475,6 +717,10 @@ const docSections = [
       a.dataset.level = heading.tagName === 'H3' ? '3' : '2';
       li.appendChild(a);
       tocList.appendChild(li);
+
+      if (mobileTocList) {
+        mobileTocList.appendChild(li.cloneNode(true));
+      }
     }
 
     const tocLinks = tocList.querySelectorAll<HTMLAnchorElement>('a');
@@ -493,6 +739,15 @@ const docSections = [
     );
 
     headings.forEach((h) => observer.observe(h));
+
+    if (mobileTocList) {
+      const mobileLinks = mobileTocList.querySelectorAll<HTMLAnchorElement>('a');
+      for (const link of mobileLinks) {
+        link.addEventListener('click', () => {
+          mobileToc?.removeAttribute('open');
+        });
+      }
+    }
   }
 
   buildTOC();
