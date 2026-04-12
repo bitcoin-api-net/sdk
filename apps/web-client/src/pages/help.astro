@@ -1,0 +1,111 @@
+---
+import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import IconArrowRight from '@icons/IconArrowRight.astro';
+---
+
+<PublicPagesLayout
+  title="Help Center — Bitcoin API"
+  description="Find answers to common questions and get help with the Bitcoin API.">
+  <main class="py-16 lg:py-24">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h1 class="text-4xl font-extrabold tracking-tight mb-4">Help Center</h1>
+        <p class="text-lg text-[#565d6d] max-w-2xl mx-auto">
+          Everything you need to get started and make the most of Bitcoin API.
+        </p>
+      </div>
+
+      <!-- Quick links -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+        <a href="/docs" class="group bg-white p-6 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow">
+          <h3 class="text-base font-semibold mb-2 group-hover:text-[#0983FD] transition-colors">Documentation</h3>
+          <p class="text-sm text-[#565d6d]">Guides, references, and examples to integrate the API.</p>
+        </a>
+        <a href="/docs/quickstart" class="group bg-white p-6 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow">
+          <h3 class="text-base font-semibold mb-2 group-hover:text-[#0983FD] transition-colors">Quickstart</h3>
+          <p class="text-sm text-[#565d6d]">Get your first API call running in under 5 minutes.</p>
+        </a>
+        <a href="/docs/authentication" class="group bg-white p-6 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow">
+          <h3 class="text-base font-semibold mb-2 group-hover:text-[#0983FD] transition-colors">Authentication</h3>
+          <p class="text-sm text-[#565d6d]">Learn how to authenticate your requests with API keys.</p>
+        </a>
+      </div>
+
+      <!-- FAQ -->
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold mb-8 mt-8">Frequently Asked Questions</h2>
+
+        <div class="space-y-6">
+          <details class="group bg-white rounded-xl border border-[#dee1e6]/50 shadow-sm">
+            <summary class="flex items-center justify-between cursor-pointer p-6 text-base font-medium select-none">
+              How do I get an API key?
+              <IconArrowRight class="w-4 h-4 text-[#565d6d] transition-transform group-open:rotate-90" />
+            </summary>
+            <div class="px-6 pb-6 text-sm text-[#565d6d] leading-relaxed">
+              Sign up for a free account and you'll receive an API key on your
+              <a href="/profile/home" class="text-[#0983FD] hover:underline">profile dashboard</a>.
+              You can use it immediately to start making requests.
+            </div>
+          </details>
+
+          <details class="group bg-white rounded-xl border border-[#dee1e6]/50 shadow-sm">
+            <summary class="flex items-center justify-between cursor-pointer p-6 text-base font-medium select-none">
+              What are the rate limits?
+              <IconArrowRight class="w-4 h-4 text-[#565d6d] transition-transform group-open:rotate-90" />
+            </summary>
+            <div class="px-6 pb-6 text-sm text-[#565d6d] leading-relaxed">
+              Free-tier accounts can make up to 100 requests per minute. If you need higher limits, check our
+              <a href="/pricing" class="text-[#0983FD] hover:underline">pricing page</a> for available plans.
+            </div>
+          </details>
+
+          <details class="group bg-white rounded-xl border border-[#dee1e6]/50 shadow-sm">
+            <summary class="flex items-center justify-between cursor-pointer p-6 text-base font-medium select-none">
+              Which data sources do you use?
+              <IconArrowRight class="w-4 h-4 text-[#565d6d] transition-transform group-open:rotate-90" />
+            </summary>
+            <div class="px-6 pb-6 text-sm text-[#565d6d] leading-relaxed">
+              We aggregate data directly from centralized and decentralized exchanges as well as on-chain blockchain
+              data. Source failover is automatic to ensure high availability.
+            </div>
+          </details>
+
+          <details class="group bg-white rounded-xl border border-[#dee1e6]/50 shadow-sm">
+            <summary class="flex items-center justify-between cursor-pointer p-6 text-base font-medium select-none">
+              Is the API free to use?
+              <IconArrowRight class="w-4 h-4 text-[#565d6d] transition-transform group-open:rotate-90" />
+            </summary>
+            <div class="px-6 pb-6 text-sm text-[#565d6d] leading-relaxed">
+              Yes — we offer a generous free tier so you can start building without any cost. Paid plans are available
+              when you need higher throughput or premium endpoints.
+            </div>
+          </details>
+
+          <details class="group bg-white rounded-xl border border-[#dee1e6]/50 shadow-sm">
+            <summary class="flex items-center justify-between cursor-pointer p-6 text-base font-medium select-none">
+              How do I report a bug or request a feature?
+              <IconArrowRight class="w-4 h-4 text-[#565d6d] transition-transform group-open:rotate-90" />
+            </summary>
+            <div class="px-6 pb-6 text-sm text-[#565d6d] leading-relaxed">
+              Reach out via email at
+              <a href="mailto:support@bitcoin-api.dev" class="text-[#0983FD] hover:underline">support@bitcoin-api.dev</a>
+              or join our Discord community. We review every request.
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Contact CTA -->
+      <div class="mt-20 text-center bg-[#EFF6FF] rounded-2xl p-10">
+        <h3 class="text-xl font-semibold mb-3">Still need help?</h3>
+        <p class="text-[#565d6d] mb-6">We're here to assist. Drop us a line and we'll get back to you shortly.</p>
+        <a
+          href="mailto:support@bitcoin-api.dev"
+          class="inline-flex items-center gap-2 bg-[#0983FD] text-white px-6 py-3 rounded-md text-sm font-medium shadow-sm hover:bg-[#076ed4]">
+          Contact Support
+          <IconArrowRight class="w-4 h-4" />
+        </a>
+      </div>
+    </div>
+  </main>
+</PublicPagesLayout>
