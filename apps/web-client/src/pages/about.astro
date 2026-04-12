@@ -1,0 +1,107 @@
+---
+import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import IconBolt from '@icons/IconBolt.astro';
+import IconArrowRight from '@icons/IconArrowRight.astro';
+---
+
+<PublicPagesLayout
+  title="About — Bitcoin API"
+  description="Learn about the team and mission behind Bitcoin API — the most comfortable Bitcoin API for developers.">
+  <main class="py-16 lg:py-24">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Hero -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight mb-6">
+          Building the most comfortable<br />
+          <span class="text-[#0983FD]">Bitcoin API</span>
+        </h1>
+        <p class="text-lg text-[#565d6d] max-w-2xl mx-auto leading-relaxed">
+          We believe working with Bitcoin data should be effortless. Our mission is to give developers, vibe coders, and
+          AI agents the simplest path from idea to production.
+        </p>
+      </div>
+
+      <!-- Values -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
+        <div class="bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm">
+          <h3 class="text-lg font-semibold mb-3">Developer Experience First</h3>
+          <p class="text-sm text-[#565d6d] leading-relaxed">
+            Every endpoint, every response, every error message is designed to minimize friction and maximize
+            productivity.
+          </p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm">
+          <h3 class="text-lg font-semibold mb-3">Reliability You Can Count On</h3>
+          <p class="text-sm text-[#565d6d] leading-relaxed">
+            We aggregate data from multiple sources with automatic failover so your app never goes dark.
+          </p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm">
+          <h3 class="text-lg font-semibold mb-3">Sustainable & Lean</h3>
+          <p class="text-sm text-[#565d6d] leading-relaxed">
+            We keep our burn rate low and pass the savings on. A generous free tier means you can build without worrying
+            about costs.
+          </p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm">
+          <h3 class="text-lg font-semibold mb-3">Open & Transparent</h3>
+          <p class="text-sm text-[#565d6d] leading-relaxed">
+            Clear documentation, predictable pricing, and honest communication. No surprises, no hidden fees.
+          </p>
+        </div>
+      </div>
+
+      <!-- Story -->
+      <div class="max-w-3xl mx-auto mb-12">
+        <h2 class="text-2xl font-bold mb-6">Our Story</h2>
+        <div class="space-y-4 text-[#565d6d] leading-relaxed">
+          <p>
+            Bitcoin API started from a simple frustration: existing crypto data APIs were either overengineered,
+            unreliable, or way too expensive for indie developers and small teams.
+          </p>
+          <p>
+            We set out to build something different — an API that's intuitive enough for a vibe coder's weekend project
+            yet robust enough for production workloads. One that treats developer experience as a core feature, not an
+            afterthought.
+          </p>
+          <p>
+            Today we serve developers, AI agents, and startups who need fast, accurate Bitcoin data without the
+            overhead. We ship improvements every week and keep the service lean, reliable, and affordable.
+          </p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="text-center bg-[#EFF6FF] rounded-2xl p-10">
+        <h3 class="text-xl font-semibold mb-3">Ready to build?</h3>
+        <p class="text-[#565d6d] mb-6">Get your free API key and start making requests in minutes.</p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a
+            href="/authorization/sign-up"
+            data-auth-link
+            class="inline-flex items-center gap-2 bg-[#0983FD] text-white px-6 py-3 rounded-md text-sm font-medium shadow-sm hover:bg-[#076ed4]">
+            <IconBolt class="w-4 h-4" />
+            Get API Key
+          </a>
+          <a
+            href="/docs"
+            class="inline-flex items-center gap-2 bg-transparent text-[#171a1f] px-6 py-3 rounded-md text-sm font-medium hover:bg-gray-100">
+            Read Documentation
+            <IconArrowRight class="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+</PublicPagesLayout>
+
+<script>
+  import { userStore } from '@stores/auth';
+
+  userStore.subscribe((user) => {
+    const href = user ? '/profile/home' : '/authorization/sign-up';
+    document.querySelectorAll<HTMLAnchorElement>('[data-auth-link]').forEach((link) => {
+      link.href = href;
+    });
+  });
+</script>
