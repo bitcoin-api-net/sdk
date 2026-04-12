@@ -3,62 +3,119 @@ import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
 
 const currentPath = Astro.url.pathname.replace(/\/$/, '');
 
-const docGroups = [
+const docSections = [
   {
-    title: 'Price',
-    links: [{ label: 'Current Price', href: '/docs/price/current' }],
+    heading: 'GETTING STARTED',
+    groups: [
+      {
+        title: 'Introduction',
+        href: '/docs',
+      },
+      {
+        title: 'Quickstart Guide',
+        href: '/docs/quickstart',
+      },
+      {
+        title: 'Authentication',
+        href: '/docs/authentication',
+      },
+    ],
+  },
+  {
+    heading: 'ENDPOINTS',
+    groups: [
+      {
+        title: 'Price',
+        links: [{ label: 'Current Price', href: '/docs/price/current' }],
+      },
+    ],
   },
 ] as const;
 ---
 
 <PublicPagesLayout
   title="Bitcoin API"
-  description="Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees."
->
+  description="Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.">
   <div class="docs-layout">
     <aside class="docs-layout__sidebar">
       <nav class="docs-nav">
-        <div class="docs-nav__actions">
-          <button type="button" class="docs-nav__toggle" data-action="expand" aria-label="Expand all">
-            Expand all
-          </button>
-          <button type="button" class="docs-nav__toggle" data-action="collapse" aria-label="Collapse all">
-            Collapse all
-          </button>
-        </div>
-        <ul class="docs-nav__list">
-          {
-            docGroups.map((group) => {
-              const linkHrefs = group.links.map((l) => l.href.replace(/\/$/, ''));
-              const groupHasActive = linkHrefs.includes(currentPath);
+        {
+          docSections.map((section) => (
+            <div class="docs-nav__section">
+              <h3 class="docs-nav__heading">{section.heading}</h3>
+              <ul class="docs-nav__list">
+                {section.groups.map((group) => {
+                  if ('links' in group) {
+                    const linkHrefs = group.links.map((l) => l.href.replace(/\/$/, ''));
+                    const groupHasActive = linkHrefs.includes(currentPath);
 
-              return (
-                <li class="docs-nav__group">
-                  <details class="docs-nav__details" open={groupHasActive}>
-                    <summary class="docs-nav__summary">{group.title}</summary>
-                    <ul class="docs-nav__links">
-                      {group.links.map((link) => {
-                        const href = link.href;
-                        const isActive = href.replace(/\/$/, '') === currentPath;
-                        return (
-                          <li>
-                            <a
-                              href={href}
-                              class:list={[{ 'docs-nav__link--active': isActive }]}
-                              aria-current={isActive ? 'page' : undefined}
-                            >
-                              {link.label}
-                            </a>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </details>
-                </li>
-              );
-            })
-          }
-        </ul>
+                    return (
+                      <li class="docs-nav__group">
+                        <details class="docs-nav__details" open={groupHasActive}>
+                          <summary class="docs-nav__summary">
+                            <svg
+                              class="docs-nav__icon"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round">
+                              <line x1="12" y1="1" x2="12" y2="23" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                            <span class="docs-nav__label">{group.title}</span>
+                            <svg
+                              class="docs-nav__chevron"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2.5"
+                              stroke-linecap="round"
+                              stroke-linejoin="round">
+                              <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                          </summary>
+                          <ul class="docs-nav__links">
+                            {group.links.map((link) => {
+                              const isActive = link.href.replace(/\/$/, '') === currentPath;
+                              return (
+                                <li>
+                                  <a
+                                    href={link.href}
+                                    class:list={[{ 'docs-nav__link--active': isActive }]}
+                                    aria-current={isActive ? 'page' : undefined}>
+                                    {link.label}
+                                  </a>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </details>
+                      </li>
+                    );
+                  }
+
+                  const isActive = group.href.replace(/\/$/, '') === currentPath;
+                  return (
+                    <li>
+                      <a
+                        href={group.href}
+                        class:list={['docs-nav__page-link', { 'docs-nav__page-link--active': isActive }]}
+                        aria-current={isActive ? 'page' : undefined}>
+                        {group.title}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))
+        }
       </nav>
     </aside>
 
@@ -71,6 +128,28 @@ const docGroups = [
         <h4 class="docs-toc__title">On this page</h4>
         <ul class="docs-toc__list" id="toc-list"></ul>
       </nav>
+
+      <div class="docs-sidebar-card">
+        <h4 class="docs-sidebar-card__title">Need help?</h4>
+        <p class="docs-sidebar-card__text">Our developer team is online to help you integrate.</p>
+        <a href="/contact" class="docs-sidebar-card__btn docs-sidebar-card__btn--outline">Chat Support</a>
+      </div>
+
+      <div class="docs-sidebar-card">
+        <h4 class="docs-sidebar-card__title">Connect AI</h4>
+        <p class="docs-sidebar-card__text">
+          Connect via MCP to enable AI agents to navigate and understand our documentation directly in your IDE.
+        </p>
+        <a href="/docs/quickstart" class="docs-sidebar-card__btn docs-sidebar-card__btn--primary">Setup MCP</a>
+      </div>
+
+      <div class="docs-sidebar-card">
+        <h4 class="docs-sidebar-card__title">Support Us</h4>
+        <p class="docs-sidebar-card__text">
+          Your donations help the project grow and cover server costs. Every contribution makes a difference.
+        </p>
+        <a href="/pricing" class="docs-sidebar-card__btn docs-sidebar-card__btn--primary">Donate Now</a>
+      </div>
     </aside>
   </div>
 </PublicPagesLayout>
@@ -90,31 +169,24 @@ const docGroups = [
 
   .docs-layout__sidebar {
     position: sticky;
-    top: 2rem;
+    top: 6rem;
     align-self: start;
-    max-height: calc(100vh - 4rem);
+    max-height: calc(100vh - 8rem);
     overflow-y: auto;
   }
 
-  .docs-nav__actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+  .docs-nav__section {
+    margin-bottom: 1.5rem;
   }
 
-  .docs-nav__toggle {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8125rem;
-    background: none;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
+  .docs-nav__heading {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: var(--color-text-muted);
-  }
-
-  .docs-nav__toggle:hover {
-    color: var(--color-text);
-    border-color: var(--color-text-muted);
+    margin: 0 0 0.5rem;
+    padding: 0;
   }
 
   .docs-nav__list {
@@ -132,42 +204,57 @@ const docGroups = [
   }
 
   .docs-nav__summary {
-    padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     list-style: none;
     user-select: none;
     color: var(--color-text);
+    border-radius: 6px;
+    transition: background-color 0.15s;
+  }
+
+  .docs-nav__summary:hover {
+    background: rgba(0, 0, 0, 0.04);
   }
 
   .docs-nav__summary::-webkit-details-marker {
     display: none;
   }
 
-  .docs-nav__summary::before {
-    content: '▶ ';
-    display: inline-block;
-    font-size: 0.6em;
-    margin-right: 0.35rem;
-    opacity: 0.5;
-    transition: transform 0.15s;
+  .docs-nav__icon {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
   }
 
-  .docs-nav__details[open] > .docs-nav__summary::before {
+  .docs-nav__label {
+    flex: 1;
+  }
+
+  .docs-nav__chevron {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: transform 0.2s ease;
+  }
+
+  .docs-nav__details[open] > .docs-nav__summary > .docs-nav__chevron {
     transform: rotate(90deg);
   }
 
   .docs-nav__links {
     list-style: none;
     margin: 0;
-    padding: 0 0 0 0.25rem;
+    padding: 0 0 0 0.5rem;
   }
 
   .docs-nav__links a {
     display: block;
     padding: 0.3rem 0.75rem;
-    margin-left: 0.5rem;
+    margin-left: 1rem;
     color: var(--color-text-muted);
     text-decoration: none;
     font-size: 0.875rem;
@@ -186,18 +273,41 @@ const docGroups = [
 
   .docs-nav__link--active {
     color: var(--color-accent) !important;
-    background: rgba(249, 115, 22, 0.08) !important;
+    background: rgba(9, 131, 253, 0.08) !important;
     border-left-color: var(--color-accent) !important;
     font-weight: 500;
   }
 
-  /* ── Right sidebar (TOC) ── */
+  .docs-nav__page-link {
+    display: block;
+    padding: 0.4rem 0.75rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .docs-nav__page-link:hover {
+    color: var(--color-text);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .docs-nav__page-link--active {
+    color: var(--color-accent) !important;
+    background: rgba(9, 131, 253, 0.08) !important;
+    font-weight: 500;
+  }
+
+  /* ── Right sidebar (TOC + cards) ── */
 
   .docs-toc {
     position: sticky;
-    top: 2rem;
+    top: 6rem;
     align-self: start;
-    max-height: calc(100vh - 4rem);
+    max-height: calc(100vh - 8rem);
     overflow-y: auto;
   }
 
@@ -247,6 +357,65 @@ const docGroups = [
     padding-left: 1.5rem;
   }
 
+  /* ── Sidebar cards ── */
+
+  .docs-sidebar-card {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+  }
+
+  .docs-sidebar-card__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 0.5rem;
+  }
+
+  .docs-sidebar-card__text {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    margin: 0 0 0.75rem;
+  }
+
+  .docs-sidebar-card__btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .docs-sidebar-card__btn--outline {
+    border: 1px solid #e2e8f0;
+    color: var(--color-text);
+    background: white;
+  }
+
+  .docs-sidebar-card__btn--outline:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .docs-sidebar-card__btn--primary {
+    background: var(--color-accent);
+    color: white;
+    border: none;
+  }
+
+  .docs-sidebar-card__btn--primary:hover {
+    background: var(--color-accent-hover);
+  }
+
   /* ── Content ── */
 
   .docs-layout__content {
@@ -278,16 +447,6 @@ const docGroups = [
 </style>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>('.docs-nav__toggle').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const details = document.querySelectorAll<HTMLDetailsElement>('.docs-nav__details');
-      const expand = btn.dataset.action === 'expand';
-      details.forEach((el) => {
-        el.open = expand;
-      });
-    });
-  });
-
   function buildTOC() {
     const content = document.querySelector('.docs-layout__content');
     const tocList = document.getElementById('toc-list');
@@ -295,7 +454,7 @@ const docGroups = [
 
     const headings = content.querySelectorAll<HTMLHeadingElement>('h2, h3');
     if (headings.length === 0) {
-      const tocNav = tocList.closest<HTMLElement>('.docs-toc');
+      const tocNav = tocList.closest<HTMLElement>('.docs-toc__nav');
       if (tocNav) tocNav.style.display = 'none';
       return;
     }
