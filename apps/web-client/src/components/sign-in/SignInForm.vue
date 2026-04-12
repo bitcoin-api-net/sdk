@@ -45,7 +45,7 @@ async function handleSignIn() {
     <div class="relative">
       <div class="flex items-center justify-between mb-2">
         <label class="text-sm font-medium">Password</label>
-        <a href="#" class="text-sm font-medium text-[#2563EB] hover:underline">Forgot password?</a>
+        <a href="/authorization/forgot-password" class="text-sm font-medium text-[#2563EB] hover:underline">Forgot password?</a>
       </div>
       <div class="relative">
         <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••" class="w-full h-11 px-3 pr-10 bg-white border border-[#dee1e6] rounded-xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-[#2563eb] outline-none transition-all placeholder:text-[#8F96A3]" />
