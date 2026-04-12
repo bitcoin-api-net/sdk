@@ -1,9 +1,6 @@
 ---
 import '@styles/global.css';
 import Logo from '@icons/Logo.astro';
-import IconGithub from '@icons/IconGithub.astro';
-import IconTwitter from '@icons/IconTwitter.astro';
-
 interface Props {
   title?: string;
   description?: string;
@@ -41,7 +38,7 @@ const {
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
-          <a href="/features" class="text-sm font-medium hover:text-[#0983FD]">Products</a>
+          <a href="/products" class="text-sm font-medium hover:text-[#0983FD]">Products</a>
           <a href="/docs" class="text-sm font-medium hover:text-[#0983FD]">Documentation</a>
           <a href="/pricing" class="text-sm font-medium hover:text-[#0983FD]">Pricing</a>
         </nav>
@@ -74,20 +71,12 @@ const {
               Making Bitcoin development accessible, secure, and scalable for everyone. Powering the next generation of
               fintech apps.
             </p>
-            <div class="flex gap-4">
-              <a href="https://github.com" class="text-[#565d6d] hover:text-[#0983FD]">
-                <IconGithub class="w-5 h-5" />
-              </a>
-              <a href="https://twitter.com" class="text-[#565d6d] hover:text-[#0983FD]">
-                <IconTwitter class="w-5 h-5" />
-              </a>
-            </div>
           </div>
 
           <div>
             <h5 class="font-semibold text-[#171a1f] mb-6">Product</h5>
             <ul class="space-y-4 text-sm">
-              <li><a href="/features" class="hover:text-[#0983FD]">Features</a></li>
+              <li><a href="/products" class="hover:text-[#0983FD]">Products</a></li>
               <li><a href="/docs" class="hover:text-[#0983FD]">Documentation</a></li>
               <li><a href="/pricing" class="hover:text-[#0983FD]">Pricing</a></li>
               <li><a href="/status" class="hover:text-[#0983FD]">Status</a></li>
