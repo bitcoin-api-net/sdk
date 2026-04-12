@@ -1,6 +1,7 @@
 ---
 import '@styles/global.css';
 import Logo from '@icons/Logo.astro';
+import { CircleUserRound } from '@lucide/astro';
 interface Props {
   title?: string;
   description?: string;
@@ -44,12 +45,8 @@ const {
         </nav>
 
         <div class="flex items-center gap-6">
-          <a href="/authorization/sign-in" class="hidden sm:block text-sm font-medium hover:text-[#0983FD]">Log in</a>
-          <a
-            href="/authorization/sign-up"
-            class="bg-[#0983FD] text-white px-4 py-2 rounded-md text-sm font-semibold shadow-sm hover:bg-[#076ed4]"
-          >
-            Get Started
+          <a href="/profile/home" class="profile-icon-link" aria-label="Profile">
+            <CircleUserRound size={28} color="#565d6d" />
           </a>
         </div>
       </div>
@@ -114,3 +111,17 @@ const {
     </footer>
   </body>
 </html>
+
+<style>
+  .profile-icon-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 4px;
+    transition: background-color 0.2s;
+  }
+  .profile-icon-link:hover {
+    background-color: #f0f2f5;
+  }
+</style>

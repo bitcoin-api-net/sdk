@@ -1,0 +1,213 @@
+---
+import '@styles/global.css';
+import Logo from '@icons/Logo.astro';
+import { CircleUserRound, Home, Settings, LogOut } from '@lucide/astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  activeNav?: string;
+}
+
+const {
+  title = 'Profile — Bitcoin API',
+  description = 'Manage your Bitcoin API account.',
+  activeNav = 'home',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="profile-shell">
+      <aside class="sidebar">
+        <a href="/" class="sidebar-brand">
+          <div class="sidebar-logo">
+            <Logo class="w-[22px] h-[22px] text-white" />
+          </div>
+          <span class="sidebar-brand-name">Bitcoin API</span>
+        </a>
+
+        <div class="sidebar-user">
+          <div class="sidebar-avatar">
+            <CircleUserRound size={36} color="#0983FD" />
+          </div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-user-name">My Account</span>
+            <span class="sidebar-user-email">user@example.com</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <span class="sidebar-nav-label">Menu</span>
+          <a href="/profile/home" class:list={['sidebar-nav-item', { active: activeNav === 'home' }]}>
+            <Home size={18} />
+            <span>Home</span>
+          </a>
+          <a href="/profile/settings" class:list={['sidebar-nav-item', { active: activeNav === 'settings' }]}>
+            <Settings size={18} />
+            <span>Settings</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <a href="/authorization/sign-in" class="sidebar-nav-item">
+            <LogOut size={18} />
+            <span>Log out</span>
+          </a>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
+
+<style>
+  /* ── Shell ── */
+  .profile-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: #fff;
+    border-right: 1px solid #dee1e6;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    margin-bottom: 32px;
+  }
+
+  .sidebar-logo {
+    width: 32px;
+    height: 32px;
+    background: #0983fd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-brand-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0983fd;
+  }
+
+  /* ── User block ── */
+  .sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f5f7fa;
+    border-radius: 10px;
+    margin-bottom: 28px;
+  }
+
+  .sidebar-avatar {
+    flex-shrink: 0;
+    display: flex;
+  }
+
+  .sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #171a1f;
+  }
+
+  .sidebar-user-email {
+    font-size: 12px;
+    color: #565d6d;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* ── Navigation ── */
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9095a1;
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #565d6d;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .sidebar-nav-item:hover {
+    background: #f0f2f5;
+    color: #171a1f;
+  }
+
+  .sidebar-nav-item.active {
+    background: #eff6ff;
+    color: #0983fd;
+    font-weight: 600;
+  }
+
+  /* ── Sidebar bottom ── */
+  .sidebar-bottom {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid #dee1e6;
+  }
+
+  /* ── Main content ── */
+  .main-content {
+    flex: 1;
+    background: #f5f7fa;
+    padding: 40px;
+    overflow-y: auto;
+  }
+</style>

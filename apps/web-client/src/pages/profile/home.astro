@@ -1,0 +1,228 @@
+---
+import ProfileLayout from '@layouts/ProfileLayout.astro';
+import { Mail, Key, Wallet, Copy, Eye, EyeOff } from '@lucide/astro';
+---
+
+<ProfileLayout title="Home — Bitcoin API" activeNav="home">
+  <div class="page-header">
+    <h1>Overview</h1>
+    <p>Your account at a glance</p>
+  </div>
+
+  <div class="cards">
+    <!-- Email -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <Mail size={20} color="#0983FD" />
+        </div>
+        <h2 class="card-title">Email Address</h2>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value">user@example.com</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="badge badge-success">Verified</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Key -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <Key size={20} color="#0983FD" />
+        </div>
+        <h2 class="card-title">Default API Key</h2>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="info-label">Key</span>
+          <div class="api-key-group">
+            <code class="api-key-value" id="apiKeyValue">sk_live_••••••••••••••••</code>
+            <button class="icon-btn" id="toggleKeyBtn" aria-label="Toggle key visibility">
+              <Eye size={16} />
+            </button>
+            <button class="icon-btn" id="copyKeyBtn" aria-label="Copy key">
+              <Copy size={16} />
+            </button>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Created</span>
+          <span class="info-value">Apr 10, 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Balance -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">
+          <Wallet size={20} color="#0983FD" />
+        </div>
+        <h2 class="card-title">Balance</h2>
+      </div>
+      <div class="card-body">
+        <div class="balance-amount">$0.00</div>
+        <div class="info-row">
+          <span class="info-label">Plan</span>
+          <span class="badge badge-neutral">Free</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Requests this month</span>
+          <span class="info-value">0 / 1 000</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</ProfileLayout>
+
+<style>
+  /* ── Page header ── */
+  .page-header {
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .page-header p {
+    font-size: 14px;
+    color: #565d6d;
+    margin: 0;
+  }
+
+  /* ── Cards grid ── */
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 720px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #dee1e6;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f2f5;
+  }
+
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    background: #eff6ff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .card-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── Info rows ── */
+  .info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .info-label {
+    font-size: 13px;
+    color: #9095a1;
+    font-weight: 500;
+  }
+
+  .info-value {
+    font-size: 14px;
+    color: #171a1f;
+    font-weight: 500;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .badge-success {
+    background: #ecfdf5;
+    color: #059669;
+  }
+
+  .badge-neutral {
+    background: #f0f2f5;
+    color: #565d6d;
+  }
+
+  /* ── API key ── */
+  .api-key-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .api-key-value {
+    font-size: 13px;
+    background: #f5f7fa;
+    padding: 4px 10px;
+    border-radius: 6px;
+    color: #171a1f;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: 0.02em;
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #9095a1;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .icon-btn:hover {
+    background: #f0f2f5;
+    color: #171a1f;
+  }
+
+  /* ── Balance ── */
+  .balance-amount {
+    font-size: 32px;
+    font-weight: 700;
+    color: #171a1f;
+    letter-spacing: -0.02em;
+  }
+</style>
