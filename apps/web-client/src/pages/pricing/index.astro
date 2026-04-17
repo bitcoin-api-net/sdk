@@ -27,7 +27,7 @@ import IconChevronRight from '@icons/IconChevronRight.astro';
             Start for free with public endpoints. Increase throughput per-endpoint with Rate Boost or request custom enterprise endpoints with SLAs.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
-            <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium shadow-md hover:bg-blue-600 flex items-center justify-center gap-2">
+            <a href="/authorization/sign-up" data-auth-link class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium shadow-md hover:bg-blue-600 flex items-center justify-center gap-2">
               Get API Key
               <IconArrowRight class="w-4 h-4" />
             </a>
@@ -127,7 +127,7 @@ import IconChevronRight from '@icons/IconChevronRight.astro';
                 <span class="text-sm">Usage subject to default rate limits</span>
               </div>
             </div>
-            <a href="/authorization/sign-up" class="w-full bg-[#5189FB] text-white py-3 rounded-xl font-medium shadow-sm hover:bg-blue-600 flex items-center justify-center gap-2">
+            <a href="/authorization/sign-up" data-auth-link class="w-full bg-[#5189FB] text-white py-3 rounded-xl font-medium shadow-sm hover:bg-blue-600 flex items-center justify-center gap-2">
               Get API Key
               <IconArrowRight class="w-5 h-5" />
             </a>
@@ -354,7 +354,7 @@ import IconChevronRight from '@icons/IconChevronRight.astro';
           Join thousands of developers building the next generation of Bitcoin applications with our robust infrastructure.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium shadow-lg hover:bg-blue-600">
+          <a href="/authorization/sign-up" data-auth-link class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium shadow-lg hover:bg-blue-600">
             Get API Key
           </a>
           <button data-open-tawk class="bg-transparent text-white border border-white px-10 py-4 rounded-xl font-medium hover:bg-white/10">
@@ -365,6 +365,17 @@ import IconChevronRight from '@icons/IconChevronRight.astro';
     </section>
   </main>
 </PublicPagesLayout>
+
+<script>
+  import { userStore } from '@stores/auth';
+
+  userStore.subscribe((user) => {
+    const href = user ? '/profile/home' : '/authorization/sign-up';
+    document.querySelectorAll<HTMLAnchorElement>('[data-auth-link]').forEach((link) => {
+      link.href = href;
+    });
+  });
+</script>
 
 <style lang="scss">
   .hero-gradient {

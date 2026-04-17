@@ -29,7 +29,7 @@ import IconServer from '@icons/IconServer.astro';
             Choose the way you want to integrate — start with fully public endpoints for free, scale by purchasing higher rate limits, or request custom endpoints for enterprise needs.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
-            <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg hover:bg-[#3b76f0]">
+            <a href="/authorization/sign-up" data-auth-link class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg hover:bg-[#3b76f0]">
               Get API Key
               <IconArrowRight class="w-4 h-4" />
             </a>
@@ -84,7 +84,7 @@ import IconServer from '@icons/IconServer.astro';
           </div>
           <h3 class="text-2xl font-bold mb-4">Public API (Free)</h3>
           <p class="text-[#8D95A5] mb-10 flex-grow">All endpoints are publicly accessible and free to use — get an API key and start building.</p>
-          <a href="/authorization/sign-up" class="w-full py-3 border border-[#DEE1E7] rounded-xl text-sm font-semibold hover:bg-gray-50 text-center block">Get API Key</a>
+          <a href="/authorization/sign-up" data-auth-link class="w-full py-3 border border-[#DEE1E7] rounded-xl text-sm font-semibold hover:bg-gray-50 text-center block">Get API Key</a>
         </div>
 
         <!-- Rate Boost -->
@@ -121,7 +121,7 @@ import IconServer from '@icons/IconServer.astro';
           <p class="text-lg text-[#8D95A5] leading-relaxed mb-10">
             All endpoints are available to everyone at no cost. Perfect for prototyping, development, and small production workloads. Build immediately without friction.
           </p>
-          <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium inline-flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
+          <a href="/authorization/sign-up" data-auth-link class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium inline-flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
             Get API Key
             <IconChevronRight class="w-4 h-4" />
           </a>
@@ -264,7 +264,7 @@ import IconServer from '@icons/IconServer.astro';
           Join thousands of developers building the next generation of Bitcoin applications with our robust infrastructure.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium text-lg shadow-lg hover:bg-[#3b76f0]">
+          <a href="/authorization/sign-up" data-auth-link class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium text-lg shadow-lg hover:bg-[#3b76f0]">
             Get API Key
           </a>
           <button data-open-tawk class="bg-transparent text-white border border-white px-10 py-4 rounded-xl font-medium text-lg hover:bg-white/10">
@@ -275,3 +275,14 @@ import IconServer from '@icons/IconServer.astro';
     </section>
   </main>
 </PublicPagesLayout>
+
+<script>
+  import { userStore } from '@stores/auth';
+
+  userStore.subscribe((user) => {
+    const href = user ? '/profile/home' : '/authorization/sign-up';
+    document.querySelectorAll<HTMLAnchorElement>('[data-auth-link]').forEach((link) => {
+      link.href = href;
+    });
+  });
+</script>
