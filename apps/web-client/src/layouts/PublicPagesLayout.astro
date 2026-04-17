@@ -6,11 +6,13 @@ import { Box, BookOpen, CreditCard } from '@lucide/astro';
 interface Props {
   title?: string;
   description?: string;
+  tawk?: boolean;
 }
 
 const {
   title = 'Bitcoin API',
   description = 'Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.',
+  tawk = false,
 } = Astro.props;
 ---
 
@@ -134,7 +136,7 @@ const {
             <h5 class="font-semibold text-[#171a1f] mb-6">Company</h5>
             <ul class="space-y-4 text-sm">
               <li><a href="/about" class="hover:text-[#0983FD]">About</a></li>
-              <li><a href="/contact" class="hover:text-[#0983FD]">Contact</a></li>
+              <li><a href="#" data-open-tawk class="hover:text-[#0983FD]">Contact</a></li>
             </ul>
           </div>
           <div>
@@ -152,6 +154,19 @@ const {
         </div>
       </div>
     </footer>
+  {tawk && (
+    <script is:inline>
+      var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+      (function(){
+        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+        s1.async=true;
+        s1.src='https://embed.tawk.to/69e0db914b03f31c3c2e7c6c/1jmb5jc8f';
+        s1.charset='UTF-8';
+        s1.setAttribute('crossorigin','*');
+        s0.parentNode.insertBefore(s1,s0);
+      })();
+    </script>
+  )}
   </body>
 </html>
 
@@ -185,4 +200,14 @@ const {
   menuBtn?.addEventListener('click', openSidebar);
   closeBtn?.addEventListener('click', closeSidebar);
   overlay?.addEventListener('click', closeSidebar);
+
+  document.querySelectorAll('[data-open-tawk]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tawk = (window as any).Tawk_API;
+      if (tawk?.maximize) {
+        tawk.maximize();
+      }
+    });
+  });
 </script>

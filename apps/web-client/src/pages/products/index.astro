@@ -11,7 +11,7 @@ import IconActivity from '@icons/IconActivity.astro';
 import IconServer from '@icons/IconServer.astro';
 ---
 
-<PublicPagesLayout title="Bitcoin API - Products">
+<PublicPagesLayout title="Bitcoin API - Products" tawk>
   <main>
     <!-- Hero Section -->
     <section class="relative overflow-hidden py-20 lg:py-32">
@@ -29,7 +29,7 @@ import IconServer from '@icons/IconServer.astro';
             Choose the way you want to integrate — start with fully public endpoints for free, scale by purchasing higher rate limits, or request custom endpoints for enterprise needs.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
-            <a href="/signup" class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg hover:bg-[#3b76f0]">
+            <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-8 py-4 rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg hover:bg-[#3b76f0]">
               Get API Key
               <IconArrowRight class="w-4 h-4" />
             </a>
@@ -52,19 +52,16 @@ import IconServer from '@icons/IconServer.astro';
               <div class="w-12"></div>
             </div>
             <div class="p-6 font-mono text-sm leading-relaxed overflow-x-auto">
-              <div class="text-[#A1A1AA] mb-2"># Fetch latest block height</div>
+              <div class="text-[#A1A1AA] mb-2"># Fetch current Bitcoin price</div>
               <div class="mb-4">
                 <span class="text-[#5189FB]">curl</span>
-                <span class="text-[#D4D4D8]"> -X GET "https://api.bitcoin.com/v1/blocks/tip/height" \</span><br>
+                <span class="text-[#D4D4D8]"> -X GET "https://bitcoin-api.net/api/v1/prices/current" \</span><br>
                 <span class="text-[#D4D4D8] ml-4">-H "Authorization: Bearer <span class="text-[#FACC15]">YOUR_API_KEY</span>"</span>
               </div>
               <div class="text-[#A1A1AA] mb-2"># Response</div>
               <div class="text-[#4ADE80]">{"{"}</div>
-              <div class="text-[#D4D4D8] ml-4">"status": "success",</div>
-              <div class="text-[#D4D4D8] ml-4">"data": {"{"}</div>
-              <div class="text-[#93C5FD] ml-8">"height": 840000,</div>
-              <div class="text-[#93C5FD] ml-8">"timestamp": 1713568290</div>
-              <div class="text-[#D4D4D8] ml-4">{"}"}</div>
+              <div class="text-[#D4D4D8] ml-4">"price": <span class="text-[#93C5FD]">65432.10</span>,</div>
+              <div class="text-[#D4D4D8] ml-4">"time": <span class="text-[#FACC15]">"2026-04-12T12:00:00Z"</span></div>
               <div class="text-[#4ADE80]">{"}"}</div>
             </div>
           </div>
@@ -87,7 +84,7 @@ import IconServer from '@icons/IconServer.astro';
           </div>
           <h3 class="text-2xl font-bold mb-4">Public API (Free)</h3>
           <p class="text-[#8D95A5] mb-10 flex-grow">All endpoints are publicly accessible and free to use — get an API key and start building.</p>
-          <a href="/signup" class="w-full py-3 border border-[#DEE1E7] rounded-xl text-sm font-semibold hover:bg-gray-50 text-center block">Get API Key</a>
+          <a href="/authorization/sign-up" class="w-full py-3 border border-[#DEE1E7] rounded-xl text-sm font-semibold hover:bg-gray-50 text-center block">Get API Key</a>
         </div>
 
         <!-- Rate Boost -->
@@ -100,7 +97,7 @@ import IconServer from '@icons/IconServer.astro';
           </div>
           <h3 class="text-2xl font-bold mb-4">Rate Boost</h3>
           <p class="text-[#8D95A5] mb-10 flex-grow">Purchase higher rate limits for any endpoint to scale throughput without changing code.</p>
-          <button class="w-full py-3 bg-[#5189FB] text-white rounded-xl text-sm font-semibold hover:bg-[#3b76f0] shadow-md">Upgrade Rate Limit</button>
+          <a href="/docs" class="w-full py-3 bg-[#5189FB] text-white rounded-xl text-sm font-semibold hover:bg-[#3b76f0] shadow-md text-center block">Upgrade Rate Limit</a>
         </div>
 
         <!-- Enterprise -->
@@ -110,7 +107,7 @@ import IconServer from '@icons/IconServer.astro';
           </div>
           <h3 class="text-2xl font-bold mb-4">Enterprise</h3>
           <p class="text-[#8D95A5] mb-10 flex-grow">Custom endpoints, dedicated rate limits, and SLAs — don't waste developer time; order the endpoints you need.</p>
-          <button class="w-full py-3 border border-[#DEE1E7] rounded-xl text-sm font-semibold hover:bg-gray-50">Contact Sales</button>
+          <button data-open-tawk class="w-full py-3 border border-[#DEE1E7] rounded-xl text-sm font-semibold hover:bg-gray-50">Contact Sales</button>
         </div>
       </div>
     </section>
@@ -124,7 +121,7 @@ import IconServer from '@icons/IconServer.astro';
           <p class="text-lg text-[#8D95A5] leading-relaxed mb-10">
             All endpoints are available to everyone at no cost. Perfect for prototyping, development, and small production workloads. Build immediately without friction.
           </p>
-          <a href="/signup" class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium inline-flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
+          <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium inline-flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
             Get API Key
             <IconChevronRight class="w-4 h-4" />
           </a>
@@ -193,10 +190,10 @@ import IconServer from '@icons/IconServer.astro';
           <p class="text-lg text-[#8D95A5] leading-relaxed mb-10">
             Buy higher request throughput for any endpoint instantly. No code changes required — keep your integration intact while handling higher traffic effortlessly.
           </p>
-          <button class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
+          <a href="/docs" class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium inline-flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
             Upgrade Rate Limit
             <IconChevronRight class="w-4 h-4" />
-          </button>
+          </a>
         </div>
       </div>
     </section>
@@ -210,7 +207,7 @@ import IconServer from '@icons/IconServer.astro';
           <p class="text-lg text-[#8D95A5] leading-relaxed mb-10">
             We will build dedicated endpoints, guaranteed rate limits, and enterprise-grade SLAs. Save your engineering resources — request a custom integration tailored to your exact needs.
           </p>
-          <button class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
+          <button data-open-tawk class="bg-[#5189FB] text-white px-8 py-3 rounded-xl font-medium flex items-center gap-2 shadow-md hover:bg-[#3b76f0]">
             Contact Sales
             <IconChevronRight class="w-4 h-4" />
           </button>
@@ -267,10 +264,10 @@ import IconServer from '@icons/IconServer.astro';
           Join thousands of developers building the next generation of Bitcoin applications with our robust infrastructure.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/signup" class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium text-lg shadow-lg hover:bg-[#3b76f0]">
+          <a href="/authorization/sign-up" class="bg-[#5189FB] text-white px-10 py-4 rounded-xl font-medium text-lg shadow-lg hover:bg-[#3b76f0]">
             Get API Key
           </a>
-          <button class="bg-transparent text-white border border-white px-10 py-4 rounded-xl font-medium text-lg hover:bg-white/10">
+          <button data-open-tawk class="bg-transparent text-white border border-white px-10 py-4 rounded-xl font-medium text-lg hover:bg-white/10">
             Contact Sales
           </button>
         </div>
