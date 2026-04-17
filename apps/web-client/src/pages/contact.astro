@@ -1,29 +1,58 @@
 ---
 import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
 import IconArrowRight from '@icons/IconArrowRight.astro';
+import { MessageCircle, Mail, Clock } from '@lucide/astro';
 ---
 
 <PublicPagesLayout
   title="Contact — Bitcoin API"
-  description="Get in touch with the Bitcoin API team. We'd love to hear from you.">
+  description="Talk to the Bitcoin API team. Live chat with a real human, or reach us by email."
+  tawk={true}>
   <main class="py-16 lg:py-24">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <h1 class="text-4xl font-extrabold tracking-tight mb-4">Contact Us</h1>
+        <h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">Get in touch</h1>
         <p class="text-lg text-[#565d6d] max-w-2xl mx-auto">
-          Have a question, feedback, or just want to say hi? We'd love to hear from you.
+          The fastest way to reach us is live chat. A real human on the other side, no bots, no tickets.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-20">
-        <a href="mailto:support@bitcoin-api.dev" class="group bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow text-center">
-          <h3 class="text-lg font-semibold mb-2 group-hover:text-[#0983FD] transition-colors">Email</h3>
-          <p class="text-sm text-[#565d6d] mb-4">For general inquiries and support</p>
-          <span class="text-sm text-[#0983FD] font-medium">support@bitcoin-api.dev</span>
+      <div class="bg-gradient-to-br from-[#EFF6FF] to-white p-10 lg:p-12 rounded-2xl border border-[#dee1e6]/50 shadow-sm text-center mb-8">
+        <div class="w-14 h-14 bg-[#0983FD] rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <MessageCircle class="w-7 h-7 text-white" />
+        </div>
+        <h2 class="text-2xl font-bold mb-3">Live Chat</h2>
+        <p class="text-[#565d6d] max-w-xl mx-auto mb-8 leading-relaxed">
+          Ask anything — integration help, pricing questions, feature requests, or just say hi. We typically reply within
+          a few minutes during business hours.
+        </p>
+        <button
+          data-open-tawk
+          class="inline-flex items-center gap-2 bg-[#0983FD] text-white px-8 py-3 rounded-xl font-medium shadow-sm hover:bg-[#076ed4] transition-colors">
+          <MessageCircle class="w-4 h-4" />
+          Open Live Chat
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">
+        <a
+          href="mailto:bshevchenko12@gmail.com"
+          class="group bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-3 mb-3">
+            <Mail class="w-5 h-5 text-[#0983FD]" />
+            <h3 class="text-lg font-semibold group-hover:text-[#0983FD] transition-colors">Email</h3>
+          </div>
+          <p class="text-sm text-[#565d6d] mb-4">Prefer email? We've got you. Replies within 24 hours on business days.</p>
+          <span class="text-sm text-[#0983FD] font-medium">bshevchenko12@gmail.com</span>
         </a>
-        <a href="/help" class="group bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow text-center">
-          <h3 class="text-lg font-semibold mb-2 group-hover:text-[#0983FD] transition-colors">Help Center</h3>
-          <p class="text-sm text-[#565d6d] mb-4">Browse FAQs and common questions</p>
+        <a
+          href="/help"
+          class="group bg-white p-8 rounded-2xl border border-[#dee1e6]/50 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-3 mb-3">
+            <Clock class="w-5 h-5 text-[#0983FD]" />
+            <h3 class="text-lg font-semibold group-hover:text-[#0983FD] transition-colors">Help Center</h3>
+          </div>
+          <p class="text-sm text-[#565d6d] mb-4">Browse FAQs and common questions — answers might already be there.</p>
           <span class="text-sm text-[#0983FD] font-medium inline-flex items-center gap-1">
             Visit Help Center
             <IconArrowRight class="w-3 h-3" />
@@ -34,7 +63,8 @@ import IconArrowRight from '@icons/IconArrowRight.astro';
       <div class="max-w-2xl mx-auto text-center">
         <h2 class="text-2xl font-bold mb-4">Response Time</h2>
         <p class="text-[#565d6d] leading-relaxed">
-          We typically respond within 24 hours on business days. For urgent issues affecting your production integration, please include "URGENT" in your email subject.
+          Live chat: typically a few minutes during business hours. Email: within 24 hours on business days. For urgent
+          production issues, please include "URGENT" in your subject line.
         </p>
       </div>
     </div>
