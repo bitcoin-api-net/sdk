@@ -1,10 +1,5 @@
 ---
 import DocsLayout from '@layouts/DocsLayout.astro';
-
-const errorResponseCode = `{
-  "code": "ERROR_CODE",
-  "message": "Human-readable error description"
-}`;
 ---
 
 <DocsLayout>
@@ -94,39 +89,76 @@ const errorResponseCode = `{
     </div>
   </div>
 
-  <h2 id="base-url">Base URL</h2>
-  <p class="docs-page-text">All API requests are made to the following base URL:</p>
-  <div class="base-url-block">
-    <code>https://api.bitcoinapi.dev</code>
-  </div>
+  <h2 id="built-for">Built for everyone shipping with Bitcoin data</h2>
+  <p class="docs-page-text">
+    Our goal is simple: be the most comfortable Bitcoin API for developers, vibe coders, and AI agents. Each audience
+    gets tools tailored to how they actually work.
+  </p>
 
-  <h2 id="available-endpoints">Available Endpoints</h2>
-  <div class="endpoint-list">
-    <div class="endpoint-list__item">
-      <span class="endpoint-list__method">GET</span>
-      <a href="/docs/price/current" class="endpoint-list__path">/v1/prices/current</a>
-      <span class="endpoint-list__desc">Get the current price of a trading pair</span>
+  <div class="audience-list">
+    <div class="audience-card">
+      <div class="audience-card__header">
+        <div class="audience-card__icon">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg
+          >
+        </div>
+        <h3>For developers</h3>
+      </div>
+      <p>Powerful search with an AI assistant that knows the entire API surface, so you find the right endpoint fast.</p>
+    </div>
+
+    <div class="audience-card">
+      <div class="audience-card__header">
+        <div class="audience-card__icon">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg
+          >
+        </div>
+        <h3>For vibe coders</h3>
+      </div>
+      <p>MCP tools and N8N integrations so you can wire Bitcoin data into your stack without writing glue code.</p>
+    </div>
+
+    <div class="audience-card">
+      <div class="audience-card__header">
+        <div class="audience-card__icon">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><circle
+              cx="15.5"
+              cy="10"
+              r="1.5"></circle><path d="M8 15h8"></path></svg
+          >
+        </div>
+        <h3>For AI agents</h3>
+      </div>
+      <p>MCP tools and static HTML documentation that's easy to crawl, parse, and reason about.</p>
     </div>
   </div>
-  <p class="docs-page-text" style="margin-top: 1rem; font-size: 0.8125rem;">
-    More endpoints are being added regularly. Check back for updates on blockchain data, transactions, and more.
-  </p>
-
-  <h2 id="response-format">Response Format</h2>
-  <p class="docs-page-text">
-    All responses are returned as JSON. Successful responses return the data directly. Error responses follow a
-    consistent shape:
-  </p>
-  <div class="code-block-wrap">
-    <pre class="code-block-dark"><code set:text={errorResponseCode} /></pre>
-  </div>
-
-  <h2 id="next-steps">Next Steps</h2>
-  <ul class="next-steps-list">
-    <li><a href="/docs/quickstart">Quickstart Guide</a> — Make your first API call in under 2 minutes</li>
-    <li><a href="/docs/authentication">Authentication</a> — Learn how to authenticate your requests</li>
-    <li><a href="/docs/price/current">Current Price</a> — Explore the price endpoint reference</li>
-  </ul>
 </DocsLayout>
 
 <style>
@@ -220,124 +252,50 @@ const errorResponseCode = `{
     margin: 0;
   }
 
-  /* ── Base URL block ── */
+  /* ── Audience cards ── */
 
-  .base-url-block {
-    background: #1e293b;
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
+  .audience-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+    margin-bottom: 2rem;
   }
 
-  .base-url-block code {
-    color: #e2e8f0;
-    font-size: 0.9375rem;
-  }
-
-  /* ── Endpoint list ── */
-
-  .endpoint-list {
+  .audience-card {
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
   }
 
-  .endpoint-list__item {
+  .audience-card__header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.875rem 1rem;
-    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
   }
 
-  .endpoint-list__item:not(:last-child) {
-    border-bottom: 1px solid #f1f5f9;
-  }
-
-  .endpoint-list__method {
-    display: inline-flex;
+  .audience-card__icon {
+    width: 36px;
+    height: 36px;
+    background: #eff6ff;
+    border-radius: 8px;
+    display: flex;
     align-items: center;
-    padding: 0.2rem 0.5rem;
-    background: #dbeafe;
-    color: #1d4ed8;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    border-radius: 4px;
-    letter-spacing: 0.03em;
+    justify-content: center;
+    color: var(--color-accent);
     flex-shrink: 0;
   }
 
-  .endpoint-list__path {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    color: var(--color-text);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.8125rem;
-  }
-
-  .endpoint-list__path:hover {
-    color: var(--color-accent);
-  }
-
-  .endpoint-list__desc {
-    color: var(--color-text-muted);
-    margin-left: auto;
-  }
-
-  /* ── Code block ── */
-
-  .code-block-wrap {
-    margin-bottom: 1.5rem;
-  }
-
-  .code-block-dark {
-    background: #1e293b;
-    border-radius: 8px;
-    padding: 1.25rem;
-    overflow-x: auto;
+  .audience-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
     margin: 0;
   }
 
-  .code-block-dark code {
-    color: #e2e8f0;
-    font-size: 0.8125rem;
-    line-height: 1.7;
-  }
-
-  /* ── Next steps ── */
-
-  .next-steps-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 2rem;
-  }
-
-  .next-steps-list li {
-    padding: 0.5rem 0;
-    font-size: 0.9375rem;
+  .audience-card p {
+    font-size: 0.875rem;
     color: var(--color-text-muted);
     line-height: 1.6;
-  }
-
-  .next-steps-list li::before {
-    content: '→ ';
-    color: var(--color-accent);
-    font-weight: 600;
-  }
-
-  .next-steps-list a {
-    color: var(--color-accent);
-    text-decoration: none;
-    font-weight: 500;
-  }
-
-  .next-steps-list a:hover {
-    text-decoration: underline;
-  }
-
-  @media (max-width: 640px) {
-    .endpoint-list__desc {
-      display: none;
-    }
+    margin: 0;
   }
 </style>
