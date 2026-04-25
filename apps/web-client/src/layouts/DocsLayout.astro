@@ -1,5 +1,6 @@
 ---
-import PublicPagesLayout from '@layouts/PublicPagesLayout.astro';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import DocsHeader from '@components/docs/DocsHeader.astro';
 
 const currentPath = Astro.url.pathname.replace(/\/$/, '');
 
@@ -49,10 +50,11 @@ function getCurrentPageTitle(): string {
 const currentPageTitle = getCurrentPageTitle();
 ---
 
-<PublicPagesLayout
+<BaseLayout
   title="Bitcoin API"
   description="Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees."
   tawk>
+  <DocsHeader slot="header" />
   <div class="docs-layout">
     <aside class="docs-layout__sidebar">
       <nav class="docs-nav">
@@ -248,7 +250,7 @@ const currentPageTitle = getCurrentPageTitle();
       </div>
     </aside>
   </div>
-</PublicPagesLayout>
+</BaseLayout>
 
 <style>
   .docs-layout {

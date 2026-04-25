@@ -1,0 +1,312 @@
+---
+import Logo from '@icons/Logo.astro';
+import HeaderAuth from '@components/layout/HeaderAuth.vue';
+import { Search, Sparkles } from '@lucide/astro';
+---
+
+<header class="docs-header">
+  <div class="docs-header__inner">
+    <a href="/" class="docs-header__logo">
+      <div class="docs-header__logo-mark">
+        <Logo class="w-[22px] h-[22px] text-white" />
+      </div>
+      <span class="docs-header__logo-text">Bitcoin API</span>
+    </a>
+
+    <div class="docs-header__center">
+      <div class="docs-header__search" id="docs-search-wrap" data-mode="traditional">
+        <span class="docs-header__search-icon" aria-hidden="true">
+          <Search size={18} />
+        </span>
+        <input
+          id="docs-search-input"
+          class="docs-header__search-input"
+          type="search"
+          autocomplete="off"
+          placeholder="Search documentation…"
+          aria-label="Search documentation"
+        />
+
+        <div
+          class="docs-toggle"
+          id="docs-search-toggle"
+          data-mode="traditional"
+          role="tablist"
+          aria-label="Search mode">
+          <span class="docs-toggle__thumb" aria-hidden="true"></span>
+          <button
+            type="button"
+            class="docs-toggle__btn docs-toggle__btn--active"
+            data-mode="traditional"
+            role="tab"
+            aria-selected="true">
+            <Search size={14} />
+            <span>Search</span>
+          </button>
+          <button
+            type="button"
+            class="docs-toggle__btn"
+            data-mode="ai"
+            role="tab"
+            aria-selected="false">
+            <Sparkles size={14} />
+            <span>AI</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-header__auth">
+      <HeaderAuth client:load />
+    </div>
+  </div>
+</header>
+
+<style>
+  .docs-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #dee1e6;
+  }
+
+  .docs-header__inner {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 1rem;
+    height: 5rem;
+    display: grid;
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr) 220px;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .docs-header__center {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .docs-header__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .docs-header__logo-mark {
+    width: 2rem;
+    height: 2rem;
+    background: #0983fd;
+    border-radius: 0.375rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .docs-header__logo-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0983fd;
+  }
+
+  /* ── Search bar ── */
+
+  .docs-header__search {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.875rem;
+    background: #f4f6f8;
+    border: 1px solid #e2e6ec;
+    border-radius: 9999px;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  }
+
+  .docs-header__search:focus-within {
+    background: #ffffff;
+    border-color: #0983fd;
+    box-shadow: 0 0 0 3px rgba(9, 131, 253, 0.15);
+  }
+
+  .docs-header__search-icon {
+    display: inline-flex;
+    color: #565d6d;
+    flex-shrink: 0;
+  }
+
+  .docs-header__search-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9375rem;
+    color: #171a1f;
+  }
+
+  .docs-header__search-input::placeholder {
+    color: #8b93a1;
+  }
+
+  .docs-header__search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* ── iOS-style toggle ── */
+
+  .docs-toggle {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    flex-shrink: 0;
+    height: 2.25rem;
+    padding: 0.1875rem;
+    background: #e6eaf0;
+    border-radius: 9999px;
+    user-select: none;
+  }
+
+  .docs-toggle__thumb {
+    position: absolute;
+    top: 0.1875rem;
+    bottom: 0.1875rem;
+    left: 0.1875rem;
+    width: calc(50% - 0.1875rem);
+    background: #ffffff;
+    border-radius: 9999px;
+    box-shadow:
+      0 1px 1px rgba(0, 0, 0, 0.04),
+      0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  .docs-toggle[data-mode='ai'] .docs-toggle__thumb {
+    transform: translateX(100%);
+  }
+
+  .docs-toggle__btn {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0 1rem;
+    min-width: 5.5rem;
+    height: 100%;
+    border: none;
+    background: transparent;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #565d6d;
+    cursor: pointer;
+    border-radius: 9999px;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
+
+  .docs-toggle__btn--active {
+    color: #0983fd;
+  }
+
+  /* ── Auth + mobile ── */
+
+  .docs-header__auth {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* ── Responsive ── */
+
+  @media (max-width: 1024px) {
+    .docs-header__inner {
+      grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) auto;
+    }
+
+    .docs-toggle__btn {
+      min-width: 4.25rem;
+      padding: 0 0.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .docs-header__inner {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 1rem;
+      height: 4.5rem;
+      padding: 0 0.75rem;
+    }
+
+    .docs-header__logo-text {
+      display: none;
+    }
+
+    .docs-header__search {
+      height: 2.5rem;
+      padding-left: 0.75rem;
+    }
+
+    .docs-toggle__btn span {
+      display: none;
+    }
+
+    .docs-toggle__btn {
+      min-width: 2.5rem;
+      padding: 0 0.625rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .docs-header__auth {
+      display: none;
+    }
+
+    .docs-header__inner {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+  }
+</style>
+
+<script>
+  const wrap = document.getElementById('docs-search-wrap');
+  const toggle = document.getElementById('docs-search-toggle');
+  const input = document.getElementById('docs-search-input') as HTMLInputElement | null;
+
+  const placeholders: Record<string, string> = {
+    traditional: 'Search documentation…',
+    ai: 'Ask AI anything…',
+  };
+
+  function setMode(mode: 'traditional' | 'ai') {
+    if (!toggle || !wrap || !input) return;
+    toggle.dataset.mode = mode;
+    wrap.dataset.mode = mode;
+    input.placeholder = placeholders[mode];
+
+    toggle.querySelectorAll<HTMLButtonElement>('.docs-toggle__btn').forEach((btn) => {
+      const isActive = btn.dataset.mode === mode;
+      btn.classList.toggle('docs-toggle__btn--active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+    });
+  }
+
+  toggle?.querySelectorAll<HTMLButtonElement>('.docs-toggle__btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode as 'traditional' | 'ai' | undefined;
+      if (mode) setMode(mode);
+    });
+  });
+</script>

@@ -1,0 +1,114 @@
+---
+import '@styles/global.css';
+import Logo from '@icons/Logo.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  tawk?: boolean;
+}
+
+const {
+  title = 'Bitcoin API',
+  description = 'Access comprehensive Bitcoin data with the most comfortable API. Pay only for what you use. No hidden fees.',
+  tawk = false,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Sora:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-white">
+    <slot name="header" />
+
+    <slot />
+
+    <footer class="bg-[#fafafb] pt-20 pb-10 border-t border-[#dee1e6]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          <div class="lg:col-span-1">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-8 h-8 bg-[#0983FD] rounded-md flex items-center justify-center">
+                <Logo class="w-[22px] h-[22px] text-white" />
+              </div>
+              <span class="text-xl font-bold text-[#0983FD]">Bitcoin API</span>
+            </div>
+            <p class="text-sm text-[#565d6d] leading-relaxed mb-6">
+              Making Bitcoin development accessible, secure, and scalable for everyone. Powering the next generation of
+              fintech apps.
+            </p>
+          </div>
+
+          <div>
+            <h5 class="font-semibold text-[#171a1f] mb-6">Product</h5>
+            <ul class="space-y-4 text-sm">
+              <li><a href="/products" class="hover:text-[#0983FD]">Products</a></li>
+              <li><a href="/docs" class="hover:text-[#0983FD]">Documentation</a></li>
+              <li><a href="/pricing" class="hover:text-[#0983FD]">Pricing</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="font-semibold text-[#171a1f] mb-6">Company</h5>
+            <ul class="space-y-4 text-sm">
+              <li><a href="/about" class="hover:text-[#0983FD]">About</a></li>
+              <li><a href="/contact" class="hover:text-[#0983FD]">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="font-semibold text-[#171a1f] mb-6">Resources</h5>
+            <ul class="space-y-4 text-sm">
+              <li><a href="/help" class="hover:text-[#0983FD]">Help Center</a></li>
+              <li><a href="/privacy-policy" class="hover:text-[#0983FD]">Privacy Policy</a></li>
+              <li><a href="/terms" class="hover:text-[#0983FD]">Terms of Service</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-[#dee1e6] flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p class="text-xs text-[#565d6d]">© {new Date().getFullYear()} Bitcoin API. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    {tawk && (
+      <script is:inline>
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+          var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+          s1.async=true;
+          s1.src='https://embed.tawk.to/69e0db914b03f31c3c2e7c6c/1jmb5jc8f';
+          s1.charset='UTF-8';
+          s1.setAttribute('crossorigin','*');
+          s0.parentNode.insertBefore(s1,s0);
+        })();
+      </script>
+    )}
+  </body>
+</html>
+
+<script>
+  import { fetchUser } from '@stores/auth';
+  await fetchUser();
+
+  document.querySelectorAll('[data-open-tawk]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tawk = (window as any).Tawk_API;
+      if (tawk?.maximize) {
+        tawk.maximize();
+      }
+    });
+  });
+</script>
