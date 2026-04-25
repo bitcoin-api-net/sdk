@@ -368,13 +368,13 @@ const currentPageTitle = getCurrentPageTitle();
 
   .docs-nav__links a {
     display: block;
-    padding: 0.3rem 0.75rem;
+    padding: 0.4rem 0.75rem;
     margin-left: 1rem;
     color: var(--color-text-muted);
     text-decoration: none;
     font-size: 0.875rem;
     border-left: 2px solid transparent;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 6px 6px 0;
     transition:
       background-color 0.15s,
       color 0.15s,
@@ -382,8 +382,9 @@ const currentPageTitle = getCurrentPageTitle();
   }
 
   .docs-nav__links a:hover {
-    color: var(--color-text);
-    background: rgba(0, 0, 0, 0.04);
+    color: var(--color-accent);
+    background: rgba(9, 131, 253, 0.06);
+    border-left-color: rgba(9, 131, 253, 0.4);
   }
 
   .docs-nav__link--active {
@@ -406,8 +407,8 @@ const currentPageTitle = getCurrentPageTitle();
   }
 
   .docs-nav__page-link:hover {
-    color: var(--color-text);
-    background: rgba(0, 0, 0, 0.04);
+    color: var(--color-accent);
+    background: rgba(9, 131, 253, 0.06);
   }
 
   .docs-nav__page-link--active {
