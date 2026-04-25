@@ -33,28 +33,11 @@ const errorResponseCode = `{
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          ><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-          ></path></svg
+          ><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg
         >
       </div>
-      <h3>Real-time Prices</h3>
-      <p>Get live cryptocurrency prices from major exchanges via REST or WebSocket.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card__icon">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg
-        >
-      </div>
-      <h3>WebSocket Streams</h3>
-      <p>Subscribe to live data feeds and receive price updates the moment they happen.</p>
+      <h3>Real-time Market Data</h3>
+      <p>Stream live prices, trades, and order book updates from major exchanges as they happen.</p>
     </div>
     <div class="feature-card">
       <div class="feature-card__icon">
@@ -67,12 +50,47 @@ const errorResponseCode = `{
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          ><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"
-          ></path></svg
+          ><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg
         >
       </div>
-      <h3>Secure & Authenticated</h3>
-      <p>All endpoints are protected with Bearer token authentication over HTTPS.</p>
+      <h3>Historical Market Data</h3>
+      <p>Query OHLCV candles and trade history across exchanges for backtesting and analysis.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card__icon">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><path d="M4 4h6v6H4z"></path><path d="M14 4h6v6h-6z"></path><path d="M4 14h6v6H4z"></path><path
+            d="M14 14h6v6h-6z"></path></svg
+        >
+      </div>
+      <h3>Real-time On-chain Data</h3>
+      <p>Track new blocks, mempool activity, and address events on the Bitcoin network as they confirm.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card__icon">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14a9 3 0 0 0 18 0V5"></path><path
+            d="M3 12a9 3 0 0 0 18 0"></path></svg
+        >
+      </div>
+      <h3>Historical On-chain Data</h3>
+      <p>Look up past blocks, transactions, and address balances across the full Bitcoin chain history.</p>
     </div>
   </div>
 
