@@ -100,13 +100,13 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
     - в конце экспортирует singleton `export const googleAiProvider = new GoogleAiProvider()`.
 32. Создать `shared/src/repositories/docs.repository.ts` (наследует `BaseRepository<PrismaClient['docChunk']>`):
     - метод `vectorizeDoc(doc: DocInput): Promise<{created: number, updated: number, skipped: number}>`:
-      * `DocInput = { kind, url, title, section?, text, endpoints }` — целый документ как одна сырая строка `text`;
-      * внутри сам режет `text` на чанки по headings + лимит токенов (хелпер в `shared/src/repositories/docs.repository/chunker.ts`);
-      * для каждого чанка генерирует `anchor` (из heading slug) и считает `sha256(chunkText)`;
-      * читает существующие `{url, anchor, contentHash}` для этого `url` из `DocChunk`;
-      * для новых/изменившихся чанков — зовёт `googleAiProvider.embed(chunkText, 'RETRIEVAL_DOCUMENT')`;
-      * `upsert` по `(url, anchor)` с записью embedding через raw SQL (`$executeRaw` с `::vector`);
-      * НЕ удаляет осиротевшие чанки внутри других url-ов (это делает отдельный метод).
+      - `DocInput = { kind, url, title, section?, text, endpoints }` — целый документ как одна сырая строка `text`;
+      - внутри сам режет `text` на чанки по headings + лимит токенов (хелпер в `shared/src/repositories/docs.repository/chunker.ts`);
+      - для каждого чанка генерирует `anchor` (из heading slug) и считает `sha256(chunkText)`;
+      - читает существующие `{url, anchor, contentHash}` для этого `url` из `DocChunk`;
+      - для новых/изменившихся чанков — зовёт `googleAiProvider.embed(chunkText, 'RETRIEVAL_DOCUMENT')`;
+      - `upsert` по `(url, anchor)` с записью embedding через raw SQL (`$executeRaw` с `::vector`);
+      - НЕ удаляет осиротевшие чанки внутри других url-ов (это делает отдельный метод).
     - метод `deleteOrphansExcept(keepUrls: string[]): Promise<number>` — удаляет все `DocChunk`, у которых `url NOT IN (...)`. Зовётся скриптом один раз в конце, когда известен полный список актуальных url.
     - метод `searchByVector(embedding: number[], k: number = 3): Promise<DocChunk[]>` — raw SQL `ORDER BY embedding <=> $1::vector LIMIT $2` (нужен в Фазе 6).
     - типы (`DocInput`, `CreatableDocChunk`, `UpdatableDocChunk`) и chunker положить в `shared/src/repositories/docs.repository/`.
@@ -145,8 +145,8 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 ### Фаза 8. MCP сервер (Fastify plugin внутри `apps/api`)
 
 48. Установить `@modelcontextprotocol/sdk` в `apps/api`.
-49. Создать Fastify plugin `apps/api/src/plugins/mcp.ts`: инициализирует `McpServer` из SDK, маунтит `StreamableHTTPServerTransport` на роуте `POST /mcp` (и `GET /mcp` для SSE/resumability).
-50. В plugin регистрировать тулзы из отдельных файлов в `apps/api/src/mcp/tools/`.
+49. В `apps/api/src/main.ts` рядом с инициализацией Fastify явно создать singleton `McpServer` из SDK и зарегистрировать на нём тулзы из `apps/api/src/mcp/tools/` (импорт + регистрация). Singleton экспортировать из `apps/api/src/mcp/server.ts`, чтобы и main, и роуты использовали один и тот же инстанс.
+50. Создать роут `apps/api/src/routes/mcp.ts` (Full declaration, по правилу `create-endpoint.mdc`): два метода (`POST /mcp` и `GET /mcp` для SSE/resumability) на один и тот же handler, который внутри создаёт/получает `StreamableHTTPServerTransport` и зовёт `mcpServer.connect(transport)` + `transport.handleRequest(req.raw, reply.raw, req.body)`. Никакой Fastify plugin отдельно не нужен — это обычный эндпоинт.
 51. Реализовать тулзу `docs_search(query, k?)` в `apps/api/src/mcp/tools/docsSearch.ts` — переиспользует `aiSearchUsecase` (без LLM-генерации, только retrieval) или прямой вызов `docsRepository.searchByVector` (с предварительным `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')`).
 52. Реализовать тулзу `docs_fetch(url)` в `apps/api/src/mcp/tools/docsFetch.ts` — возвращает чистый markdown страницы (читает из `DocChunk` по url или из ассета `docs-pages.json`).
 53. Реализовать тулзу `recipe_search(endpointId?, query?, language?)` в `apps/api/src/mcp/tools/recipeSearch.ts` — фильтрует `DocChunk WHERE kind='recipe'` + опц. cosine similarity.
@@ -155,15 +155,6 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 56. Создать страницу `apps/web-client/src/content/docs/setup-mcp.mdx` с копи-пейст конфигом для `~/.cursor/mcp.json` (URL: `https://api.bitcoinapi.dev/mcp`).
 57. Заменить ссылку `Setup MCP` в sidebar-card на `/docs/setup-mcp`.
 
-### Фаза 9. CI / деплой
+### Фаза 9. деплой
 
 58. В корневой `Makefile` добавить таргет `docs-build`: `web build` (loader сам подтянет схему из `ApplicationInterface`) → `web docs:index` (read → chunk → embed → upsert одним скриптом).
-59. В CI пайплайне поставить `docs-build` после деплоя api и web.
-60. В CI пайплайне api после успешного деплоя триггерить деплой web (через `repository_dispatch` / deploy hook / следующий job в том же workflow) — чтобы свежая схема (новые версии кода api) сразу попала в индекс и страницы.
-
-### Фаза 10. Полировка
-
-61. Добавить в `DocPageLayout` блок «Was this helpful?» (минимум — лог в БД для последующего использования).
-62. Логировать AI запросы и оценки в `DocAiQuery` модель для будущего fine-tuning промпта.
-63. Добавить sitemap.xml для `/docs/**`.
-64. Прогнать lighthouse, починить найденное.
