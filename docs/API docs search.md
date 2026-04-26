@@ -36,10 +36,22 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 
 ## План реализации
 
+### Фаза 0. Апгрейд Astro 5 → Astro 6
+
+Обоснование: в шаге 9 используется кастомный Content Loader. В Astro 6 у Loader API сломанная совместимость (schema-функция убрана, типы инферятся через `satisfies Loader`, выпилен legacy `src/content/`), плюс зависимости (Zod 4, Vite 7, Shiki 4) и Node 22.12+. Логичнее обновиться до 6.1.x ДО того, как мы напишем loader, чтобы не переписывать его дважды.
+
+0.1. Проверить `node -v` ≥ 22.12 на dev/CI; при необходимости поднять.
+0.2. В `apps/web-client` обновить `astro` до `^6.1.6`, `@astrojs/vue` и `@astrojs/check` до версий, совместимых с Astro 6.
+0.3. Обновить совместимые dev-зависимости: `vue-tsc`, `@tailwindcss/vite` (под Vite 7), `tailwindcss`. Проверить, что плагины Vite не сломались.
+0.4. В `apps/web-client/src/content.config.ts` (если уже есть) и будущих лоадерах: schema объявлять статически, использовать `satisfies Loader`. Не использовать `schema: async () => ...`.
+0.5. Удалить любые остатки legacy подхода `src/content/` и флаг `legacy.collections` (если когда-то был включён).
+0.6. Прогнать миграции по Zod 4 в существующих схемах (если используем Zod где-то в web-client).
+0.7. `npm build` + `npm typecheck` web-client должны проходить чисто на Astro 6 — после этого начинаем Фазу 1.
+
 ### Фаза 1. OpenAPI как метод ApplicationInterface
 
 1. Создать `apps/api/src/app.interface.ts` с классом `ApplicationInterface` и сразу экспортировать готовый singleton-инстанс (`export const applicationInterface = new ApplicationInterface()`). `app.ts` не трогаем.
-2. Единственный публичный метод — `getOpenApiSchema(): Promise<OpenAPIObject>`: внутри поднимает минимальный Fastify instance (swagger + autoload routes), делает `app.ready()` + `app.swagger()`, возвращает схему и закрывает app. Без `listen`, без коннектов к БД/Redis. Результат кешируется в поле инстанса.
+2. Единственный публичный метод — `getOpenApiSchema(): Promise<OpenAPIObject>`: внутри поднимает минимальный Fastify instance (swagger + autoload routes), делает `app.ready()` + `app.swagger()`, возвращает схему и закрывает app. Без `listen`, без коннектов к БД/Redis.
 3. Проверить, что у всех роутов есть `operationId`, `summary`, `description`, теги в schema; проставить отсутствующие.
 4. Экспортировать `ApplicationInterface` из `apps/api` (через `exports` в `apps/api/package.json`), чтобы `apps/web-client` мог импортировать singleton из workspace-пакета.
 
