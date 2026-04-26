@@ -7,7 +7,7 @@
 ```
 src/content/docs/*.mdx       (narrative)  ─┐
 src/content/recipes/*.mdx    (рецепты)    ─┼─► registry (DocEntry[]) ─┬─► Astro static pages
-ApplicationInterface (loader) (api ref)   ─┘                          ├─► Pagefind index           (traditional search, статика)
+ApplicationInterface (loader) (api ref)   ─┘                          ├─► Orama index              (traditional search, статика)
                                                                       ├─► chunks → embeddings → pgvector
                                                                       │                  ▲
                                                                       │       Fastify POST /docs/ai-search (SSE)  ◄── AI mode на сайте
@@ -19,7 +19,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 
 - Astro **Content Collections** (Astro 5 Loader API) + кастомный loader для OpenAPI.
 - `recipes` — отдельная коллекция со схемой `endpoints[]`, двусторонняя связь резолвится на билде.
-- Pagefind для traditional search (ноль инфры).
+- Orama для traditional search (ноль инфры, статика).
 - pgvector в Postgres (Prisma уже есть). Fastify endpoint для AI search со стримингом.
 - MCP — отдельный HTTP/SSE сервер на `mcp.bitcoinapi.dev`, тулзы: `docs_search`, `docs_fetch`, `recipe_search`, `api_endpoint`.
 
@@ -30,7 +30,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 - [x] Чат-модель: **`gemini-2.5-flash-lite`** (fallback `gemini-2.5-flash` если качество не устроит)
 - [x] Embeddings: **`text-embedding-004`**, **768 dim**
 - [x] AI ответ: streaming SSE (по умолчанию: да)
-- [x] Cost-control: семантический кэш в Redis (TTL 24h), top-3 чанков, `max_output_tokens: 600`, `temperature: 0.3`, prompt caching через `cachedContent`, smart routing коротких запросов в Pagefind
+- [x] Cost-control: семантический кэш в Redis (TTL 24h), top-3 чанков, `max_output_tokens: 600`, `temperature: 0.3`, prompt caching через `cachedContent`, smart routing коротких запросов в Orama
 - [x] Триггер пересборки индекса: **только на деплой web**. При деплое api — автоматически триггерить деплой web после успешного api (chained pipeline), чтобы подтянулась свежая схема.
 - [x] Хост MCP: **`/mcp` на api домене**. Поддомены опциональны и добавятся по необходимости. Реализация — Fastify plugin внутри `apps/api`, один процесс, общий DB/Redis/auth.
 
@@ -78,12 +78,12 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 20. Удалить `apps/web-client/src/pages/docs/quickstart.astro` (содержимое уже в коллекции).
 21. Удалить `apps/web-client/src/pages/docs/price/current.astro` (если контент перенесён в `api` коллекцию).
 
-### Фаза 4. Traditional search (Pagefind)
+### Фаза 4. Traditional search (Orama)
 
-22. Установить `pagefind` в `apps/web-client` (devDependency).
-23. В `package.json` добавить script `"postbuild": "pagefind --site dist"`.
-24. В `DocPageLayout.astro` добавить `data-pagefind-body` на main контейнер контента и `data-pagefind-meta` для title/section.
-25. Создать Vue-компонент `SearchTraditional.vue` который импортирует `/pagefind/pagefind.js`, делает поиск по input, рендерит результаты с подсветкой.
+22. Установить `@oramacloud/client` и `@oramacloud/astro` (или `@orama/orama` и `@orama/plugin-astro` для локального билда) в `apps/web-client`.
+23. Подключить интеграцию Orama в `astro.config.mjs` для генерации статического индекса при билде.
+24. Настроить конфигурацию Orama для индексации контента (заголовки, текст, секции).
+25. Создать Vue-компонент `SearchTraditional.vue` который импортирует Orama клиент, загружает сгенерированный индекс, делает поиск по input (с поддержкой опечаток) и рендерит результаты с подсветкой.
 26. Подключить компонент в `#docs-search-wrap` в режиме traditional.
 
 ### Фаза 5. Build chunks + embeddings
