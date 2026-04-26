@@ -86,15 +86,24 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 25. Создать Vue-компонент `SearchTraditional.vue` который импортирует Orama клиент, загружает сгенерированный индекс, делает поиск по input (с поддержкой опечаток) и рендерит результаты с подсветкой.
 26. Подключить компонент в `#docs-search-wrap` в режиме traditional.
 
-### Фаза 5. Build chunks + embeddings
+### Фаза 5. Индексация документации
 
-27. Создать `apps/web-client/scripts/build-chunks.ts`: использовать `getCollection` через Astro Content API (или прямой парс mdx) → разбить на чанки по headings + max токенов → выдать `apps/web-client/dist/docs-chunks.jsonl` со схемой `{id, kind, url, anchor, title, section, text, endpoints?}`.
-28. Добавить script `"docs:chunks": "tsx scripts/build-chunks.ts"` (запускается после `astro build`).
-29. В Prisma schema добавить enum `DocChunkKind { doc, recipe, api }` и model `DocChunk { id, kind, url, anchor, title, section, text, endpoints String[], embedding Unsupported("vector(768)") }`.
-30. Создать миграцию для расширения `CREATE EXTENSION IF NOT EXISTS vector` и таблицы.
-31. Добавить HNSW индекс на `embedding` в миграции.
-32. Создать `apps/api/bin/embed-and-upload.ts`: читает `docs-chunks.jsonl` → батчами эмбеддит через `@google/genai` (`text-embedding-004`, `taskType: 'RETRIEVAL_DOCUMENT'`, `outputDimensionality: 768`) → upsert в `DocChunk` (truncate перед заливкой).
-33. Добавить script в api package.json: `"docs:index": "tsx bin/embed-and-upload.ts"`.
+Принцип: один скрипт делает весь пайплайн (read → chunk → embed → upsert) без промежуточного `.jsonl`. Живёт в `web-client`, т.к. это его контент. Prisma доступна транзитивно из `shared/package.json`. Дельта-индексация по `sha256` контента чанка — не пережигаем квоту Gemini на неизменившиеся доки.
+
+27. В Prisma schema (в `shared/`) добавить enum `DocChunkKind { doc, recipe, api }` и model `DocChunk { id, kind, url, anchor, title, section, text, endpoints String[], contentHash String, embedding Unsupported("vector(768)") }`.
+28. Создать миграцию: `CREATE EXTENSION IF NOT EXISTS vector` + таблица `DocChunk`.
+29. Добавить HNSW индекс на `embedding` в миграции.
+30. Создать `apps/web-client/bin/index-docs.ts`:
+    - читает `.mdx` из `src/content/docs` и `src/content/recipes` напрямую через `fs` (виртуальный модуль `astro:content` в обычном tsx-скрипте недоступен);
+    - валидирует frontmatter Zod-схемами, импортированными из `src/content.config.ts` (single source of truth);
+    - тянет `api`-entries вызовом `applicationInterface.getOpenApiSchema()` (как в loader);
+    - режет контент на чанки по headings + лимит токенов;
+    - считает `sha256(text)` каждого чанка;
+    - читает существующие `contentHash` из `DocChunk`, эмбеддит через `@google/genai` (`text-embedding-004`, `taskType: 'RETRIEVAL_DOCUMENT'`, `outputDimensionality: 768`) только новые/изменившиеся;
+    - upsert в `DocChunk`, удаляет осиротевшие чанки (которых больше нет в исходниках).
+31. Добавить script `"docs:index": "tsx bin/index-docs.ts"` в `apps/web-client/package.json` (запускать вручную / по CI после деплоя web, не на каждом билде).
+32. Установить в `apps/web-client` нужные deps: `@google/genai`, `gray-matter` (для парсинга frontmatter из `.mdx`).
+33. Прокинуть `GEMINI_API_KEY` и `DATABASE_URL` в `.env` web-client (только для скрипта, не для рантайма Astro).
 
 ### Фаза 6. Fastify AI search
 
@@ -131,7 +140,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 
 ### Фаза 9. CI / деплой
 
-58. В корневой `Makefile` добавить таргет `docs-build`: `web build` (loader сам подтянет схему из `ApplicationInterface`) → `web docs:chunks` → `api docs:index`.
+58. В корневой `Makefile` добавить таргет `docs-build`: `web build` (loader сам подтянет схему из `ApplicationInterface`) → `web docs:index` (read → chunk → embed → upsert одним скриптом).
 59. В CI пайплайне поставить `docs-build` после деплоя api и web.
 60. В CI пайплайне api после успешного деплоя триггерить деплой web (через `repository_dispatch` / deploy hook / следующий job в том же workflow) — чтобы свежая схема (новые версии кода api) сразу попала в индекс и страницы.
 
