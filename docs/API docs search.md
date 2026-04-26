@@ -32,7 +32,7 @@ api openapi.json (loader)    (api ref)    ─┘                          ├─
 - [x] AI ответ: streaming SSE (по умолчанию: да)
 - [x] Cost-control: семантический кэш в Redis (TTL 24h), top-3 чанков, `max_output_tokens: 600`, `temperature: 0.3`, prompt caching через `cachedContent`, smart routing коротких запросов в Pagefind
 - [x] Триггер пересборки индекса: **только на деплой web**. При деплое api — автоматически триггерить деплой web после успешного api (chained pipeline), чтобы подтянулась свежая схема.
-- [ ] Хост MCP: отдельный поддомен `mcp.bitcoinapi.dev` / на api домене `/mcp`
+- [x] Хост MCP: **`/mcp` на api домене**. Поддомены опциональны и добавятся по необходимости. Реализация — Fastify plugin внутри `apps/api`, один процесс, общий DB/Redis/auth.
 
 ## План реализации
 
@@ -104,27 +104,28 @@ api openapi.json (loader)    (api ref)    ─┘                          ├─
 46. Создать переключатель режимов traditional/AI в `#docs-search-wrap` (хранение выбора в localStorage).
 47. Прокинуть открытие модалки/dropdown с двумя режимами.
 
-### Фаза 8. MCP сервер
+### Фаза 8. MCP сервер (Fastify plugin внутри `apps/api`)
 
-48. Создать `apps/mcp/` со своим `package.json`, зависимостями `@modelcontextprotocol/sdk`, fastify (или express).
-49. Реализовать тулзу `docs_search(query, k?)` — проксирует в Fastify `/docs/ai-search` (или прямо в репозиторий через shared package).
-50. Реализовать тулзу `docs_fetch(url)` — возвращает чистый markdown страницы (читает из реестра/CDN).
-51. Реализовать тулзу `recipe_search(endpointId?, query?, language?)` — фильтрует `DocChunk WHERE kind='recipe'` + опц. similarity.
-52. Реализовать тулзу `api_endpoint(method, path)` — отдаёт OpenAPI-фрагмент из `openapi.json`.
-53. Подключить HTTP/SSE transport из `@modelcontextprotocol/sdk`.
-54. Создать страницу `apps/web-client/src/content/docs/setup-mcp.mdx` с копи-пейст конфигом для `~/.cursor/mcp.json`.
-55. Заменить ссылку `Setup MCP` в sidebar-card на `/docs/setup-mcp`.
+48. Установить `@modelcontextprotocol/sdk` в `apps/api`.
+49. Создать Fastify plugin `apps/api/src/plugins/mcp.ts`: инициализирует `McpServer` из SDK, маунтит `StreamableHTTPServerTransport` на роуте `POST /mcp` (и `GET /mcp` для SSE/resumability).
+50. В plugin регистрировать тулзы из отдельных файлов в `apps/api/src/mcp/tools/`.
+51. Реализовать тулзу `docs_search(query, k?)` в `apps/api/src/mcp/tools/docsSearch.ts` — переиспользует `aiSearchUsecase` (без LLM-генерации, только retrieval) или прямой вызов `docChunksRepository.searchByVector`.
+52. Реализовать тулзу `docs_fetch(url)` в `apps/api/src/mcp/tools/docsFetch.ts` — возвращает чистый markdown страницы (читает из `DocChunk` по url или из ассета `docs-pages.json`).
+53. Реализовать тулзу `recipe_search(endpointId?, query?, language?)` в `apps/api/src/mcp/tools/recipeSearch.ts` — фильтрует `DocChunk WHERE kind='recipe'` + опц. cosine similarity.
+54. Реализовать тулзу `api_endpoint(method, path)` в `apps/api/src/mcp/tools/apiEndpoint.ts` — отдаёт OpenAPI-фрагмент из закешированного `openapi.json`.
+55. Добавить простой rate-limit для `/mcp` (Redis counter по IP/origin) и логирование вызовов тулз в `DocAiQuery`-стиле для аналитики.
+56. Создать страницу `apps/web-client/src/content/docs/setup-mcp.mdx` с копи-пейст конфигом для `~/.cursor/mcp.json` (URL: `https://api.bitcoinapi.dev/mcp`).
+57. Заменить ссылку `Setup MCP` в sidebar-card на `/docs/setup-mcp`.
 
 ### Фаза 9. CI / деплой
 
-56. В корневой `Makefile` добавить таргет `docs-build`: `api dump-openapi` → `web build` → `web docs:chunks` → `api docs:index`.
-57. В CI пайплайне поставить `docs-build` после деплоя api и web.
-58. В CI пайплайне api после успешного деплоя триггерить деплой web (через `repository_dispatch` / deploy hook / следующий job в том же workflow) — чтобы свежий `openapi.json` сразу попал в индекс и страницы.
-59. Деплой `apps/mcp` на отдельный поддомен (devops: nginx + systemd unit, по аналогии с api).
+58. В корневой `Makefile` добавить таргет `docs-build`: `api dump-openapi` → `web build` → `web docs:chunks` → `api docs:index`.
+59. В CI пайплайне поставить `docs-build` после деплоя api и web.
+60. В CI пайплайне api после успешного деплоя триггерить деплой web (через `repository_dispatch` / deploy hook / следующий job в том же workflow) — чтобы свежий `openapi.json` сразу попал в индекс и страницы.
 
 ### Фаза 10. Полировка
 
-60. Добавить в `DocPageLayout` блок «Was this helpful?» (минимум — лог в БД для последующего использования).
-61. Логировать AI запросы и оценки в `DocAiQuery` модель для будущего fine-tuning промпта.
-62. Добавить sitemap.xml для `/docs/**`.
-63. Прогнать lighthouse, починить найденное.
+61. Добавить в `DocPageLayout` блок «Was this helpful?» (минимум — лог в БД для последующего использования).
+62. Логировать AI запросы и оценки в `DocAiQuery` модель для будущего fine-tuning промпта.
+63. Добавить sitemap.xml для `/docs/**`.
+64. Прогнать lighthouse, починить найденное.
