@@ -122,19 +122,19 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 
 ### Фаза 6. Fastify AI search
 
-36. Создать провайдер `apps/api/src/providers/chat.provider.ts` (использует тот же singleton из `@google/genai` через `googleAiProvider` либо отдельный thin client): метод `streamCompletion({system, user, contextChunks}): AsyncIterable<string>` (модель `gemini-2.5-flash-lite`, `temperature: 0.3`, `maxOutputTokens: 600`). Если в `googleAiProvider` логично положить и `streamCompletion` рядом с `embed` — вынести туда (один внешний сервис = один provider). Решить по факту, основной критерий — оба метода идут к одному SDK.
-37. Создать system prompt в `apps/api/src/usecases/docs/aiSearch.prompt.ts`: «отвечай только на основе контекста, всегда указывай источники как `[title](url#anchor)`, отказывайся от вне-доменных вопросов». Подготовить как `cachedContent` для prompt caching.
-38. Создать репозиторий `apps/api/src/repositories/aiSearchCache.repository.ts` (Redis): ключ `ai:cache:<sha256(normalized_query)>`, TTL 24h, значение `{answer, sources}`. Опц. бонус — vector similarity по `RediSearch` для семантического hit.
-39. Создать usecase `apps/api/src/usecases/docs/aiSearch.usecase.ts`:
+36. Расширить `shared/src/providers/googleAi.provider.ts` методом `streamCompletion({system, user, contextChunks}): AsyncIterable<string>` — тонкая обёртка над `generateContentStream` из `@google/genai` (модель `gemini-2.5-flash-lite`, `temperature: 0.3`, `maxOutputTokens: 600`, system prompt передаётся как `cachedContent` для prompt caching).
+37. Создать репозиторий `apps/api/src/repositories/search.repository.ts` (Redis): методы `cacheQuery(query: string, value: {answer, sources})` (ключ `ai:cache:<sha256(normalized_query)>`, TTL 24h) и `findQuery(query: string): {answer, sources} | null`. Опц. бонус — vector similarity по `RediSearch` для семантического hit.
+38. Создать usecase `apps/api/src/usecases/docs/aiSearch.usecase.ts`:
+    - system prompt объявлен прямо в файле как константа: «отвечай только на основе контекста, всегда указывай источники как `[title](url#anchor)`, отказывайся от вне-доменных вопросов»;
     - smart-routing (если запрос < 15 chars или нет вопросительных слов → пустой результат с подсказкой использовать traditional);
-    - cache lookup;
+    - `searchRepository.findQuery(query)` — если есть, вернуть из кэша;
     - `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')`;
     - `docsRepository.searchByVector(embedding, 3)`;
-    - `chatProvider.streamCompletion(...)`;
-    - `aiSearchCacheRepository.set` после полной генерации.
-40. Создать схемы запроса/ответа в `apps/api/src/routes/docs/aiSearch.schemas.ts` (Ajv `JSONSchemaType`): `{query: string, sessionId?: string}` → SSE events `{type: 'token'|'sources'|'done', data}`.
-41. Создать route `POST /docs/ai-search` (SSE) в `apps/api/src/routes/docs/aiSearch.ts`, подключить usecase.
-42. Добавить rate-limit (per API key: 200/day для авторизованных, 20/day для анонимов по IP). Использовать Redis counters.
+    - `googleAiProvider.streamCompletion({system, user: query, contextChunks})`;
+    - `searchRepository.cacheQuery(query, {answer, sources})` после полной генерации.
+39. Создать схемы запроса/ответа в `apps/api/src/routes/docs/aiSearch.schemas.ts` (Ajv `JSONSchemaType`): `{query: string, sessionId?: string}` → SSE events `{type: 'token'|'sources'|'done', data}`.
+40. Создать route `POST /docs/ai-search` (SSE) в `apps/api/src/routes/docs/aiSearch.ts`, подключить usecase.
+41. Добавить rate-limit (per API key: 200/day для авторизованных, 20/day для анонимов по IP). Использовать Redis counters.
 
 ### Фаза 7. AI mode на сайте
 
