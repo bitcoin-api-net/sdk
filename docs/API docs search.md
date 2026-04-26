@@ -86,38 +86,55 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 25. Создать Vue-компонент `SearchTraditional.vue` который импортирует Orama клиент, загружает сгенерированный индекс, делает поиск по input (с поддержкой опечаток) и рендерит результаты с подсветкой.
 26. Подключить компонент в `#docs-search-wrap` в режиме traditional.
 
-### Фаза 5. Индексация документации
+### Фаза 5. Подготовка инфраструктуры эмбеддингов (shared)
 
-Принцип: один скрипт делает весь пайплайн (read → chunk → embed → upsert) без промежуточного `.jsonl`. Живёт в `web-client`, т.к. это его контент. Prisma доступна транзитивно из `shared/package.json`. Дельта-индексация по `sha256` контента чанка — не пережигаем квоту Gemini на неизменившиеся доки.
+Принцип: provider знает только про Gemini API (embed текста), repository знает про БД и сам внутри использует provider. Дельта-индексация по `sha256(text)` живёт внутри репозитория — provider остаётся "тупым" обёрткой над `@google/genai`.
 
-27. В Prisma schema (в `shared/`) добавить enum `DocChunkKind { doc, recipe, api }` и model `DocChunk { id, kind, url, anchor, title, section, text, endpoints String[], contentHash String, embedding Unsupported("vector(768)") }`.
-28. Создать миграцию: `CREATE EXTENSION IF NOT EXISTS vector` + таблица `DocChunk`.
-29. Добавить HNSW индекс на `embedding` в миграции.
-30. Создать `apps/web-client/bin/index-docs.ts`:
-    - читает `.mdx` из `src/content/docs` и `src/content/recipes` напрямую через `fs` (виртуальный модуль `astro:content` в обычном tsx-скрипте недоступен);
-    - валидирует frontmatter Zod-схемами, импортированными из `src/content.config.ts` (single source of truth);
-    - тянет `api`-entries вызовом `applicationInterface.getOpenApiSchema()` (как в loader);
-    - режет контент на чанки по headings + лимит токенов;
-    - считает `sha256(text)` каждого чанка;
-    - читает существующие `contentHash` из `DocChunk`, эмбеддит через `@google/genai` (`text-embedding-004`, `taskType: 'RETRIEVAL_DOCUMENT'`, `outputDimensionality: 768`) только новые/изменившиеся;
-    - upsert в `DocChunk`, удаляет осиротевшие чанки (которых больше нет в исходниках).
-31. Добавить script `"docs:index": "tsx bin/index-docs.ts"` в `apps/web-client/package.json` (запускать вручную / по CI после деплоя web, не на каждом билде).
-32. Установить в `apps/web-client` нужные deps: `@google/genai`, `gray-matter` (для парсинга frontmatter из `.mdx`).
-33. Прокинуть `GEMINI_API_KEY` и `DATABASE_URL` в `.env` web-client (только для скрипта, не для рантайма Astro).
+27. Установить `@google/genai` в `shared/package.json` (используется и web-client скриптом, и api в Фазе 6).
+28. Добавить `GEMINI_API_KEY` в корневой `.env` и в `shared/src/env.ts`-style использование (через `required(env.GEMINI_API_KEY)`).
+29. В Prisma schema (в `prisma/models/`) добавить файл `docChunk.prisma`: enum `DocChunkKind { doc, recipe, api }` и model `DocChunk { id String @id @default(uuid(7)), kind DocChunkKind, url String, anchor String?, title String, section String?, text String, endpoints String[], contentHash String, embedding Unsupported("vector(768)"), @@unique([url, anchor]) }`.
+30. Создать миграцию: `CREATE EXTENSION IF NOT EXISTS vector` → таблица `DocChunk` → HNSW индекс на `embedding` (`USING hnsw (embedding vector_cosine_ops)`).
+31. Создать `shared/src/providers/googleAi.provider.ts` (по rule `providers.mdc`):
+    - класс `GoogleAiProvider`, в конструкторе инициализирует singleton `GoogleGenAI` через `required(env.GEMINI_API_KEY)`;
+    - метод `embed(text: string, taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY'): Promise<number[]>` — вызывает `text-embedding-004`, 768 dim, возвращает массив чисел;
+    - в конце экспортирует singleton `export const googleAiProvider = new GoogleAiProvider()`.
+32. Создать `shared/src/repositories/docs.repository.ts` (наследует `BaseRepository<PrismaClient['docChunk']>`):
+    - метод `vectorizeDoc(doc: DocInput): Promise<{created: number, updated: number, skipped: number}>`:
+      * `DocInput = { kind, url, title, section?, text, endpoints }` — целый документ как одна сырая строка `text`;
+      * внутри сам режет `text` на чанки по headings + лимит токенов (хелпер в `shared/src/repositories/docs.repository/chunker.ts`);
+      * для каждого чанка генерирует `anchor` (из heading slug) и считает `sha256(chunkText)`;
+      * читает существующие `{url, anchor, contentHash}` для этого `url` из `DocChunk`;
+      * для новых/изменившихся чанков — зовёт `googleAiProvider.embed(chunkText, 'RETRIEVAL_DOCUMENT')`;
+      * `upsert` по `(url, anchor)` с записью embedding через raw SQL (`$executeRaw` с `::vector`);
+      * НЕ удаляет осиротевшие чанки внутри других url-ов (это делает отдельный метод).
+    - метод `deleteOrphans(keepUrls: string[]): Promise<number>` — удаляет все `DocChunk`, у которых `url NOT IN (...)`. Зовётся скриптом один раз в конце, когда известен полный список актуальных url.
+    - метод `searchByVector(embedding: number[], k: number = 3): Promise<DocChunk[]>` — raw SQL `ORDER BY embedding <=> $1::vector LIMIT $2` (нужен в Фазе 6).
+    - типы (`DocInput`, `CreatableDocChunk`, `UpdatableDocChunk`) и chunker положить в `shared/src/repositories/docs.repository/`.
+33. Создать `apps/web-client/bin/index-docs.ts`:
+    - читает `.mdx` из `src/content/docs` и `src/content/recipes` через `fs` (виртуальный модуль `astro:content` в tsx-скрипте недоступен);
+    - валидирует frontmatter Zod-схемами из `src/content.config.ts`;
+    - тянет `api`-entries вызовом `applicationInterface.getOpenApiSchema()`;
+    - в цикле по докам зовёт `docsRepository.vectorizeDoc(doc)` — нарезка/hash/embed/upsert внутри репозитория;
+    - после цикла зовёт `docsRepository.deleteOrphans(allUrls)` для удаления удалённых страниц;
+    - логирует aggregated stats (created/updated/skipped/deleted).
+34. Добавить script `"docs:index": "tsx bin/index-docs.ts"` в `apps/web-client/package.json` (запускать вручную / по CI после деплоя web).
+35. Установить в `apps/web-client` deps для скрипта: `gray-matter` (для парсинга frontmatter из `.mdx`). `@google/genai` уже в `shared`.
 
 ### Фаза 6. Fastify AI search
 
-34. Установить `@google/genai` в `apps/api`. Добавить `GEMINI_API_KEY` в `.env` и envs schema.
-35. Создать общий клиент `apps/api/src/providers/llm/geminiClient.ts` (singleton `GoogleGenAI`).
-36. Создать провайдер `apps/api/src/providers/llm/embeddingsProvider.ts`: метод `embed(text, taskType): number[]` (`text-embedding-004`, 768 dim, `taskType` = `RETRIEVAL_QUERY` для запроса, `RETRIEVAL_DOCUMENT` для индексации).
-37. Создать провайдер `apps/api/src/providers/llm/chatProvider.ts`: метод `streamCompletion({system, user, contextChunks}): AsyncIterable<string>` (модель `gemini-2.5-flash-lite`, `temperature: 0.3`, `maxOutputTokens: 600`).
-38. Создать system prompt в `apps/api/src/usecases/docs/aiSearch.prompt.ts`: «отвечай только на основе контекста, всегда указывай источники как `[title](url#anchor)`, отказывайся от вне-доменных вопросов». Подготовить как `cachedContent` для prompt caching.
-39. Создать репозиторий `apps/api/src/providers/database/docChunksRepository.ts` с методом `searchByVector(embedding, k=3): DocChunk[]` (raw SQL `ORDER BY embedding <=> $1::vector LIMIT $2`).
-40. Создать репозиторий `apps/api/src/providers/cache/aiSearchCacheRepository.ts` (Redis): ключ `ai:cache:<sha256(normalized_query)>`, TTL 24h, значение `{answer, sources}`. Опц. бонус — vector similarity по `RediSearch` для семантического hit.
-41. Создать usecase `apps/api/src/usecases/docs/aiSearchUsecase.ts`: smart-routing (если запрос < 15 chars или нет вопросительных слов → вернуть пустой результат с подсказкой использовать traditional) → cache lookup → embed query → searchByVector(k=3) → streamCompletion → cache.set после полной генерации.
-42. Создать схемы запроса/ответа в `apps/api/src/routes/docs/aiSearch.schemas.ts` (zod): `{query: string, sessionId?: string}` → SSE events `{type: 'token'|'sources'|'done', data}`.
-43. Создать route `POST /docs/ai-search` (SSE) в `apps/api/src/routes/docs/aiSearch.ts`, подключить usecase.
-44. Добавить rate-limit (per API key: 200/day для авторизованных, 20/day для анонимов по IP). Использовать Redis counters.
+36. Создать провайдер `apps/api/src/providers/chat.provider.ts` (использует тот же singleton из `@google/genai` через `googleAiProvider` либо отдельный thin client): метод `streamCompletion({system, user, contextChunks}): AsyncIterable<string>` (модель `gemini-2.5-flash-lite`, `temperature: 0.3`, `maxOutputTokens: 600`). Если в `googleAiProvider` логично положить и `streamCompletion` рядом с `embed` — вынести туда (один внешний сервис = один provider). Решить по факту, основной критерий — оба метода идут к одному SDK.
+37. Создать system prompt в `apps/api/src/usecases/docs/aiSearch.prompt.ts`: «отвечай только на основе контекста, всегда указывай источники как `[title](url#anchor)`, отказывайся от вне-доменных вопросов». Подготовить как `cachedContent` для prompt caching.
+38. Создать репозиторий `apps/api/src/repositories/aiSearchCache.repository.ts` (Redis): ключ `ai:cache:<sha256(normalized_query)>`, TTL 24h, значение `{answer, sources}`. Опц. бонус — vector similarity по `RediSearch` для семантического hit.
+39. Создать usecase `apps/api/src/usecases/docs/aiSearch.usecase.ts`:
+    - smart-routing (если запрос < 15 chars или нет вопросительных слов → пустой результат с подсказкой использовать traditional);
+    - cache lookup;
+    - `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')`;
+    - `docsRepository.searchByVector(embedding, 3)`;
+    - `chatProvider.streamCompletion(...)`;
+    - `aiSearchCacheRepository.set` после полной генерации.
+40. Создать схемы запроса/ответа в `apps/api/src/routes/docs/aiSearch.schemas.ts` (Ajv `JSONSchemaType`): `{query: string, sessionId?: string}` → SSE events `{type: 'token'|'sources'|'done', data}`.
+41. Создать route `POST /docs/ai-search` (SSE) в `apps/api/src/routes/docs/aiSearch.ts`, подключить usecase.
+42. Добавить rate-limit (per API key: 200/day для авторизованных, 20/day для анонимов по IP). Использовать Redis counters.
 
 ### Фаза 7. AI mode на сайте
 
@@ -130,7 +147,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 48. Установить `@modelcontextprotocol/sdk` в `apps/api`.
 49. Создать Fastify plugin `apps/api/src/plugins/mcp.ts`: инициализирует `McpServer` из SDK, маунтит `StreamableHTTPServerTransport` на роуте `POST /mcp` (и `GET /mcp` для SSE/resumability).
 50. В plugin регистрировать тулзы из отдельных файлов в `apps/api/src/mcp/tools/`.
-51. Реализовать тулзу `docs_search(query, k?)` в `apps/api/src/mcp/tools/docsSearch.ts` — переиспользует `aiSearchUsecase` (без LLM-генерации, только retrieval) или прямой вызов `docChunksRepository.searchByVector`.
+51. Реализовать тулзу `docs_search(query, k?)` в `apps/api/src/mcp/tools/docsSearch.ts` — переиспользует `aiSearchUsecase` (без LLM-генерации, только retrieval) или прямой вызов `docsRepository.searchByVector` (с предварительным `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')`).
 52. Реализовать тулзу `docs_fetch(url)` в `apps/api/src/mcp/tools/docsFetch.ts` — возвращает чистый markdown страницы (читает из `DocChunk` по url или из ассета `docs-pages.json`).
 53. Реализовать тулзу `recipe_search(endpointId?, query?, language?)` в `apps/api/src/mcp/tools/recipeSearch.ts` — фильтрует `DocChunk WHERE kind='recipe'` + опц. cosine similarity.
 54. Реализовать тулзу `api_endpoint(method, path)` в `apps/api/src/mcp/tools/apiEndpoint.ts` — отдаёт OpenAPI-фрагмент из `applicationInterface.getOpenApiSchema()` (кеш уже встроен в singleton).
