@@ -17,7 +17,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 
 Ключевые решения:
 
-- Astro **Content Collections** (Astro 5 Loader API) + кастомный loader для OpenAPI.
+- Astro **Content Collections** (Loader API) + кастомный loader для OpenAPI.
 - `recipes` — отдельная коллекция со схемой `endpoints[]`, двусторонняя связь резолвится на билде.
 - Orama для traditional search (ноль инфры, статика).
 - pgvector в Postgres (Prisma уже есть). Fastify endpoint для AI search со стримингом.
@@ -35,18 +35,6 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 - [x] Хост MCP: **отдельная апка `apps/mcp`** (Fastify), одна машина с api, общий `shared` (DB/Redis/providers). Внешний URL — `mcp.bitcoinapi.dev` (отдельный поддомен) или `/mcp` через reverse proxy на api-домене (решается на уровне Cloudflare/nginx, на код не влияет). Свой systemd-сервис, свой деплой.
 
 ## План реализации
-
-### Фаза 0. Апгрейд Astro 5 → Astro 6
-
-Обоснование: в шаге 9 используется кастомный Content Loader. В Astro 6 у Loader API сломанная совместимость (schema-функция убрана, типы инферятся через `satisfies Loader`, выпилен legacy `src/content/`), плюс зависимости (Zod 4, Vite 7, Shiki 4) и Node 22.12+. Логичнее обновиться до 6.1.x ДО того, как мы напишем loader, чтобы не переписывать его дважды.
-
-0.1. Проверить `node -v` ≥ 22.12 на dev/CI; при необходимости поднять.
-0.2. В `apps/web-client` обновить `astro` до `^6.1.6`, `@astrojs/vue` и `@astrojs/check` до версий, совместимых с Astro 6.
-0.3. Обновить совместимые dev-зависимости: `vue-tsc`, `@tailwindcss/vite` (под Vite 7), `tailwindcss`. Проверить, что плагины Vite не сломались.
-0.4. В `apps/web-client/src/content.config.ts` (если уже есть) и будущих лоадерах: schema объявлять статически, использовать `satisfies Loader`. Не использовать `schema: async () => ...`.
-0.5. Удалить любые остатки legacy подхода `src/content/` и флаг `legacy.collections` (если когда-то был включён).
-0.6. Прогнать миграции по Zod 4 в существующих схемах (если используем Zod где-то в web-client).
-0.7. `npm build` + `npm typecheck` web-client должны проходить чисто на Astro 6 — после этого начинаем Фазу 1.
 
 ### Фаза 1. OpenAPI как метод ApplicationInterface
 
@@ -67,7 +55,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 6. Подключить интеграцию mdx в `astro.config.mjs`.
 7. Создать `apps/web-client/src/content.config.ts` с zod-схемой коллекции `docs` (поля: `title`, `description`, `section`, `order`, `tags`).
 8. Добавить в `content.config.ts` коллекцию `recipes` (`title`, `description`, `endpoints[]`, `language`, `difficulty?`, `tags?`, `runUrl?`).
-9. Создать кастомный loader `apps/web-client/src/content/loaders/openapi.ts` (Astro 5 Loader API): импортирует `applicationInterface` из `apps/api`, делает `const schema = await applicationInterface.getOpenApiSchema()` и эмитит entry per operation. Никаких промежуточных файлов.
+9. Создать кастомный loader `apps/web-client/src/content/loaders/openapi.ts` (Astro Loader API): импортирует `applicationInterface` из `apps/api`, делает `const schema = await applicationInterface.getOpenApiSchema()` и эмитит entry per operation. Никаких промежуточных файлов.
 10. Добавить в `content.config.ts` коллекцию `api` с этим loader, schema: `operationId`, `method`, `path`, `summary`, `description`, `tags`, `requestSchema`, `responseSchemas`, `parameters`.
 11. Создать `apps/web-client/src/content/docs/quickstart.mdx` — портировать содержимое из текущего `quickstart.astro` во frontmatter + markdown body.
 12. Создать `apps/web-client/src/content/recipes/_example.mdx` (пример со всеми полями) для шаблона.
