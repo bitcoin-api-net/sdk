@@ -32,7 +32,45 @@
 
 Пересборка индекса — в CI после деплоя доков. Чанки в git не нужны, артефакт CI.
 
-### 5. MCP для IDE
+### 5. Recipes (примеры использования эндпоинтов)
+
+Отдельная коллекция `recipes`, **не** часть `docs`. Причины:
+
+- Своя схема: `endpoints: string[]`, `language`, `difficulty`, `runUrl` — в narrative docs эти поля не нужны.
+- Двусторонняя связь резолвится в build-time:
+  - на странице эндпоинта: `recipes.filter(r => r.endpoints.includes(endpointId))` → блок «Recipes using this endpoint».
+  - на странице рецепта: список используемых эндпоинтов с ссылками на reference.
+- Разный layout/URL: `/docs/recipes/<slug>` (code-first, copy + run) vs `/docs/api/<slug>` (reference) vs `/docs/<slug>` (narrative).
+- Для AI/MCP рецепт = цельный чанк с метаданными `endpoints[]`. Появляется отдельная MCP-тулза `recipe_search(endpointId?, query?)` — именно то, что нужно агенту в IDE: «пример для `GET /v1/prices/current` на Python».
+
+Схема (черновик):
+
+```ts
+recipes: defineCollection({
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    endpoints: z.array(z.string()),         // 'GET /v1/prices/current' или operationId
+    language: z.enum(['js','ts','python','curl','go']),
+    difficulty: z.enum(['basic','intermediate','advanced']).optional(),
+    tags: z.array(z.string()).optional(),
+    runUrl: z.string().url().optional(),    // hoppscotch/replit
+  })
+})
+```
+
+Структура контента:
+
+```
+src/content/
+  docs/      # narrative: quickstart, concepts, guides
+  recipes/   # code-first примеры с метадатой endpoints[]
+  api/       # виртуальная, через loader из openapi.json
+```
+
+В общем реестре всё объединяется как `DocEntry[]` с полем `kind: 'doc' | 'recipe' | 'api'` — для search/RAG/MCP этого достаточно, а схемы остаются строгими.
+
+### 6. MCP для IDE
 
 MCP — это _ещё один потребитель тех же чанков_. Не надо отдельной базы. Поднимаешь маленький MCP-сервер (Node, [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk)) с 2–3 тулзами:
 
