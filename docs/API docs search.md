@@ -107,7 +107,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
       * для новых/изменившихся чанков — зовёт `googleAiProvider.embed(chunkText, 'RETRIEVAL_DOCUMENT')`;
       * `upsert` по `(url, anchor)` с записью embedding через raw SQL (`$executeRaw` с `::vector`);
       * НЕ удаляет осиротевшие чанки внутри других url-ов (это делает отдельный метод).
-    - метод `deleteOrphans(keepUrls: string[]): Promise<number>` — удаляет все `DocChunk`, у которых `url NOT IN (...)`. Зовётся скриптом один раз в конце, когда известен полный список актуальных url.
+    - метод `deleteOrphansExcept(keepUrls: string[]): Promise<number>` — удаляет все `DocChunk`, у которых `url NOT IN (...)`. Зовётся скриптом один раз в конце, когда известен полный список актуальных url.
     - метод `searchByVector(embedding: number[], k: number = 3): Promise<DocChunk[]>` — raw SQL `ORDER BY embedding <=> $1::vector LIMIT $2` (нужен в Фазе 6).
     - типы (`DocInput`, `CreatableDocChunk`, `UpdatableDocChunk`) и chunker положить в `shared/src/repositories/docs.repository/`.
 33. Создать `apps/web-client/bin/index-docs.ts`:
@@ -115,7 +115,7 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
     - валидирует frontmatter Zod-схемами из `src/content.config.ts`;
     - тянет `api`-entries вызовом `applicationInterface.getOpenApiSchema()`;
     - в цикле по докам зовёт `docsRepository.vectorizeDoc(doc)` — нарезка/hash/embed/upsert внутри репозитория;
-    - после цикла зовёт `docsRepository.deleteOrphans(allUrls)` для удаления удалённых страниц;
+    - после цикла зовёт `docsRepository.deleteOrphansExcept(allUrls)` для удаления удалённых страниц;
     - логирует aggregated stats (created/updated/skipped/deleted).
 34. Добавить script `"docs:index": "tsx bin/index-docs.ts"` в `apps/web-client/package.json` (запускать вручную / по CI после деплоя web).
 35. Установить в `apps/web-client` deps для скрипта: `gray-matter` (для парсинга frontmatter из `.mdx`). `@google/genai` уже в `shared`.
