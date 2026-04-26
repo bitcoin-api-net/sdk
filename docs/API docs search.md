@@ -1,111 +1,124 @@
-Окей, давай разложу. У тебя задача — один источник истины → 4 потребителя: статические страницы, обычный поиск, AI-поиск с цитатами, MCP для IDE.
+# Документация: web + traditional search + AI search + MCP
 
-## Архитектура которую советую
+## Архитектура (короткое summary)
 
-### 1. Два источника, один индекс
-
-Не пытайся слить markdown и OpenAPI в один формат — это разные домены. Сделай их двумя _входами_ в один **build-time реестр**:
-
-- **Narrative docs** (quickstart, концепты, гайды) → Astro **Content Collections** в MDX/Markdown с фронтматтером (`title`, `description`, `section`, `tags`, `order`).
-- **API reference** → `openapi.json` от Fastify Swagger. В Astro 5 у Content Collections есть [Loader API](https://docs.astro.build/en/reference/content-loader-reference/) — можно написать кастомный loader, который скачивает/читает `openapi.json` и превращает каждый endpoint в entry коллекции (`api` collection). Тогда endpoint'ы — такие же entries, как и markdown-страницы.
-
-Результат: одна абстракция `DocEntry { id, url, title, section, body, headings[], chunks[] }` на оба источника.
-
-### 2. Рендер веб-страниц
-
-Один dynamic route, например `src/pages/docs/[...slug].astro`, который читает обе коллекции (`docs` + `api`) и рендерит. Никакого ручного `quickstart.astro` — всё из коллекций.
-
-### 3. Обычный поиск (тот «Search AI» инпут, traditional mode)
-
-Берёшь [**Pagefind**](https://pagefind.app/) — стандарт для статических Astro-сайтов. Запускаешь после `astro build`, он сканит готовый HTML и генерит статический индекс (~kB на страницу). Поиск работает в браузере, без бэка. Идеально для traditional mode.
-
-### 4. AI-поиск с ссылками (RAG)
-
-Тут нужен бэк. Шаги:
-
-1. На том же build-шаге, где собираешь реестр, **порежь контент на чанки** (~300–800 токенов, по заголовкам). Сохрани как `docs-chunks.jsonl`: `{id, url, anchor, title, section, text}`.
-2. Прогон через embedding модель → векторы.
-3. Хранилище:
-   - **pgvector** в Postgres (у тебя уже Prisma) — проще, всё в одной БД.
-   - либо **Redis Vector** (у тебя Redis в стеке) — быстрее, но лишний движок.
-4. Fastify endpoint `POST /docs/ai-search`: embed query → top-k чанков → LLM с system-промптом «отвечай только по контексту, всегда указывай ссылки `url#anchor`». Возвращаешь и ответ, и список источников — фронт рендерит карточки-ссылки.
-
-Пересборка индекса — в CI после деплоя доков. Чанки в git не нужны, артефакт CI.
-
-### 5. Recipes (примеры использования эндпоинтов)
-
-Отдельная коллекция `recipes`, **не** часть `docs`. Причины:
-
-- Своя схема: `endpoints: string[]`, `language`, `difficulty`, `runUrl` — в narrative docs эти поля не нужны.
-- Двусторонняя связь резолвится в build-time:
-  - на странице эндпоинта: `recipes.filter(r => r.endpoints.includes(endpointId))` → блок «Recipes using this endpoint».
-  - на странице рецепта: список используемых эндпоинтов с ссылками на reference.
-- Разный layout/URL: `/docs/recipes/<slug>` (code-first, copy + run) vs `/docs/api/<slug>` (reference) vs `/docs/<slug>` (narrative).
-- Для AI/MCP рецепт = цельный чанк с метаданными `endpoints[]`. Появляется отдельная MCP-тулза `recipe_search(endpointId?, query?)` — именно то, что нужно агенту в IDE: «пример для `GET /v1/prices/current` на Python».
-
-Схема (черновик):
-
-```ts
-recipes: defineCollection({
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    endpoints: z.array(z.string()),         // 'GET /v1/prices/current' или operationId
-    language: z.enum(['js','ts','python','curl','go']),
-    difficulty: z.enum(['basic','intermediate','advanced']).optional(),
-    tags: z.array(z.string()).optional(),
-    runUrl: z.string().url().optional(),    // hoppscotch/replit
-  })
-})
-```
-
-Структура контента:
+Один build-time реестр из трёх источников → 4 потребителя.
 
 ```
-src/content/
-  docs/      # narrative: quickstart, concepts, guides
-  recipes/   # code-first примеры с метадатой endpoints[]
-  api/       # виртуальная, через loader из openapi.json
+src/content/docs/*.mdx       (narrative)  ─┐
+src/content/recipes/*.mdx    (рецепты)    ─┼─► registry (DocEntry[]) ─┬─► Astro static pages
+api openapi.json (loader)    (api ref)    ─┘                          ├─► Pagefind index           (traditional search, статика)
+                                                                      ├─► chunks → embeddings → pgvector
+                                                                      │                  ▲
+                                                                      │       Fastify POST /docs/ai-search (SSE)  ◄── AI mode на сайте
+                                                                      │                  ▲
+                                                                      └─► MCP server (HTTP/SSE)                   ◄── IDE-агенты
 ```
 
-В общем реестре всё объединяется как `DocEntry[]` с полем `kind: 'doc' | 'recipe' | 'api'` — для search/RAG/MCP этого достаточно, а схемы остаются строгими.
+Ключевые решения:
 
-### 6. MCP для IDE
+- Astro **Content Collections** (Astro 5 Loader API) + кастомный loader для OpenAPI.
+- `recipes` — отдельная коллекция со схемой `endpoints[]`, двусторонняя связь резолвится на билде.
+- Pagefind для traditional search (ноль инфры).
+- pgvector в Postgres (Prisma уже есть). Fastify endpoint для AI search со стримингом.
+- MCP — отдельный HTTP/SSE сервер на `mcp.bitcoinapi.dev`, тулзы: `docs_search`, `docs_fetch`, `recipe_search`, `api_endpoint`.
 
-MCP — это _ещё один потребитель тех же чанков_. Не надо отдельной базы. Поднимаешь маленький MCP-сервер (Node, [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk)) с 2–3 тулзами:
+## Открытые вопросы (заполнить перед стартом)
 
-- `docs_search(query, k?)` → дёргает твой же `/docs/ai-search` или напрямую vector store, возвращает чанки с url+anchor.
-- `docs_fetch(url)` → возвращает чистый markdown страницы (берёшь из реестра).
-- опционально `api_endpoint(method, path)` → OpenAPI-фрагмент.
+- [ ] Языки: EN only / multi-lang
+- [ ] LLM провайдер для AI search (OpenAI / Anthropic / другой)
+- [ ] Модель эмбеддингов (по умолчанию: `text-embedding-3-small`, 1536 dim)
+- [ ] AI ответ: streaming SSE (по умолчанию: да)
+- [ ] Триггер пересборки индекса: только на деплой web / вебхук от api при изменении openapi
+- [ ] Хост MCP: отдельный поддомен `mcp.bitcoinapi.dev` / на api домене `/mcp`
 
-Хостишь как **remote MCP over HTTP/SSE** на отдельном домене (например `mcp.bitcoinapi.dev`). Тогда «Setup MCP» — это просто инструкция: добавить URL в `~/.cursor/mcp.json`. Не надо ничего ставить локально.
+## План реализации
 
-## Картинка пайплайна
+### Фаза 1. OpenAPI экспорт из Fastify
 
-```
-content/docs/*.mdx ─────┐
-                        ├──► build registry ──┬──► Astro pages (статика)
-fastify openapi.json ───┘   (DocEntry[])      ├──► Pagefind index (traditional search)
-                                              ├──► chunks + embeddings → pgvector
-                                              │       ▲
-                                              │       │
-                                              │   Fastify /docs/ai-search ◄── AI mode на сайте
-                                              │       ▲
-                                              │       │
-                                              └──► MCP server (docs_search/fetch) ◄── IDE-агенты
-```
+1. В `apps/api` добавить bin-скрипт `bin/dump-openapi.ts`: запустить app, прочитать `app.swagger()`, записать в `apps/api/openapi.json`.
+2. В `apps/api/package.json` добавить script `"docs:openapi": "tsx bin/dump-openapi.ts"`.
+3. Проверить, что у всех роутов есть `operationId`, `summary`, `description`, теги в schema; проставить отсутствующие.
+4. Добавить `apps/api/openapi.json` в `.gitignore` (артефакт билда).
 
-## Почему так
+### Фаза 2. Content Collections в web-client
 
-- **Один build-step** → один реестр → невозможно рассинхронить веб/AI/MCP.
-- Astro Content Loader API специально под это — OpenAPI становится «виртуальной коллекцией».
-- Pagefind = ноль инфры на traditional search.
-- Чанки + embeddings — общий ресурс для AI-режима сайта **и** MCP, не дублируешь.
-- MCP по HTTP — пользователь добавляет URL, не качает npm-пакет.
+5. Установить `@astrojs/mdx` в `apps/web-client`.
+6. Подключить интеграцию mdx в `astro.config.mjs`.
+7. Создать `apps/web-client/src/content.config.ts` с zod-схемой коллекции `docs` (поля: `title`, `description`, `section`, `order`, `tags`).
+8. Добавить в `content.config.ts` коллекцию `recipes` (`title`, `description`, `endpoints[]`, `language`, `difficulty?`, `tags?`, `runUrl?`).
+9. Создать кастомный loader `apps/web-client/src/content/loaders/openapi.ts` (Astro 5 Loader API), который читает `apps/api/openapi.json` и эмитит entry per operation.
+10. Добавить в `content.config.ts` коллекцию `api` с этим loader, schema: `operationId`, `method`, `path`, `summary`, `description`, `tags`, `requestSchema`, `responseSchemas`, `parameters`.
+11. Создать `apps/web-client/src/content/docs/quickstart.mdx` — портировать содержимое из текущего `quickstart.astro` во frontmatter + markdown body.
+12. Создать `apps/web-client/src/content/recipes/_example.mdx` (пример со всеми полями) для шаблона.
 
-## Пара вопросов прежде чем углубляться
+### Фаза 3. Рендер страниц из коллекций
 
-1. Доки многоязычные планируются или only EN?
-2. AI-режим — хочешь стримить ответ (SSE) или достаточно одного response с цитатами?
-3. Какой LLM провайдер — OpenAI/Anthropic/локальный? Это влияет на выбор embeddings (для локального RAG обычно `text-embedding-3-small` или `bge-small`).
-4. Как часто меняется OpenAPI? Если часто — индекс пересобираем по вебхуку из API, если редко — на каждом деплое веба.
+13. Создать общий `DocPageLayout.astro` (наследует `DocsLayout`) с TOC из `getHeadings()`, breadcrumbs, prev/next.
+14. Создать роут `apps/web-client/src/pages/docs/[...slug].astro` для коллекции `docs` (`getStaticPaths` из `getCollection('docs')`).
+15. Создать роут `apps/web-client/src/pages/docs/recipes/[...slug].astro` для коллекции `recipes`, layout с code-first (большой code block, run button, список используемых эндпоинтов).
+16. Создать роут `apps/web-client/src/pages/docs/api/[...slug].astro` для коллекции `api`, layout с request/response/params блоками.
+17. Создать helper `apps/web-client/src/lib/docs-cross-links.ts`: `recipesForEndpoint(endpointId)` и `endpointsForRecipe(recipe)`.
+18. На странице `api/[...slug]` отрендерить блок «Recipes using this endpoint» через хелпер.
+19. На странице `recipes/[...slug]` отрендерить блок «Endpoints used» через хелпер.
+20. Удалить `apps/web-client/src/pages/docs/quickstart.astro` (содержимое уже в коллекции).
+21. Удалить `apps/web-client/src/pages/docs/price/current.astro` (если контент перенесён в `api` коллекцию).
+
+### Фаза 4. Traditional search (Pagefind)
+
+22. Установить `pagefind` в `apps/web-client` (devDependency).
+23. В `package.json` добавить script `"postbuild": "pagefind --site dist"`.
+24. В `DocPageLayout.astro` добавить `data-pagefind-body` на main контейнер контента и `data-pagefind-meta` для title/section.
+25. Создать Vue-компонент `SearchTraditional.vue` который импортирует `/pagefind/pagefind.js`, делает поиск по input, рендерит результаты с подсветкой.
+26. Подключить компонент в `#docs-search-wrap` в режиме traditional.
+
+### Фаза 5. Build chunks + embeddings
+
+27. Создать `apps/web-client/scripts/build-chunks.ts`: использовать `getCollection` через Astro Content API (или прямой парс mdx) → разбить на чанки по headings + max токенов → выдать `apps/web-client/dist/docs-chunks.jsonl` со схемой `{id, kind, url, anchor, title, section, text, endpoints?}`.
+28. Добавить script `"docs:chunks": "tsx scripts/build-chunks.ts"` (запускается после `astro build`).
+29. В Prisma schema добавить enum `DocChunkKind { doc, recipe, api }` и model `DocChunk { id, kind, url, anchor, title, section, text, endpoints String[], embedding Unsupported("vector(1536)") }`.
+30. Создать миграцию для расширения `CREATE EXTENSION IF NOT EXISTS vector` и таблицы.
+31. Добавить HNSW индекс на `embedding` в миграции.
+32. Создать `apps/api/bin/embed-and-upload.ts`: читает `docs-chunks.jsonl` → батчами эмбеддит через провайдер → upsert в `DocChunk` (truncate перед заливкой).
+33. Добавить script в api package.json: `"docs:index": "tsx bin/embed-and-upload.ts"`.
+
+### Фаза 6. Fastify AI search
+
+34. Создать провайдер `apps/api/src/providers/llm/embeddingsProvider.ts` (метод `embed(text): number[]`).
+35. Создать провайдер `apps/api/src/providers/llm/chatProvider.ts` (метод `streamCompletion(messages): AsyncIterable`).
+36. Создать репозиторий `apps/api/src/providers/database/docChunksRepository.ts` с методом `searchByVector(embedding, k): DocChunk[]` (raw SQL `ORDER BY embedding <=> $1 LIMIT $2`).
+37. Создать usecase `apps/api/src/usecases/docs/aiSearchUsecase.ts`: embed(query) → top-k → формирует контекст с цитатами → стримит ответ LLM.
+38. Создать схемы запроса/ответа в `apps/api/src/routes/docs/aiSearch.schemas.ts`.
+39. Создать route `POST /docs/ai-search` (SSE) в `apps/api/src/routes/docs/aiSearch.ts`, подключить usecase.
+40. Добавить rate-limit на endpoint (per IP / per API key).
+
+### Фаза 7. AI mode на сайте
+
+41. Создать Vue-компонент `SearchAI.vue`: textarea + submit, потребляет SSE с `/docs/ai-search`, рендерит markdown ответа + карточки источников (`title`, `section`, `url#anchor`).
+42. Создать переключатель режимов traditional/AI в `#docs-search-wrap` (хранение выбора в localStorage).
+43. Прокинуть открытие модалки/dropdown с двумя режимами.
+
+### Фаза 8. MCP сервер
+
+44. Создать `apps/mcp/` со своим `package.json`, зависимостями `@modelcontextprotocol/sdk`, fastify (или express).
+45. Реализовать тулзу `docs_search(query, k?)` — проксирует в Fastify `/docs/ai-search` (или прямо в репозиторий через shared package).
+46. Реализовать тулзу `docs_fetch(url)` — возвращает чистый markdown страницы (читает из реестра/CDN).
+47. Реализовать тулзу `recipe_search(endpointId?, query?, language?)` — фильтрует `DocChunk WHERE kind='recipe'` + опц. similarity.
+48. Реализовать тулзу `api_endpoint(method, path)` — отдаёт OpenAPI-фрагмент из `openapi.json`.
+49. Подключить HTTP/SSE transport из `@modelcontextprotocol/sdk`.
+50. Создать страницу `apps/web-client/src/content/docs/setup-mcp.mdx` с копи-пейст конфигом для `~/.cursor/mcp.json`.
+51. Заменить ссылку `Setup MCP` в sidebar-card на `/docs/setup-mcp`.
+
+### Фаза 9. CI / деплой
+
+52. В корневой `Makefile` добавить таргет `docs-build`: `api dump-openapi` → `web build` → `web docs:chunks` → `api docs:index`.
+53. В CI пайплайне поставить `docs-build` после деплоя api и web.
+54. Настроить вебхук `api → web` на пересборку индекса при изменении openapi (опционально).
+55. Деплой `apps/mcp` на отдельный поддомен (devops: nginx + systemd unit, по аналогии с api).
+
+### Фаза 10. Полировка
+
+56. Добавить в `DocPageLayout` блок «Was this helpful?» (минимум — лог в БД для последующего использования).
+57. Логировать AI запросы и оценки в `DocAiQuery` модель для будущего fine-tuning промпта.
+58. Добавить sitemap.xml для `/docs/**`.
+59. Прогнать lighthouse, починить найденное.
