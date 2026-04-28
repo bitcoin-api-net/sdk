@@ -1,0 +1,15 @@
+model DocChunk {
+  id          String                     @id @default(uuid(7))
+  url         String
+  anchor      String
+  title       String
+  section     String?
+  text        String
+  contentHash String                     @map("content_hash")
+  embedding   Unsupported("vector(768)")
+  createdAt   DateTime                   @default(now()) @map("created_at")
+  updatedAt   DateTime                   @updatedAt @map("updated_at")
+
+  @@unique([url, anchor])
+  @@map("doc_chunks")
+}

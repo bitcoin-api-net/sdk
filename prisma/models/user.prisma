@@ -2,5 +2,7 @@ model User {
   id       String  @id @default(uuid(7))
   email    String  @unique
   password String
-  isActive Boolean @default(false)
+  isActive Boolean @default(false) @map("is_active")
+
+  @@map("users")
 }

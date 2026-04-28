@@ -1,0 +1,19 @@
+model ApiChunk {
+  id              String                     @id @default(uuid(7))
+  operationId     String                     @unique @map("operation_id")
+  method          String
+  path            String
+  summary         String?
+  description     String?
+  tags            String[]
+  requestSchema   Json?                      @map("request_schema")
+  responseSchemas Json                       @map("response_schemas")
+  parameters      Json
+  text            String
+  contentHash     String                     @map("content_hash")
+  embedding       Unsupported("vector(768)")
+  createdAt       DateTime                   @default(now()) @map("created_at")
+  updatedAt       DateTime                   @updatedAt @map("updated_at")
+
+  @@map("api_chunks")
+}

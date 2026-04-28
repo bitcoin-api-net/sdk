@@ -6,6 +6,8 @@
   "author": "Bogdan",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^1.50.1",
+    "@langchain/textsplitters": "^1.0.1",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "decimal.js": "^10.6.0",
