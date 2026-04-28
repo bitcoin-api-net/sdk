@@ -86,41 +86,48 @@ apps/api/files/openapi.json  (api ref)    ─┘                          ├─
 
 ### Фаза 5. Подготовка инфраструктуры эмбеддингов (shared)
 
-Принцип: provider знает только про Gemini API (embed текста), repository знает про БД и сам внутри использует provider. Дельта-индексация по `sha256(text)` живёт внутри репозитория — provider остаётся "тупым" обёрткой над `@google/genai`.
+Принцип: три источника контента (`docs`, `recipes`, `api`) — три разные сущности с разными полями и схемами в Astro, поэтому в БД тоже три отдельные модели и три репозитория. Никаких union/discriminator-полей. Общее у них только: `embedding vector(768)`, `contentHash`, чанкинг по headings и метод `searchByVector`. Это общее живёт в одном месте — базовом классе репозитория.
+
+Provider знает только про Gemini API (embed текста). Каждый репозиторий знает про свою таблицу и сам внутри использует provider. Дельта-индексация по `sha256(text)` — внутри репозитория.
 
 27. Установить `@google/genai` в `shared/package.json` (используется и web-client скриптом, и api в Фазе 6).
 28. Добавить `GEMINI_API_KEY` в корневой `.env` и в `shared/src/env.ts`-style использование (через `required(env.GEMINI_API_KEY)`).
-29. В Prisma schema (в `prisma/models/`) добавить файл `docChunk.prisma`: enum `DocChunkKind { doc, recipe, api }` и model `DocChunk { id String @id @default(uuid(7)), kind DocChunkKind, url String, anchor String?, title String, section String?, text String, operationId String?, endpoints String[], contentHash String, embedding Unsupported("vector(768)"), @@unique([url, anchor]) }`.
-    - `operationId` — заполняется только для `kind=api` (один эндпоинт = один operationId), индексируется для быстрых lookup в MCP-тулзе `api_endpoint`.
-    - `endpoints` — заполняется только для `kind=recipe` (рецепт может ссылаться на N эндпоинтов).
-    - Для `kind=doc` оба поля пустые.
-30. Создать миграцию через `prisma migrate dev --create-only --name doc_chunk` (HNSW и `Unsupported("vector")` Prisma не сгенерит сам). В созданном `migration.sql` ВРУЧНУЮ:
+29. В Prisma schema добавить три файла моделей. У всех трёх — общий набор служебных полей: `id String @id @default(uuid(7))`, `contentHash String`, `embedding Unsupported("vector(768)")`, `createdAt`, `updatedAt`. Дальше — специфика:
+    29.1. `prisma/models/docChunk.prisma` — model `DocChunk { url String, anchor String, title String, section String?, text String, @@unique([url, anchor]) }`. Источник: `src/content/docs/*.mdx` (narrative).
+    29.2. `prisma/models/recipeChunk.prisma` — model `RecipeChunk { url String, anchor String, title String, description String?, language String, difficulty String?, tags String[], runUrl String?, endpoints String[], text String, @@unique([url, anchor]) }`. Источник: `src/content/recipes/*.mdx`. `endpoints` — массив `operationId`-ов, на которые ссылается рецепт (для MCP-тулзы `recipe_search` и cross-link `recipesForEndpoint`).
+    29.3. `prisma/models/apiChunk.prisma` — model `ApiChunk { operationId String @unique, method String, path String, summary String?, description String?, tags String[], requestSchema Json?, responseSchemas Json, parameters Json, text String }`. Источник: `apps/api/files/openapi.json` через loader. Один эндпоинт = один чанк (нарезка не нужна — OpenAPI operation уже атомарна). `text` — собранный для embed-а человеческий текст из summary+description+tags+method+path.
+30. Создать миграцию через `prisma migrate dev --create-only --name doc_chunks` (HNSW и `Unsupported("vector")` Prisma сам не сгенерит). В созданном `migration.sql` ВРУЧНУЮ:
     - в начале: `CREATE EXTENSION IF NOT EXISTS vector;`
-    - затем DDL таблицы `DocChunk` (как сгенерил Prisma);
-    - в конце: `CREATE INDEX doc_chunk_embedding_hnsw_idx ON "DocChunk" USING hnsw (embedding vector_cosine_ops);`
+    - затем DDL трёх таблиц `DocChunk`, `RecipeChunk`, `ApiChunk` (как сгенерил Prisma);
+    - в конце по одному HNSW-индексу на каждую таблицу:
+      - `CREATE INDEX doc_chunk_embedding_hnsw_idx ON "DocChunk" USING hnsw (embedding vector_cosine_ops);`
+      - `CREATE INDEX recipe_chunk_embedding_hnsw_idx ON "RecipeChunk" USING hnsw (embedding vector_cosine_ops);`
+      - `CREATE INDEX api_chunk_embedding_hnsw_idx ON "ApiChunk" USING hnsw (embedding vector_cosine_ops);`
     - применить через `prisma migrate dev`.
 31. Создать `shared/src/providers/googleAi.provider.ts` (по rule `providers.mdc`):
     - класс `GoogleAiProvider`, в конструкторе инициализирует singleton `GoogleGenAI` через `required(env.GEMINI_API_KEY)`;
     - метод `embed(text: string, taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY'): Promise<number[]>` — вызывает `text-embedding-004`, 768 dim, возвращает массив чисел;
     - в конце экспортирует singleton `export const googleAiProvider = new GoogleAiProvider()`.
-32. Создать `shared/src/repositories/docs.repository.ts` (наследует `BaseRepository<PrismaClient['docChunk']>`):
-    - метод `vectorizeDoc(doc: DocInput): Promise<{created: number, updated: number, skipped: number}>`:
-      - `DocInput = { kind, url, title, section?, text, endpoints }` — целый документ как одна сырая строка `text`;
-      - внутри сам режет `text` на чанки по headings + лимит токенов (хелпер в `shared/src/repositories/docs.repository/chunker.ts`);
-      - для каждого чанка генерирует `anchor` (из heading slug) и считает `sha256(chunkText)`;
-      - читает существующие `{url, anchor, contentHash}` для этого `url` из `DocChunk`;
-      - для новых/изменившихся чанков — зовёт `googleAiProvider.embed(chunkText, 'RETRIEVAL_DOCUMENT')`;
-      - `upsert` по `(url, anchor)` с записью embedding через raw SQL (`$executeRaw` с `::vector`);
-      - в конце метода удаляет осиротевшие anchors ВНУТРИ ЭТОГО `url`: `DELETE FROM "DocChunk" WHERE url = $1 AND anchor NOT IN ($2...)` (если heading переименовали — старая запись пропадёт);
-      - НЕ удаляет осиротевшие чанки внутри других url-ов (это делает отдельный метод).
-    - метод `deleteOrphansExcept(keepUrls: string[]): Promise<number>` — удаляет все `DocChunk`, у которых `url NOT IN (...)`. Зовётся скриптом один раз в конце, когда известен полный список актуальных url.
-    - метод `searchByVector(embedding: number[], k: number = 3): Promise<DocChunk[]>` — raw SQL `ORDER BY embedding <=> $1::vector LIMIT $2` (нужен в Фазе 6).
-    - типы (`DocInput`, `CreatableDocChunk`, `UpdatableDocChunk`) и chunker положить в `shared/src/repositories/docs.repository/`.
-33. Принцип: запускаем индексацию ПОСЛЕ `astro build`, читаем уже валидированные коллекции из артефактов билда — без дублирования zod-схем и парсинга `.mdx`. Astro складывает данные коллекций в `dist/_astro/` / внутренний кеш; стабильный публичный путь — собрать их явно через small data-route.
-    33.1. Создать data-роут `apps/web-client/src/pages/_docs-index.json.ts` (prerendered): `getCollection('docs')`, `getCollection('recipes')`, `getCollection('api')` → один JSON с массивом `{kind, url, anchor?, title, section?, body, operationId?, endpoints?}` для всех entries. Префикс `_` исключает его из навигации/sitemap.
-    33.2. Создать `apps/web-client/bin/index-docs.ts`: - читает `dist/_docs-index.json` через `fs` (после `astro build`); - в цикле по entries зовёт `docsRepository.vectorizeDoc(doc)` — нарезка/hash/embed/upsert внутри репозитория; - после цикла зовёт `docsRepository.deleteOrphansExcept(allUrls)` для удаления удалённых страниц; - логирует aggregated stats (created/updated/skipped/deleted).
-34. Добавить script `"docs:index": "tsx bin/index-docs.ts"` в `apps/web-client/package.json`. Запускать строго ПОСЛЕ `astro build`.
-35. Дополнительные deps скрипту не нужны — парсинг `.mdx` делает Astro на этапе build.
+32. Создать общий хелпер чанкинга `shared/src/services/text-chunker.service.ts` — функция `chunkMarkdown(text: string): Array<{anchor: string, title: string, text: string}>` (нарезка по headings + лимит токенов, slug для anchor). Используется репозиториями `docs` и `recipes`.
+33. Создать три репозитория, каждый наследует `BaseRepository<PrismaClient['<model>']>`. Типы (`Creatable*`, `Updatable*`, `*Input`) — в `shared/src/repositories/<name>.repository/types.ts`.
+    33.1. `shared/src/repositories/doc-chunk.repository.ts`:
+    - `vectorize(doc: DocInput): Promise<{created, updated, skipped}>` — `DocInput = {url, title, section?, text}`, внутри `chunkMarkdown` → для каждого чанка `sha256` → дельта vs БД → `embed(_, 'RETRIEVAL_DOCUMENT')` → `upsert` по `(url, anchor)` через raw SQL (`embedding ::vector`); в конце удаляет осиротевшие anchors внутри этого `url`.
+    - `deleteOrphansExcept(keepUrls: string[]): Promise<number>` — удаляет страницы целиком, которых больше нет в коллекции.
+    - `searchByVector(embedding: number[], k?: number): Promise<DocChunk[]>` — raw SQL `ORDER BY embedding <=> $1::vector LIMIT $2`.
+    - `findByUrl(url: string): Promise<DocChunk[]>` — для MCP `docs_fetch`.
+      33.2. `shared/src/repositories/recipe-chunk.repository.ts`:
+    - `vectorize(recipe: RecipeInput): Promise<{created, updated, skipped}>` — `RecipeInput = {url, title, description?, language, difficulty?, tags, runUrl?, endpoints, text}`, чанкинг `chunkMarkdown(text)`, при upsert каждого чанка пишет ВСЕ поля рецепта (denormalized — да, но запросы к одному чанку отдают всё сразу без join);
+    - `deleteOrphansExcept(keepUrls: string[])`, `searchByVector(...)` — те же сигнатуры что у `docChunk`;
+    - `findByEndpoint(operationId: string): Promise<RecipeChunk[]>` — `WHERE $1 = ANY(endpoints)`, для MCP `recipe_search` без query и для cross-link `recipesForEndpoint`.
+      33.3. `shared/src/repositories/apic-chunk.repository.ts`:
+    - `vectorizeApi(api: ApiInput): Promise<{created, updated, skipped}>` — `ApiInput = {operationId, method, path, summary?, description?, tags, requestSchema, responseSchemas, parameters}`, без чанкинга (1:1), внутри сам собирает `text` для embed-а из summary+description+tags+method+path;
+    - `deleteOrphansExcept(keepOperationIds: string[]): Promise<number>` — удаляет эндпоинты, исчезнувшие из OpenAPI;
+    - `searchByVector(embedding: number[], k?: number): Promise<ApiChunk[]>`;
+    - `findByOperationId(operationId: string): Promise<ApiChunk | null>` — для MCP `api_endpoint`.
+34. Принцип индексации: запускаем ПОСЛЕ `astro build`, читаем уже валидированные коллекции из артефактов билда — без дублирования zod-схем и парсинга `.mdx`. Astro складывает данные коллекций в `dist/_astro/` / внутренний кеш; стабильный публичный путь — собрать их явно через small data-route.
+    34.1. Создать data-роут `apps/web-client/src/pages/_docs-index.json.ts` (prerendered): `getCollection('docs')`, `getCollection('recipes')`, `getCollection('api')` → JSON с тремя массивами `{ docs: DocInput[], recipes: RecipeInput[], api: ApiInput[] }`. Префикс `_` исключает его из навигации/sitemap.
+    34.2. Создать `apps/web-client/bin/index-docs.ts`: - читает `dist/_docs-index.json` через `fs` (после `astro build`); - три параллельных цикла: `docs.forEach(d => docChunkRepository.vectorize(d))`, `recipes.forEach(r => recipeChunkRepository.vectorize(r))`, `api.forEach(a => apiChunkRepository.vectorizeApi(a))`; - после циклов: `docChunkRepository.deleteOrphansExcept(docUrls)`, `recipeChunkRepository.deleteOrphansExcept(recipeUrls)`, `apiChunkRepository.deleteOrphansExcept(operationIds)`; - логирует aggregated stats per kind.
+35. Добавить script `"docs:index": "tsx bin/index-docs.ts"` в `apps/web-client/package.json`. Запускать строго ПОСЛЕ `astro build`. Дополнительные deps скрипту не нужны — парсинг `.mdx` делает Astro.
 
 #### AI правила
 
@@ -140,8 +147,8 @@ apps/api/files/openapi.json  (api ref)    ─┘                          ├─
     - smart-routing — отдаём в LLM только если выполнены ВСЕ условия: длина запроса > 15 chars И (содержит `?` ИЛИ начинается с одного из `how|what|why|when|where|which|who|can|does|do|is|are` (case-insensitive)). Иначе — пустой результат с подсказкой использовать traditional;
     - `searchRepository.findQuery(query)` — если есть, отдать кэш как один SSE-event и закрыть стрим;
     - `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')`;
-    - `docsRepository.searchByVector(embedding, 3)` → `chunks`;
-    - сразу шлём SSE-event `{type: 'sources', data: chunks.map(c => ({title, section, url, anchor}))}` — sources формируются ИЗ retrieval, а не из ответа модели;
+    - параллельно зовём `docChunkRepository.searchByVector(embedding, 3)`, `recipeChunkRepository.searchByVector(embedding, 3)`, `apiChunkRepository.searchByVector(embedding, 3)`, мержим и сортируем по similarity, берём top-3;
+    - сразу шлём SSE-event `{type: 'sources', data: chunks.map(c => ({kind, title, section?, url, anchor?}))}` — sources формируются ИЗ retrieval, а не из ответа модели; `kind` (`doc|recipe|api`) проставляется на основе того, из какого репо пришёл чанк;
     - `googleAiProvider.streamCompletion({system, user: query, contextChunks: chunks})` → стримим `{type: 'token', data: '...'}`;
     - в конце `{type: 'done'}` и `searchRepository.cacheQuery(query, {answer, sources})`.
 39. Создать схемы запроса/ответа в `apps/api/src/routes/docs/aiSearch.schemas.ts` (Ajv `JSONSchemaType`): запрос `{query: string, sessionId?: string}` → SSE events:
@@ -171,10 +178,10 @@ apps/api/files/openapi.json  (api ref)    ─┘                          ├─
 45. Создать новую апку `apps/mcp` (Fastify), по структуре аналогично `apps/api`: `package.json` (deps: `fastify`, `@modelcontextprotocol/sdk`, `shared: "*"`), `tsconfig.json`, `src/app.ts` с функцией `main()`, `imports: { "#src/*": "./src/*" }`. Свой порт (например `MCP_PORT`).
 46. В `apps/mcp/src/app.ts` функция `main()`: коннект к `redis`/`db` через `shared`, поднять Fastify, создать singleton `McpServer` из SDK и зарегистрировать на нём тулзы из `apps/mcp/src/mcp/tools/`. Singleton экспортировать из `apps/mcp/src/mcp/server.ts`.
 47. Создать роут `apps/mcp/src/routes/mcp.ts` (Full declaration, по правилу `create-endpoint.mdc`): `POST /mcp` и `GET /mcp` на один handler. Внутри handler создать `StreamableHTTPServerTransport` в **stateless mode** (`sessionIdGenerator: undefined`), вызвать `mcpServer.connect(transport)` и `transport.handleRequest(req.raw, reply.raw, req.body)`. Транспорт создаётся per-request — это ок для read-only docs (никакой sticky-сессии не нужно). Body парсит сам Fastify (`Content-Type: application/json`), кастомный contentTypeParser не требуется.
-48. Реализовать тулзу `docs_search(query, k?)` в `apps/mcp/src/mcp/tools/docsSearch.ts` — прямой `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')` + `docsRepository.searchByVector(embedding, k ?? 5)`. Без LLM.
-49. Реализовать тулзу `docs_fetch(url)` в `apps/mcp/src/mcp/tools/docsFetch.ts` — возвращает все чанки страницы (`DocChunk WHERE url = $1 ORDER BY anchor`), склеенные в один markdown.
-50. Реализовать тулзу `recipe_search(operationId?, query?, language?)` в `apps/mcp/src/mcp/tools/recipeSearch.ts` — фильтр `DocChunk WHERE kind='recipe'` (`endpoints` содержит `operationId` если передан) + опц. cosine similarity при наличии `query`.
-51. Реализовать тулзу `api_endpoint(method, path)` в `apps/mcp/src/mcp/tools/apiEndpoint.ts` — читает `apps/api/files/openapi.json` (один раз на старте mcp, кешируется в памяти; перечитывается при `SIGHUP` или per-request — решается в Фазе 8) и отдаёт OpenAPI-фрагмент по `method+path`.
+48. Реализовать тулзу `docs_search(query, k?)` в `apps/mcp/src/mcp/tools/docsSearch.ts` — `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')` + параллельный `searchByVector` по всем трём репо (`docChunk`, `recipeChunk`, `apiChunk`), мерж и сортировка по similarity, top-k. Без LLM.
+49. Реализовать тулзу `docs_fetch(url)` в `apps/mcp/src/mcp/tools/docsFetch.ts` — `docChunkRepository.findByUrl(url)`, склеить чанки в один markdown.
+50. Реализовать тулзу `recipe_search(operationId?, query?, language?)` в `apps/mcp/src/mcp/tools/recipeSearch.ts` — если есть `operationId`, `recipeChunkRepository.findByEndpoint(operationId)`; если есть `query`, доп. фильтр через `searchByVector` (или сортировка по cosine similarity); фильтр по `language` — обычный `WHERE`.
+51. Реализовать тулзу `api_endpoint(method, path)` в `apps/mcp/src/mcp/tools/apiEndpoint.ts` — читает `apps/api/files/openapi.json` (один раз на старте mcp, кешируется в памяти; перечитывается при `SIGHUP` или per-request) и отдаёт OpenAPI-фрагмент по `method+path`. БД здесь не нужна — JSON-файл уже даёт точный lookup.
 52. Добавить простой rate-limit для `/mcp` (Redis counter по IP/origin) и логирование вызовов тулз для аналитики.
 53. Создать страницу `apps/web-client/src/content/docs/setup-mcp.mdx` с копи-пейст конфигом для `~/.cursor/mcp.json` (URL — `https://mcp.bitcoinapi.dev/mcp` или `https://api.bitcoinapi.dev/mcp` через reverse proxy, выбирается на этапе деплоя).
 54. Заменить ссылку `Setup MCP` в sidebar-card на `/docs/setup-mcp`.
