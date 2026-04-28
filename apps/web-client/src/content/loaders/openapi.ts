@@ -4,7 +4,7 @@ import path from 'node:path';
 import env, { required } from 'shared/src/env.js';
 
 const PROJECT_DIR = required(env.PROJECT_DIR);
-const OPENAPI_FILE = path.resolve(PROJECT_DIR, 'api/files/openapi.json');
+const OPENAPI_FILE = path.resolve(PROJECT_DIR, 'apps/api/files/openapi.json');
 
 type OpenApiOperation = {
   operationId?: string;
