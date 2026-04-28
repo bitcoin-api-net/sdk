@@ -1,7 +1,7 @@
 import { RecipeChunk } from '../../../generated/prisma/client.js';
 import { googleAiProvider } from '../providers/google-ai.provider.js';
 import { textChunker } from '../services/text-chunker.service.js';
-import { sha256 } from '../crypto.js';
+import { sha256, uuid7 } from '../crypto.js';
 import { toVectorLiteral } from './shared/utils.js';
 import { PrismaClient, prismaClient } from './client.js';
 import type { RecipeInput, VectorizeStats } from './recipe-chunk.repository/types.js';
@@ -38,7 +38,7 @@ export class RecipeChunkRepository extends VectorChunkBaseRepository<PrismaClien
           "tags", "run_url", "endpoints", "text", "content_hash", "embedding", "created_at", "updated_at"
         )
         VALUES (
-          gen_random_uuid()::text,
+          ${uuid7()},
           ${recipe.url}, ${chunk.anchor}, ${chunk.title},
           ${recipe.description ?? null}, ${recipe.language}, ${recipe.difficulty ?? null},
           ${recipe.tags}::text[], ${recipe.runUrl ?? null}, ${recipe.endpoints}::text[],

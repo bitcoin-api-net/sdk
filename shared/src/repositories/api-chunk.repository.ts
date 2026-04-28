@@ -1,6 +1,6 @@
 import { ApiChunk } from '../../../generated/prisma/client.js';
 import { googleAiProvider } from '../providers/google-ai.provider.js';
-import { sha256 } from '../crypto.js';
+import { sha256, uuid7 } from '../crypto.js';
 import { toVectorLiteral } from './shared/utils.js';
 import { PrismaClient, prismaClient } from './client.js';
 import type { ApiInput, VectorizeStats } from './api-chunk.repository/types.js';
@@ -35,7 +35,7 @@ export class ApiChunkRepository extends VectorChunkBaseRepository<PrismaClient['
         "content_hash", "embedding", "created_at", "updated_at"
       )
       VALUES (
-        gen_random_uuid()::text,
+        ${uuid7()},
         ${api.operationId}, ${api.method}, ${api.path},
         ${api.summary ?? null}, ${api.description ?? null},
         ${api.tags}::text[],

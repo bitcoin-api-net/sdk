@@ -1,14 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { connectToDb, disconnectFromDb } from 'shared/src/repositories/client.js';
+import { logger } from 'shared/src/logging.js';
 import { apiChunkRepository } from 'shared/src/repositories/api-chunk.repository.js';
 import type { ApiInput } from 'shared/src/repositories/api-chunk.repository/types.js';
+import { connectToDb, disconnectFromDb } from 'shared/src/repositories/client.js';
 import { docChunkRepository } from 'shared/src/repositories/doc-chunk.repository.js';
 import type { DocInput, VectorizeStats } from 'shared/src/repositories/doc-chunk.repository/types.js';
 import { recipeChunkRepository } from 'shared/src/repositories/recipe-chunk.repository.js';
 import type { RecipeInput } from 'shared/src/repositories/recipe-chunk.repository/types.js';
-import { logger } from 'shared/src/logging.js';
 
 type DocsIndexPayload = {
   docs: DocInput[];
@@ -17,7 +17,7 @@ type DocsIndexPayload = {
 };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const INDEX_FILE = path.resolve(__dirname, '..', 'dist', '_docs-index.json');
+const INDEX_FILE = path.resolve(__dirname, '..', 'dist', 'docs-index.json');
 
 async function main() {
   if (!fs.existsSync(INDEX_FILE)) {

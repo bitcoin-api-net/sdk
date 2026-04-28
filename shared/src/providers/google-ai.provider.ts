@@ -1,9 +1,9 @@
-import { GoogleGenAI } from '@google/genai';
 import env, { required } from '../env.js';
+import { GoogleGenAI } from '@google/genai';
 
 const GEMINI_API_KEY = required(env.GEMINI_API_KEY);
 
-const EMBEDDING_MODEL = 'text-embedding-004';
+const EMBEDDING_MODEL = 'gemini-embedding-001';
 const EMBEDDING_DIM = 768;
 
 export type EmbeddingTaskType = 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY';
@@ -27,9 +27,7 @@ export class GoogleAiProvider {
 
     const values = response.embeddings?.[0]?.values;
     if (!values || values.length !== EMBEDDING_DIM) {
-      throw new Error(
-        `Gemini embed returned invalid vector (got ${values?.length ?? 0}, expected ${EMBEDDING_DIM})`
-      );
+      throw new Error(`Gemini embed returned invalid vector (got ${values?.length ?? 0}, expected ${EMBEDDING_DIM})`);
     }
     return values;
   }

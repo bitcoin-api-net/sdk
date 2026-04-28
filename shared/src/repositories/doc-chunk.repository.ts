@@ -1,10 +1,10 @@
 import { DocChunk } from '../../../generated/prisma/client.js';
+import { sha256, uuid7 } from '../crypto.js';
 import { googleAiProvider } from '../providers/google-ai.provider.js';
 import { textChunker } from '../services/text-chunker.service.js';
-import { sha256 } from '../crypto.js';
-import { toVectorLiteral } from './shared/utils.js';
 import { PrismaClient, prismaClient } from './client.js';
 import type { DocInput, VectorizeStats } from './doc-chunk.repository/types.js';
+import { toVectorLiteral } from './shared/utils.js';
 import { VectorChunkBaseRepository } from './vector-chunk-base.repository.js';
 
 export class DocChunkRepository extends VectorChunkBaseRepository<PrismaClient['docChunk']> {
@@ -34,7 +34,7 @@ export class DocChunkRepository extends VectorChunkBaseRepository<PrismaClient['
 
       await prismaClient.$executeRaw`
         INSERT INTO "doc_chunks" ("id", "url", "anchor", "title", "section", "text", "content_hash", "embedding", "created_at", "updated_at")
-        VALUES (gen_random_uuid()::text, ${doc.url}, ${chunk.anchor}, ${chunk.title}, ${doc.section ?? null}, ${chunk.text}, ${contentHash}, ${embeddingLiteral}::vector, NOW(), NOW())
+        VALUES (${uuid7()}, ${doc.url}, ${chunk.anchor}, ${chunk.title}, ${doc.section ?? null}, ${chunk.text}, ${contentHash}, ${embeddingLiteral}::vector, NOW(), NOW())
         ON CONFLICT ("url", "anchor") DO UPDATE SET
           "title" = EXCLUDED."title",
           "section" = EXCLUDED."section",
@@ -51,9 +51,7 @@ export class DocChunkRepository extends VectorChunkBaseRepository<PrismaClient['
       }
     }
 
-    const orphanAnchors = existing
-      .map((e) => e.anchor)
-      .filter((anchor) => !seenAnchors.has(anchor));
+    const orphanAnchors = existing.map((e) => e.anchor).filter((anchor) => !seenAnchors.has(anchor));
     if (orphanAnchors.length > 0) {
       await this.model.deleteMany({
         where: { url: doc.url, anchor: { in: orphanAnchors } },
