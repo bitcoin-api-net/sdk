@@ -1,6 +1,7 @@
 ---
 import Logo from '@icons/Logo.astro';
 import HeaderAuth from '@components/layout/HeaderAuth.vue';
+import SearchTraditional from '@components/docs/SearchTraditional.vue';
 import { Search, Sparkles } from '@lucide/astro';
 ---
 
@@ -15,17 +16,7 @@ import { Search, Sparkles } from '@lucide/astro';
 
     <div class="docs-header__center">
       <div class="docs-header__search" id="docs-search-wrap" data-mode="traditional">
-        <span class="docs-header__search-icon" aria-hidden="true">
-          <Search size={18} />
-        </span>
-        <input
-          id="docs-search-input"
-          class="docs-header__search-input"
-          type="search"
-          autocomplete="off"
-          placeholder="Search documentation…"
-          aria-label="Search documentation"
-        />
+        <SearchTraditional client:load />
 
         <div
           class="docs-toggle"
@@ -283,18 +274,11 @@ import { Search, Sparkles } from '@lucide/astro';
 <script>
   const wrap = document.getElementById('docs-search-wrap');
   const toggle = document.getElementById('docs-search-toggle');
-  const input = document.getElementById('docs-search-input') as HTMLInputElement | null;
-
-  const placeholders: Record<string, string> = {
-    traditional: 'Search documentation…',
-    ai: 'Ask AI anything…',
-  };
 
   function setMode(mode: 'traditional' | 'ai') {
-    if (!toggle || !wrap || !input) return;
+    if (!toggle || !wrap) return;
     toggle.dataset.mode = mode;
     wrap.dataset.mode = mode;
-    input.placeholder = placeholders[mode];
 
     toggle.querySelectorAll<HTMLButtonElement>('.docs-toggle__btn').forEach((btn) => {
       const isActive = btn.dataset.mode === mode;

@@ -1,0 +1,194 @@
+---
+import DocsLayout from '@layouts/DocsLayout.astro';
+
+type Crumb = { label: string; href?: string };
+type SiblingLink = { label: string; href: string } | null;
+
+interface Props {
+  title: string;
+  description?: string;
+  breadcrumbs: Crumb[];
+  prev?: SiblingLink;
+  next?: SiblingLink;
+}
+
+const { title, description, breadcrumbs, prev = null, next = null } = Astro.props;
+---
+
+<DocsLayout>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    {
+      breadcrumbs.map((c, i) => (
+        <>
+          {i > 0 && <span class="breadcrumbs__sep">›</span>}
+          {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+        </>
+      ))
+    }
+  </nav>
+
+  <h1 class="docs-page-title">{title}</h1>
+  {description && <p class="docs-page-lead">{description}</p>}
+
+  <div class="docs-page-body">
+    <slot />
+  </div>
+
+  {
+    (prev || next) && (
+      <nav class="docs-pagination" aria-label="Pagination">
+        {prev ? (
+          <a class="docs-pagination__link docs-pagination__link--prev" href={prev.href}>
+            <span class="docs-pagination__dir">← Previous</span>
+            <span class="docs-pagination__label">{prev.label}</span>
+          </a>
+        ) : (
+          <span />
+        )}
+        {next ? (
+          <a class="docs-pagination__link docs-pagination__link--next" href={next.href}>
+            <span class="docs-pagination__dir">Next →</span>
+            <span class="docs-pagination__label">{next.label}</span>
+          </a>
+        ) : (
+          <span />
+        )}
+      </nav>
+    )
+  }
+</DocsLayout>
+
+<style>
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+  }
+  .breadcrumbs a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+  .breadcrumbs a:hover {
+    color: var(--color-accent);
+  }
+  .breadcrumbs__sep {
+    opacity: 0.4;
+  }
+  .docs-page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.75rem;
+    color: var(--color-text);
+  }
+  .docs-page-lead {
+    font-size: 1.0625rem;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    margin: 0 0 2rem;
+    max-width: 640px;
+  }
+  .docs-page-body :global(h2) {
+    font-size: 1.375rem;
+    margin: 2.5rem 0 1rem;
+  }
+  .docs-page-body :global(h3) {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem;
+    color: var(--color-text);
+  }
+  .docs-page-body :global(p) {
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    margin: 0 0 1rem;
+    max-width: 720px;
+  }
+  .docs-page-body :global(a) {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  .docs-page-body :global(a:hover) {
+    text-decoration: underline;
+  }
+  .docs-page-body :global(pre) {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1.25rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 0 0 1.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+  }
+  .docs-page-body :global(code) {
+    font-size: 0.8125rem;
+  }
+  .docs-page-body :global(p code),
+  .docs-page-body :global(li code) {
+    background: #f1f5f9;
+    color: var(--color-text);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+  }
+  .docs-page-body :global(blockquote) {
+    border-left: 3px solid #fde68a;
+    background: #fefce8;
+    padding: 0.875rem 1.125rem;
+    border-radius: 0 8px 8px 0;
+    margin: 0 0 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+  .docs-page-body :global(blockquote p) {
+    margin: 0;
+  }
+  .docs-page-body :global(ul) {
+    padding-left: 1.25rem;
+    margin: 0 0 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+  .docs-pagination {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 3rem 0 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+  }
+  .docs-pagination__link {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--color-text);
+    background: white;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+  }
+  .docs-pagination__link:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  .docs-pagination__link--next {
+    text-align: right;
+  }
+  .docs-pagination__dir {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  .docs-pagination__label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+</style>

@@ -26,6 +26,10 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
     method: 'GET',
     url: '/verify-email',
     schema: {
+      operationId: 'verifyEmail',
+      summary: 'Verify email by token',
+      description: 'Activates the user account associated with the verification token and sets the access cookie.',
+      tags: ['auth'],
       querystring: querySchema,
     },
     handler: async (req, reply) => {

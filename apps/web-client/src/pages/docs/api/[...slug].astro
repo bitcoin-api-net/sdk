@@ -1,0 +1,369 @@
+---
+import DocPageLayout from '@layouts/DocPageLayout.astro';
+import { recipesForEndpoint } from '../../../lib/docs-cross-links.js';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const api = await getCollection('api');
+  return api.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const recipes = await recipesForEndpoint(entry.data.operationId);
+
+type Param = {
+  name: string;
+  in: string;
+  description?: string;
+  required?: boolean;
+  schema?: { type?: string };
+};
+
+const parameters = (entry.data.parameters as Param[]) ?? [];
+const queryParams = parameters.filter((p) => p.in === 'query');
+const pathParams = parameters.filter((p) => p.in === 'path');
+const headerParams = parameters.filter((p) => p.in === 'header');
+
+const responses = entry.data.responseSchemas as Record<string, { description?: string; content?: Record<string, { schema?: unknown }> }>;
+const responseEntries = Object.entries(responses);
+
+const breadcrumbs = [
+  { label: 'Docs', href: '/docs' },
+  { label: 'API Reference' },
+  { label: entry.data.summary || entry.data.operationId },
+];
+
+function paramRow(p: Param) {
+  return {
+    name: p.name,
+    type: p.schema?.type ?? 'string',
+    required: !!p.required,
+    description: p.description ?? '',
+  };
+}
+---
+
+<DocPageLayout
+  title={entry.data.summary || entry.data.operationId}
+  description={entry.data.description}
+  breadcrumbs={breadcrumbs}>
+  <div class="endpoint-url">
+    <span class={`method-badge method-badge--${entry.data.method.toLowerCase()}`}>{entry.data.method}</span>
+    <code class="endpoint-url__path">{entry.data.path}</code>
+  </div>
+
+  {
+    pathParams.length > 0 && (
+      <section>
+        <h2>Path Parameters</h2>
+        <table class="params-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pathParams.map((p) => {
+              const r = paramRow(p);
+              return (
+                <tr>
+                  <td>
+                    <code>{r.name}</code>
+                  </td>
+                  <td>
+                    <code>{r.type}</code>
+                  </td>
+                  <td>{r.required ? 'yes' : 'no'}</td>
+                  <td>{r.description}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+    )
+  }
+
+  {
+    queryParams.length > 0 && (
+      <section>
+        <h2>Query Parameters</h2>
+        <table class="params-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {queryParams.map((p) => {
+              const r = paramRow(p);
+              return (
+                <tr>
+                  <td>
+                    <code>{r.name}</code>
+                  </td>
+                  <td>
+                    <code>{r.type}</code>
+                  </td>
+                  <td>{r.required ? 'yes' : 'no'}</td>
+                  <td>{r.description}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+    )
+  }
+
+  {
+    headerParams.length > 0 && (
+      <section>
+        <h2>Headers</h2>
+        <table class="params-table">
+          <thead>
+            <tr>
+              <th>Header</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {headerParams.map((p) => {
+              const r = paramRow(p);
+              return (
+                <tr>
+                  <td>
+                    <code>{r.name}</code>
+                  </td>
+                  <td>
+                    <code>{r.type}</code>
+                  </td>
+                  <td>{r.required ? 'yes' : 'no'}</td>
+                  <td>{r.description}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+    )
+  }
+
+  {
+    entry.data.requestSchema && (
+      <section>
+        <h2>Request Body</h2>
+        <pre class="schema-block">
+          <code>{JSON.stringify(entry.data.requestSchema, null, 2)}</code>
+        </pre>
+      </section>
+    )
+  }
+
+  {
+    responseEntries.length > 0 && (
+      <section>
+        <h2>Responses</h2>
+        {responseEntries.map(([status, resp]) => (
+          <div class="response-block">
+            <div class="response-block__header">
+              <span class="response-block__status">{status}</span>
+              {resp.description && <span class="response-block__desc">{resp.description}</span>}
+            </div>
+            {resp.content && (
+              <pre class="schema-block">
+                <code>{JSON.stringify(resp.content, null, 2)}</code>
+              </pre>
+            )}
+          </div>
+        ))}
+      </section>
+    )
+  }
+
+  {
+    recipes.length > 0 && (
+      <section class="cross-links">
+        <h2>Recipes using this endpoint</h2>
+        <ul class="cross-links__list">
+          {recipes.map((r) => (
+            <li>
+              <a href={r.href} class="cross-links__item">
+                <span class="recipe-lang">{r.language}</span>
+                <strong>{r.title}</strong>
+                <span class="cross-links__summary">{r.description}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</DocPageLayout>
+
+<style>
+  .endpoint-url {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.625rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .endpoint-url__path {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+  .method-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 4px;
+    letter-spacing: 0.03em;
+  }
+  .method-badge--get {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  .method-badge--post {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  .method-badge--put,
+  .method-badge--patch {
+    background: #fef3c7;
+    color: #b45309;
+  }
+  .method-badge--delete {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  .params-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .params-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .params-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--color-text-muted);
+    vertical-align: top;
+  }
+  .params-table code {
+    background: #f1f5f9;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    color: var(--color-text);
+  }
+
+  .schema-block {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1.25rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .response-block {
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .response-block__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f8fafc;
+    padding: 0.5rem 0.875rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .response-block__status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #16a34a;
+  }
+  .response-block__desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+  }
+
+  .cross-links {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+  }
+  .cross-links h2 {
+    font-size: 1.125rem;
+    margin: 0 0 1rem;
+  }
+  .cross-links__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .cross-links__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    text-decoration: none;
+    color: var(--color-text);
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+  }
+  .cross-links__item:hover {
+    border-color: var(--color-accent);
+    background: rgba(9, 131, 253, 0.04);
+  }
+  .recipe-lang {
+    display: inline-flex;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    background: #f1f5f9;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .cross-links__summary {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+  }
+</style>

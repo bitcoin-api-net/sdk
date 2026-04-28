@@ -1,0 +1,159 @@
+---
+import DocPageLayout from '@layouts/DocPageLayout.astro';
+import { endpointsForRecipe } from '../../../lib/docs-cross-links.js';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const recipes = await getCollection('recipes');
+  return recipes
+    .filter((r) => !r.id.startsWith('_'))
+    .map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const endpoints = await endpointsForRecipe(entry.data.endpoints);
+
+const breadcrumbs = [
+  { label: 'Docs', href: '/docs' },
+  { label: 'Recipes', href: '/docs' },
+  { label: entry.data.title },
+];
+---
+
+<DocPageLayout title={entry.data.title} description={entry.data.description} breadcrumbs={breadcrumbs}>
+  <div class="recipe-meta">
+    <span class="recipe-meta__lang">{entry.data.language}</span>
+    {entry.data.difficulty && <span class="recipe-meta__diff">{entry.data.difficulty}</span>}
+    {
+      entry.data.runUrl && (
+        <a class="recipe-meta__run" href={entry.data.runUrl} target="_blank" rel="noopener noreferrer">
+          ▶ Run in test environment
+        </a>
+      )
+    }
+  </div>
+
+  <Content />
+
+  {
+    endpoints.length > 0 && (
+      <section class="cross-links">
+        <h2>Endpoints used</h2>
+        <ul class="cross-links__list">
+          {endpoints.map((e) => (
+            <li>
+              <a href={e.href} class="cross-links__item">
+                <span class={`method-badge method-badge--${e.method.toLowerCase()}`}>{e.method}</span>
+                <code>{e.path}</code>
+                <span class="cross-links__summary">{e.summary}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</DocPageLayout>
+
+<style>
+  .recipe-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .recipe-meta__lang,
+  .recipe-meta__diff {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    background: #f1f5f9;
+    color: var(--color-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .recipe-meta__run {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  .recipe-meta__run:hover {
+    background: #076ed4;
+  }
+  .cross-links {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+  }
+  .cross-links h2 {
+    font-size: 1.125rem;
+    margin: 0 0 1rem;
+  }
+  .cross-links__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .cross-links__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    text-decoration: none;
+    color: var(--color-text);
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+  }
+  .cross-links__item:hover {
+    border-color: var(--color-accent);
+    background: rgba(9, 131, 253, 0.04);
+  }
+  .method-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+  .method-badge--get {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  .method-badge--post {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  .method-badge--put,
+  .method-badge--patch {
+    background: #fef3c7;
+    color: #b45309;
+  }
+  .method-badge--delete {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  .cross-links__summary {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+  }
+</style>

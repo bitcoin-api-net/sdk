@@ -1,0 +1,30 @@
+---
+title: Fetch current BTC/USDT price
+description: Minimal Node.js example that fetches the current Bitcoin price using a single REST call.
+endpoints:
+  - getCurrentPrice
+language: javascript
+difficulty: beginner
+tags:
+  - prices
+  - rest
+runUrl: https://hopp.sh/r/j6Fo2zFIqfFW
+---
+
+A minimal example showing how to call the [`getCurrentPrice`](/docs/api/getCurrentPrice) endpoint and print the latest BTC/USDT price.
+
+## Code
+
+```js
+const response = await fetch(
+  'https://api.bitcoinapi.dev/v1/prices/current?symbol=btcusdt',
+  { headers: { Authorization: 'Bearer YOUR_API_KEY' } }
+);
+const data = await response.json();
+console.log(`BTC/USDT: ${data.price} @ ${data.time}`);
+```
+
+## Notes
+
+- Replace `YOUR_API_KEY` with the key from your [profile](/profile/home).
+- Symbols are lowercase. Currently only `btcusdt` is supported.

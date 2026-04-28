@@ -19,6 +19,10 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
     url: '/me',
     config: { auth: true },
     schema: {
+      operationId: 'getMe',
+      summary: 'Get current user',
+      description: 'Returns information about the currently authenticated user.',
+      tags: ['auth'],
       response: {
         200: responseSchema,
       },

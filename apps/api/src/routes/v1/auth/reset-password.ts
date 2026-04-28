@@ -21,6 +21,10 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
     method: 'POST',
     url: '/reset-password',
     schema: {
+      operationId: 'resetPassword',
+      summary: 'Reset password using a reset token',
+      description: 'Sets a new password for the user identified by the reset token from the email.',
+      tags: ['auth'],
       body: bodySchema,
     },
     handler: async (req, reply) => {

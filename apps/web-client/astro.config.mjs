@@ -1,4 +1,5 @@
 // @ts-check
+import mdx from '@astrojs/mdx';
 import vue from '@astrojs/vue';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
@@ -12,7 +13,7 @@ const { SITE_URL } = loadEnv(process.env.NODE_ENV ?? 'production', PROJECT_DIR, 
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [vue()],
+  integrations: [vue(), mdx()],
   site: SITE_URL,
   vite: {
     envDir: PROJECT_DIR,

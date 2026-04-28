@@ -38,6 +38,10 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
     method: 'POST',
     url: '/login',
     schema: {
+      operationId: 'login',
+      summary: 'Log in with email and password',
+      description: 'Authenticates a user and sets an HttpOnly access cookie.',
+      tags: ['auth'],
       body: bodySchema,
       response: {
         200: responseSchema,

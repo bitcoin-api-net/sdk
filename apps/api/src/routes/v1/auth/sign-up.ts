@@ -33,6 +33,10 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
     method: 'POST',
     url: '/sign-up',
     schema: {
+      operationId: 'signUp',
+      summary: 'Sign up a new user',
+      description: 'Registers a new user and sends a verification email.',
+      tags: ['auth'],
       body: bodySchema,
       response: {
         201: responseSchema,

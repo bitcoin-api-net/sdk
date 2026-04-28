@@ -24,6 +24,10 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
     method: 'GET',
     url: '/callback',
     schema: {
+      operationId: 'googleCallback',
+      summary: 'Google OAuth callback',
+      description: 'Handles the redirect from Google, exchanges the auth code, and sets the access cookie.',
+      tags: ['auth'],
       querystring: querySchema,
     },
     handler: async (req, reply) => {

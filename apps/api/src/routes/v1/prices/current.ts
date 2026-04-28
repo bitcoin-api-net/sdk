@@ -42,11 +42,14 @@ export default async function (fastify: FastifyInstance) {
     method: 'GET',
     url: '/current',
     schema: {
+      operationId: 'getCurrentPrice',
+      summary: 'Get current price',
+      description: `Returns the latest price for a given trading pair from the configured exchange. For websocket use: wscat -c ${process.env.WS_API_BROWSER_URL}/v1/prices/current?symbol=btcusdt`,
+      tags: ['prices'],
       querystring: querySchema,
       response: {
         200: responseSchema,
       },
-      description: `For websocket use: wscat -c ${process.env.WS_API_BROWSER_URL}/v1/prices/current?symbol=btcusdt`,
     },
     handler: async (req, reply) => {
       const { symbol } = req.query;

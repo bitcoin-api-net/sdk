@@ -1,0 +1,38 @@
+---
+import DocPageLayout from '@layouts/DocPageLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs');
+  const sorted = [...docs].sort((a, b) => a.data.order - b.data.order);
+  return sorted.map((entry, idx) => ({
+    params: { slug: entry.id },
+    props: {
+      entry,
+      prev: idx > 0 ? { label: sorted[idx - 1].data.title, href: `/docs/${sorted[idx - 1].id}` } : null,
+      next:
+        idx < sorted.length - 1
+          ? { label: sorted[idx + 1].data.title, href: `/docs/${sorted[idx + 1].id}` }
+          : null,
+    },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const { Content } = await render(entry);
+
+const breadcrumbs = [
+  { label: 'Docs', href: '/docs' },
+  { label: entry.data.section },
+  { label: entry.data.title },
+];
+---
+
+<DocPageLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  breadcrumbs={breadcrumbs}
+  prev={prev}
+  next={next}>
+  <Content />
+</DocPageLayout>

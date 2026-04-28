@@ -7,13 +7,14 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyWebsocket from '@fastify/websocket';
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
+import fs from 'node:fs';
+import path from 'node:path';
 import env, { required } from 'shared/src/env.js';
 import { AppError } from 'shared/src/errors.js';
 import { defaultOptions, logProcessErrors } from 'shared/src/logging.js';
 import { redis } from 'shared/src/redis.js';
 import { connectToDb } from 'shared/src/repositories/client.js';
-import path from 'node:path';
 
 const API_PORT = required(env.API_PORT);
 const NODE_ENV = required(env.NODE_ENV);
@@ -62,7 +63,20 @@ async function main() {
 
   await app.register(fastifyWebsocket);
 
-  await app.register(fastifySwagger);
+  await app.register(fastifySwagger, {
+    openapi: {
+      info: {
+        title: 'Bitcoin API',
+        description: 'Real-time Bitcoin price API.',
+        version: '0.0.1',
+      },
+      tags: [
+        { name: 'health', description: 'Health checks' },
+        { name: 'auth', description: 'Authentication and account management' },
+        { name: 'prices', description: 'Cryptocurrency prices' },
+      ],
+    },
+  });
   await app.register(fastifySwaggerUi, {
     routePrefix: '/api/documentation',
   });
@@ -77,7 +91,18 @@ async function main() {
     options: { prefix: 'api' },
   });
 
+  await app.ready();
+
+  saveApiSchemaToFile(app);
+
   await app.listen({ host: '0.0.0.0', port: Number(API_PORT) });
+}
+
+function saveApiSchemaToFile(app: FastifyInstance) {
+  const openApiPath = path.join(import.meta.dirname, '..', 'files', 'openapi.json');
+  fs.mkdirSync(path.dirname(openApiPath), { recursive: true });
+  fs.writeFileSync(openApiPath, JSON.stringify(app.swagger(), null, 2));
+  app.log.info({ path: openApiPath }, 'OpenAPI schema written');
 }
 
 main();

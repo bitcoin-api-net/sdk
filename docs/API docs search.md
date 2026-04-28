@@ -7,7 +7,7 @@
 ```
 src/content/docs/*.mdx       (narrative)  ─┐
 src/content/recipes/*.mdx    (рецепты)    ─┼─► registry (DocEntry[]) ─┬─► Astro static pages
-ApplicationInterface (loader) (api ref)   ─┘                          ├─► Orama index              (traditional search, статика)
+apps/api/files/openapi.json  (api ref)    ─┘                          ├─► Orama index              (traditional search, статика)
                                                                       ├─► chunks → embeddings → pgvector
                                                                       │                  ▲
                                                                       │       Fastify POST /docs/ai-search (SSE)  ◄── AI mode на сайте
@@ -36,26 +36,30 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 
 ## План реализации
 
-### Фаза 1. OpenAPI как метод ApplicationInterface
+### Фаза 1. OpenAPI как файл-артефакт api
 
-1. Создать `apps/api/src/app.interface.ts` с классом `ApplicationInterface` и сразу экспортировать готовый singleton-инстанс (`export const applicationInterface = new ApplicationInterface()`). `app.ts` не трогаем.
-2. Единственный публичный метод — `getOpenApiSchema(): Promise<OpenAPIObject>`: внутри поднимает минимальный Fastify instance (swagger + autoload routes), делает `app.ready()` + `app.swagger()`, возвращает схему и закрывает app. Без `listen`, без коннектов к БД/Redis.
-3. Проверить, что у всех роутов есть `operationId`, `summary`, `description`, теги в schema; проставить отсутствующие.
-4. Добавить в `apps/api/package.json` поле `"exports"` с точкой `"./app.interface"` (а также `"./src/*"` если потребуется), чтобы `apps/web-client` и `apps/mcp` могли импортировать singleton из workspace-пакета `api`.
-   4.1. Гарантировать, что модули роутов и провайдеров НЕ открывают соединения (Redis/DB) на import — иначе `getOpenApiSchema()` из web-client билда дёрнет инфраструктуру. Все singletons — lazy.
+Принцип: api — единственный источник OpenAPI-схемы. Web-client и MCP читают её из готового JSON-файла, а не импортируют код api. Так нет cross-app импортов и web-client билд не зависит от модулей api.
 
-#### AI привила
+1. Проверить, что у всех роутов есть `operationId`, `summary`, `description`, `tags` в `schema`; проставить отсутствующие.
+2. Зарегистрировать `@fastify/swagger` в `app.ts` (если ещё не зарегистрирован) с `openapi.info` (title, description, version) и общим списком `tags`. Никакого отдельного `app.interface.ts` не создаём.
+3. В `app.ts` сразу после `app.ready()` и ДО `app.listen(...)` делать `const schema = app.swagger()` и синхронно писать его в `apps/api/files/openapi.json` (`fs.writeFileSync(path, JSON.stringify(schema, null, 2))`). Файл перезаписывается на каждый запуск api (dev и prod).
+4. Создать папку `apps/api/files/` и закоммитить начальный `openapi.json` (последний снапшот). Файл коммитим в git — он простой источник правды для web-client билда без поднятого api. На деплое api пересоздаст его автоматически.
+5. В `apps/web-client/src/content/loaders/openapi.ts` (Фаза 2) loader читает `apps/api/files/openapi.json` через `fs` (путь резолвить от `import.meta.url` поднимаясь до корня монорепо). Никаких импортов из пакета `api`.
+6. Никаких `exports` в `apps/api/package.json` для cross-app импортов не нужно. Удалить ранее добавленный `app.interface.ts` и поле `"exports"`.
+7. Деплой web-client должен идти ПОСЛЕ деплоя api (chained pipeline, см. Фазу 9), чтобы web подтянул свежий `openapi.json` из репозитория после того, как api его обновил и закоммитил/запушил его. На сервере проще: `make pb-api` запускает api → api перезаписывает файл локально → `make pb-web` сразу после читает этот файл из той же рабочей директории.
+
+#### AI правила
 
 - .cursor/rules/shared/development/backend/architecture/architecture.mdc
 - .cursor/rules/shared/development/backend/backend.mdc
 
 ### Фаза 2. Content Collections в web-client
 
-5. Установить `@astrojs/mdx` в `apps/web-client`. Туда же добавить workspace-зависимости `"shared": "*"` и `"api": "*"` (нужны для loader в п.9 и для `bin/index-docs.ts` в Фазе 5).
+5. Установить `@astrojs/mdx` в `apps/web-client`. Туда же добавить workspace-зависимость `"shared": "*"` (нужна для `bin/index-docs.ts` в Фазе 5). Зависимость на пакет `api` НЕ нужна — OpenAPI-схема читается из файла.
 6. Подключить интеграцию mdx в `astro.config.mjs`.
 7. Создать `apps/web-client/src/content.config.ts` с zod-схемой коллекции `docs` (поля: `title`, `description`, `section`, `order`, `tags`).
 8. Добавить в `content.config.ts` коллекцию `recipes` (`title`, `description`, `endpoints[]`, `language`, `difficulty?`, `tags?`, `runUrl?`).
-9. Создать кастомный loader `apps/web-client/src/content/loaders/openapi.ts` (Astro Loader API): импортирует `applicationInterface` из `apps/api`, делает `const schema = await applicationInterface.getOpenApiSchema()` и эмитит entry per operation. Никаких промежуточных файлов.
+9. Создать кастомный loader `apps/web-client/src/content/loaders/openapi.ts` (Astro Loader API): читает `apps/api/files/openapi.json` через `fs.readFileSync` (путь — относительно корня монорепо, резолвить от `import.meta.url`), парсит JSON и эмитит entry per operation.
 10. Добавить в `content.config.ts` коллекцию `api` с этим loader, schema: `operationId`, `method`, `path`, `summary`, `description`, `tags`, `requestSchema`, `responseSchemas`, `parameters`.
 11. Создать `apps/web-client/src/content/docs/quickstart.mdx` — портировать содержимое из текущего `quickstart.astro` во frontmatter + markdown body.
 12. Создать `apps/web-client/src/content/recipes/_example.mdx` (пример со всеми полями) для шаблона.
@@ -164,13 +168,13 @@ ApplicationInterface (loader) (api ref)   ─┘                          ├─
 
 ### Фаза 8. MCP сервер (отдельная апка `apps/mcp`)
 
-45. Создать новую апку `apps/mcp` (Fastify), по структуре аналогично `apps/api`: `package.json` (deps: `fastify`, `@modelcontextprotocol/sdk`, `shared: "*"`, `api: "*"`), `tsconfig.json`, `src/app.ts` с функцией `main()`, `imports: { "#src/*": "./src/*" }`. Свой порт (например `MCP_PORT`).
+45. Создать новую апку `apps/mcp` (Fastify), по структуре аналогично `apps/api`: `package.json` (deps: `fastify`, `@modelcontextprotocol/sdk`, `shared: "*"`), `tsconfig.json`, `src/app.ts` с функцией `main()`, `imports: { "#src/*": "./src/*" }`. Свой порт (например `MCP_PORT`).
 46. В `apps/mcp/src/app.ts` функция `main()`: коннект к `redis`/`db` через `shared`, поднять Fastify, создать singleton `McpServer` из SDK и зарегистрировать на нём тулзы из `apps/mcp/src/mcp/tools/`. Singleton экспортировать из `apps/mcp/src/mcp/server.ts`.
 47. Создать роут `apps/mcp/src/routes/mcp.ts` (Full declaration, по правилу `create-endpoint.mdc`): `POST /mcp` и `GET /mcp` на один handler. Внутри handler создать `StreamableHTTPServerTransport` в **stateless mode** (`sessionIdGenerator: undefined`), вызвать `mcpServer.connect(transport)` и `transport.handleRequest(req.raw, reply.raw, req.body)`. Транспорт создаётся per-request — это ок для read-only docs (никакой sticky-сессии не нужно). Body парсит сам Fastify (`Content-Type: application/json`), кастомный contentTypeParser не требуется.
 48. Реализовать тулзу `docs_search(query, k?)` в `apps/mcp/src/mcp/tools/docsSearch.ts` — прямой `googleAiProvider.embed(query, 'RETRIEVAL_QUERY')` + `docsRepository.searchByVector(embedding, k ?? 5)`. Без LLM.
 49. Реализовать тулзу `docs_fetch(url)` в `apps/mcp/src/mcp/tools/docsFetch.ts` — возвращает все чанки страницы (`DocChunk WHERE url = $1 ORDER BY anchor`), склеенные в один markdown.
 50. Реализовать тулзу `recipe_search(operationId?, query?, language?)` в `apps/mcp/src/mcp/tools/recipeSearch.ts` — фильтр `DocChunk WHERE kind='recipe'` (`endpoints` содержит `operationId` если передан) + опц. cosine similarity при наличии `query`.
-51. Реализовать тулзу `api_endpoint(method, path)` в `apps/mcp/src/mcp/tools/apiEndpoint.ts` — отдаёт OpenAPI-фрагмент из `applicationInterface.getOpenApiSchema()` (импорт singleton из workspace-пакета `api`).
+51. Реализовать тулзу `api_endpoint(method, path)` в `apps/mcp/src/mcp/tools/apiEndpoint.ts` — читает `apps/api/files/openapi.json` (один раз на старте mcp, кешируется в памяти; перечитывается при `SIGHUP` или per-request — решается в Фазе 8) и отдаёт OpenAPI-фрагмент по `method+path`.
 52. Добавить простой rate-limit для `/mcp` (Redis counter по IP/origin) и логирование вызовов тулз для аналитики.
 53. Создать страницу `apps/web-client/src/content/docs/setup-mcp.mdx` с копи-пейст конфигом для `~/.cursor/mcp.json` (URL — `https://mcp.bitcoinapi.dev/mcp` или `https://api.bitcoinapi.dev/mcp` через reverse proxy, выбирается на этапе деплоя).
 54. Заменить ссылку `Setup MCP` в sidebar-card на `/docs/setup-mcp`.
