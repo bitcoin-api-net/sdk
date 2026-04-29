@@ -6,7 +6,7 @@ import json from 'highlight.js/lib/languages/json';
 import 'highlight.js/styles/github-dark.css';
 import { Marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 type Source = {
   kind: 'doc' | 'recipe' | 'api';
@@ -42,6 +42,11 @@ const loading = ref(false);
 const answer = ref('');
 const sources = ref<Source[]>([]);
 const errorMessage = ref<string | null>(null);
+const teleportReady = ref(false);
+
+onMounted(() => {
+  teleportReady.value = !!document.getElementById('docs-search-wrap');
+});
 
 const answerHtml = computed(() => {
   if (!answer.value) return '';
@@ -174,23 +179,25 @@ function buildHref(s: Source): string {
       </svg>
     </button>
 
-    <div v-if="open" class="search-ai__dropdown" role="region" aria-live="polite">
-      <div v-if="errorMessage" class="search-ai__error">{{ errorMessage }}</div>
+    <Teleport to="#docs-search-wrap" :disabled="!teleportReady">
+      <div v-if="open" class="search-ai__dropdown" role="region" aria-live="polite">
+        <div v-if="errorMessage" class="search-ai__error">{{ errorMessage }}</div>
 
-      <div v-if="answer || loading" class="search-ai__answer">
-        <div class="search-ai__answer-md" v-html="answerHtml" />
-        <span v-if="loading" class="search-ai__cursor" aria-hidden="true">▋</span>
-      </div>
+        <div v-if="answer || loading" class="search-ai__answer">
+          <div class="search-ai__answer-md" v-html="answerHtml" />
+          <span v-if="loading" class="search-ai__cursor" aria-hidden="true">▋</span>
+        </div>
 
-      <div v-if="sources.length > 0" class="search-ai__sources">
-        <div class="search-ai__sources-title">Sources</div>
-        <a v-for="s in sources" :key="`${s.url}#${s.anchor ?? ''}`" :href="buildHref(s)" class="search-ai__source">
-          <span class="search-ai__kind" :data-kind="s.kind">{{ s.kind }}</span>
-          <span class="search-ai__source-title">{{ s.title }}</span>
-          <span v-if="s.section" class="search-ai__source-section">{{ s.section }}</span>
-        </a>
+        <div v-if="sources.length > 0" class="search-ai__sources">
+          <div class="search-ai__sources-title">Sources</div>
+          <a v-for="s in sources" :key="`${s.url}#${s.anchor ?? ''}`" :href="buildHref(s)" class="search-ai__source">
+            <span class="search-ai__kind" :data-kind="s.kind">{{ s.kind }}</span>
+            <span class="search-ai__source-title">{{ s.title }}</span>
+            <span v-if="s.section" class="search-ai__source-section">{{ s.section }}</span>
+          </a>
+        </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -254,8 +261,8 @@ function buildHref(s: Source): string {
 .search-ai__dropdown {
   position: absolute;
   top: calc(100% + 0.5rem);
-  left: -0.875rem;
-  right: -0.25rem;
+  left: 0;
+  right: 0;
   max-height: 70vh;
   overflow-y: auto;
   background: #fff;
