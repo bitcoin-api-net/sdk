@@ -314,6 +314,41 @@
         }
       }
     },
+    "/api/v1/docs/ask-ai": {
+      "post": {
+        "operationId": "askAiDocs",
+        "summary": "Ask AI about Bitcoin API docs",
+        "tags": [
+          "docs"
+        ],
+        "description": "Streams an AI-generated answer over Server-Sent Events. Events: `sources`, `token`, `done`. Client MUST send `Accept: text/event-stream`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/prices/current": {
       "get": {
         "operationId": "getCurrentPrice",
@@ -374,6 +409,10 @@
     {
       "name": "prices",
       "description": "Cryptocurrency prices"
+    },
+    {
+      "name": "docs",
+      "description": "Documentation search and AI assistant"
     }
   ]
 }

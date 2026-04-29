@@ -2,6 +2,7 @@
 import Logo from '@icons/Logo.astro';
 import HeaderAuth from '@components/layout/HeaderAuth.vue';
 import SearchTraditional from '@components/docs/SearchTraditional.vue';
+import SearchAI from '@components/docs/SearchAI.vue';
 import { Search, Sparkles } from '@lucide/astro';
 ---
 
@@ -16,7 +17,12 @@ import { Search, Sparkles } from '@lucide/astro';
 
     <div class="docs-header__center">
       <div class="docs-header__search" id="docs-search-wrap" data-mode="traditional">
-        <SearchTraditional client:load />
+        <div class="docs-header__search-slot" data-slot="traditional">
+          <SearchTraditional client:load />
+        </div>
+        <div class="docs-header__search-slot" data-slot="ai" hidden>
+          <SearchAI client:load />
+        </div>
 
         <div
           class="docs-toggle"
@@ -80,6 +86,18 @@ import { Search, Sparkles } from '@lucide/astro';
     min-width: 0;
     display: flex;
     align-items: center;
+  }
+
+  .docs-header__search-slot {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  .docs-header__search-slot[hidden] {
+    display: none;
   }
 
   .docs-header__logo {
@@ -272,10 +290,13 @@ import { Search, Sparkles } from '@lucide/astro';
 </style>
 
 <script>
+  type Mode = 'traditional' | 'ai';
+  const STORAGE_KEY = 'docs-search-mode';
+
   const wrap = document.getElementById('docs-search-wrap');
   const toggle = document.getElementById('docs-search-toggle');
 
-  function setMode(mode: 'traditional' | 'ai') {
+  function setMode(mode: Mode) {
     if (!toggle || !wrap) return;
     toggle.dataset.mode = mode;
     wrap.dataset.mode = mode;
@@ -285,11 +306,33 @@ import { Search, Sparkles } from '@lucide/astro';
       btn.classList.toggle('docs-toggle__btn--active', isActive);
       btn.setAttribute('aria-selected', String(isActive));
     });
+
+    wrap.querySelectorAll<HTMLElement>('.docs-header__search-slot').forEach((slot) => {
+      slot.hidden = slot.dataset.slot !== mode;
+    });
+
+    try {
+      localStorage.setItem(STORAGE_KEY, mode);
+    } catch {
+      // ignore unavailable localStorage (private mode, etc.)
+    }
   }
+
+  function readSavedMode(): Mode {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'ai' || saved === 'traditional') return saved;
+    } catch {
+      // ignore
+    }
+    return 'traditional';
+  }
+
+  setMode(readSavedMode());
 
   toggle?.querySelectorAll<HTMLButtonElement>('.docs-toggle__btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const mode = btn.dataset.mode as 'traditional' | 'ai' | undefined;
+      const mode = btn.dataset.mode as Mode | undefined;
       if (mode) setMode(mode);
     });
   });

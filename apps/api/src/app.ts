@@ -1,7 +1,8 @@
 import corsPlugin from '#src/plugins/cors.js';
+import errorHandlerPlugin from '#src/plugins/error-handler.js';
 import jwtAuthPlugin from '#src/plugins/jwt-auth.js';
 import loggingPlugin from '#src/plugins/logging.js';
-import type { ResponseErrorPayload } from '#src/shared/errors.js';
+import ssePlugin from '#src/plugins/sse.js';
 import fastifyAutoload from '@fastify/autoload';
 import fastifyCookie from '@fastify/cookie';
 import fastifySwagger from '@fastify/swagger';
@@ -11,7 +12,6 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fs from 'node:fs';
 import path from 'node:path';
 import env, { required } from 'shared/src/env.js';
-import { AppError } from 'shared/src/errors.js';
 import { defaultOptions, logProcessErrors } from 'shared/src/logging.js';
 import { redis } from 'shared/src/redis.js';
 import { connectToDb } from 'shared/src/repositories/client.js';
@@ -30,23 +30,8 @@ async function main() {
 
   const app = Fastify({ logger: defaultOptions });
 
-  app.setErrorHandler<Error>((error, _request, reply) => {
-    if (error instanceof AppError) {
-      return reply.status(error.httpCode).send({
-        code: error.code,
-        message: error.message,
-      } satisfies ResponseErrorPayload);
-    }
-
-    const fastifyError = error as Error & { statusCode?: number; code?: string };
-    const statusCode = fastifyError.statusCode ?? 500;
-    return reply.status(statusCode).send({
-      code: fastifyError.code ?? 'INTERNAL_ERROR',
-      message: fastifyError.message,
-    } satisfies ResponseErrorPayload);
-  });
-
   await app.register(loggingPlugin);
+  await app.register(errorHandlerPlugin);
 
   if (NODE_ENV === 'development') await app.register(corsPlugin);
 
@@ -63,6 +48,8 @@ async function main() {
 
   await app.register(fastifyWebsocket);
 
+  await app.register(ssePlugin);
+
   await app.register(fastifySwagger, {
     openapi: {
       info: {
@@ -74,6 +61,7 @@ async function main() {
         { name: 'health', description: 'Health checks' },
         { name: 'auth', description: 'Authentication and account management' },
         { name: 'prices', description: 'Cryptocurrency prices' },
+        { name: 'docs', description: 'Documentation search and AI assistant' },
       ],
     },
   });
