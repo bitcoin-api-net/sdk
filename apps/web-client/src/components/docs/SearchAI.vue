@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import hljs from 'highlight.js/lib/core';
+import bash from 'highlight.js/lib/languages/bash';
+import javascript from 'highlight.js/lib/languages/javascript';
+import json from 'highlight.js/lib/languages/json';
+import 'highlight.js/styles/github-dark.css';
+import { Marked } from 'marked';
+import { markedHighlight } from 'marked-highlight';
 import { computed, ref } from 'vue';
 
 type Source = {
@@ -11,12 +18,35 @@ type Source = {
 
 type ServerEventName = 'sources' | 'token' | 'done' | 'error';
 
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('shell', bash);
+hljs.registerLanguage('sh', bash);
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('js', javascript);
+hljs.registerLanguage('json', json);
+
+const marked = new Marked(
+  markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+  }),
+  { gfm: true, breaks: true },
+);
+
 const query = ref('');
 const open = ref(false);
 const loading = ref(false);
 const answer = ref('');
 const sources = ref<Source[]>([]);
 const errorMessage = ref<string | null>(null);
+
+const answerHtml = computed(() => {
+  if (!answer.value) return '';
+  return marked.parse(answer.value, { async: false }) as string;
+});
 
 let abortCtrl: AbortController | null = null;
 
@@ -148,7 +178,7 @@ function buildHref(s: Source): string {
       <div v-if="errorMessage" class="search-ai__error">{{ errorMessage }}</div>
 
       <div v-if="answer || loading" class="search-ai__answer">
-        <span>{{ answer }}</span>
+        <div class="search-ai__answer-md" v-html="answerHtml" />
         <span v-if="loading" class="search-ai__cursor" aria-hidden="true">▋</span>
       </div>
 
@@ -253,8 +283,54 @@ function buildHref(s: Source): string {
   font-size: 0.9375rem;
   line-height: 1.55;
   color: #171a1f;
-  white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.search-ai__answer-md :deep(p) {
+  margin: 0 0 0.5rem 0;
+}
+.search-ai__answer-md :deep(p:last-child) {
+  margin-bottom: 0;
+}
+.search-ai__answer-md :deep(ul),
+.search-ai__answer-md :deep(ol) {
+  margin: 0.25rem 0 0.5rem 0;
+  padding-left: 1.25rem;
+}
+.search-ai__answer-md :deep(li) {
+  margin: 0.125rem 0;
+}
+.search-ai__answer-md :deep(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+.search-ai__answer-md :deep(pre) {
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.search-ai__answer-md :deep(pre code.hljs) {
+  padding: 0.625rem 0.75rem;
+}
+.search-ai__answer-md :deep(a) {
+  color: #0983fd;
+  text-decoration: underline;
+}
+.search-ai__answer-md :deep(strong) {
+  font-weight: 600;
+}
+.search-ai__answer-md :deep(h1),
+.search-ai__answer-md :deep(h2),
+.search-ai__answer-md :deep(h3) {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.25rem 0;
 }
 
 .search-ai__cursor {
