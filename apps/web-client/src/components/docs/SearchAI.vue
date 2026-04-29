@@ -150,10 +150,16 @@ function onKey(e: KeyboardEvent) {
 }
 
 function onFocus() {
-  if (answer.value || sources.value.length || errorMessage.value) open.value = true;
+  if (loading.value || answer.value || sources.value.length || errorMessage.value) open.value = true;
 }
 
-function onBlur() {
+function onBlur(e: FocusEvent) {
+  // Keep open while streaming, no matter where focus goes.
+  if (loading.value) return;
+  // Keep open if focus moves into the wrapper (e.g. clicking a source link, toggle, etc).
+  const next = e.relatedTarget as HTMLElement | null;
+  const wrap = document.getElementById('docs-search-wrap');
+  if (next && wrap?.contains(next)) return;
   setTimeout(() => {
     open.value = false;
   }, 200);
@@ -171,7 +177,7 @@ function buildHref(s: Source): string {
         <path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z" />
       </svg>
     </span>
-    <input v-model="query" class="search-ai__input" type="search" autocomplete="off" :placeholder="placeholder" aria-label="Ask AI about documentation" :disabled="loading" @keydown="onKey" @focus="onFocus" @blur="onBlur" />
+    <input v-model="query" class="search-ai__input" type="search" autocomplete="off" :placeholder="placeholder" aria-label="Ask AI about documentation" @keydown="onKey" @focus="onFocus" @blur="onBlur" />
     <button type="button" class="search-ai__submit" :disabled="loading || !query.trim()" aria-label="Send" @mousedown.prevent @click="ask">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="5" y1="12" x2="19" y2="12" />
@@ -183,10 +189,17 @@ function buildHref(s: Source): string {
       <div v-if="open" class="search-ai__dropdown" role="region" aria-live="polite">
         <div v-if="errorMessage" class="search-ai__error">{{ errorMessage }}</div>
 
-        <div v-if="answer || loading" class="search-ai__answer">
-          <div class="search-ai__answer-md" v-html="answerHtml" />
-          <span v-if="loading" class="search-ai__cursor" aria-hidden="true">▋</span>
-        </div>
+      <div v-if="loading && !answer" class="search-ai__thinking" aria-live="polite">
+        <span class="search-ai__thinking-label">Thinking</span>
+        <span class="search-ai__thinking-dots" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+      </div>
+
+      <div v-else-if="answer" class="search-ai__answer">
+        <div class="search-ai__answer-md" v-html="answerHtml" />
+        <span v-if="loading" class="search-ai__cursor" aria-hidden="true">▋</span>
+      </div>
 
         <div v-if="sources.length > 0" class="search-ai__sources">
           <div class="search-ai__sources-title">Sources</div>
@@ -284,6 +297,47 @@ function buildHref(s: Source): string {
   background: #fef2f2;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
+}
+
+.search-ai__thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #565d6d;
+}
+.search-ai__thinking-label {
+  font-weight: 500;
+}
+.search-ai__thinking-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.search-ai__thinking-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: #0983fd;
+  opacity: 0.35;
+  animation: search-ai-bounce 1.2s infinite ease-in-out;
+}
+.search-ai__thinking-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.search-ai__thinking-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes search-ai-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
 }
 
 .search-ai__answer {
