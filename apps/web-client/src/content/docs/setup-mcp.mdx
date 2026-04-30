@@ -1,0 +1,84 @@
+---
+title: Setup MCP
+description: Connect Bitcoin API documentation to your IDE agent via the Model Context Protocol.
+section: AI Integration
+order: 20
+tags:
+  - mcp
+  - ai
+  - cursor
+  - integrations
+---
+
+The Bitcoin API ships an MCP (Model Context Protocol) server that lets any
+MCP-compatible IDE agent (Cursor, Claude Code, Continue, …) search our docs,
+fetch full pages, look up code recipes, and inspect the OpenAPI schema —
+without you copy-pasting anything.
+
+The endpoint is **public and read-only**. No API key is required.
+
+## Endpoint
+
+```
+https://api.bitcoinapi.dev/mcp
+```
+
+Transport: **Streamable HTTP** (single endpoint, both GET and POST).
+
+## Cursor
+
+Add this to `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "bitcoin-api-docs": {
+      "url": "https://api.bitcoinapi.dev/mcp"
+    }
+  }
+}
+```
+
+Restart Cursor. The agent will pick up four new tools (see below).
+
+## Claude Code
+
+```bash
+claude mcp add --transport http bitcoin-api-docs https://api.bitcoinapi.dev/mcp
+```
+
+## Available tools
+
+### `docs_search(query, k?)`
+
+Semantic search across all documentation: narrative pages, code recipes, and
+OpenAPI endpoints. Returns the top-`k` chunks (default `8`) ranked by
+similarity. Use this first — then drill in with the more specific tools below.
+
+### `docs_fetch(url)`
+
+Returns the full markdown content of a documentation page by its URL/path
+(e.g. `/docs/quickstart`).
+
+### `recipe_search(operationId?, query?, language?)`
+
+Find code recipes. At least one of `operationId` or `query` is required.
+
+- `operationId` — list every recipe that uses a given API operation.
+- `query` — free-form search.
+- `language` — optional filter (e.g. `"javascript"`, `"python"`).
+
+### `api_endpoint(method, path)`
+
+Returns the raw OpenAPI fragment (parameters, request/response schemas) for
+an endpoint, e.g. `method: "GET"`, `path: "/api/v1/prices/current"`.
+
+## Try it
+
+Once configured, ask your agent something like:
+
+> *"How do I subscribe to live BTC/USDT prices over WebSocket using Bitcoin
+> API? Use the bitcoin-api-docs MCP to find an example."*
+
+The agent will call `docs_search`, then `recipe_search` or `api_endpoint`,
+and produce a working snippet grounded in the current docs.

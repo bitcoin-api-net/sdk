@@ -2,14 +2,15 @@ import corsPlugin from '#src/plugins/cors.js';
 import errorHandlerPlugin from '#src/plugins/error-handler.js';
 import jwtAuthPlugin from '#src/plugins/jwt-auth.js';
 import loggingPlugin from '#src/plugins/logging.js';
+import mcpPlugin from '#src/plugins/mcp.js';
 import ssePlugin from '#src/plugins/sse.js';
+import { openApiRepository } from '#src/repositories/openapi.repository.js';
 import fastifyAutoload from '@fastify/autoload';
 import fastifyCookie from '@fastify/cookie';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyWebsocket from '@fastify/websocket';
-import Fastify, { FastifyInstance } from 'fastify';
-import fs from 'node:fs';
+import Fastify from 'fastify';
 import path from 'node:path';
 import env, { required } from 'shared/src/env.js';
 import { defaultOptions, logProcessErrors } from 'shared/src/logging.js';
@@ -79,18 +80,13 @@ async function main() {
     options: { prefix: 'api' },
   });
 
+  await app.register(mcpPlugin);
+
   await app.ready();
 
-  saveApiSchemaToFile(app);
+  openApiRepository.save(app.swagger());
 
   await app.listen({ host: '0.0.0.0', port: Number(API_PORT) });
-}
-
-function saveApiSchemaToFile(app: FastifyInstance) {
-  const openApiPath = path.join(import.meta.dirname, '..', 'files', 'openapi.json');
-  fs.mkdirSync(path.dirname(openApiPath), { recursive: true });
-  fs.writeFileSync(openApiPath, JSON.stringify(app.swagger(), null, 2));
-  app.log.info({ path: openApiPath }, 'OpenAPI schema written');
 }
 
 main();
