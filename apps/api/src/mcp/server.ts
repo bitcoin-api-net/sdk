@@ -8,25 +8,30 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { AppError } from 'shared/src/errors.js';
 import { logger } from 'shared/src/logging.js';
 
-export const mcpServer = new McpServer({
-  name: 'bitcoin-api-docs',
-  version: '0.0.1',
-});
+// Streamable HTTP in stateless mode requires a fresh McpServer + Transport
+// per request, otherwise SDK throws "Already connected to a transport".
+export function createMcpServer(): McpServer {
+  const server = new McpServer({
+    name: 'bitcoin-api-docs',
+    version: '0.0.1',
+  });
 
-registerDocsListTool(mcpServer);
-registerDocsFetchTool(mcpServer);
-registerRecipeSearchTool(mcpServer);
-registerRecipeFetchTool(mcpServer);
-registerApiEndpointsListTool(mcpServer);
-registerApiEndpointTool(mcpServer);
+  registerDocsListTool(server);
+  registerDocsFetchTool(server);
+  registerRecipeSearchTool(server);
+  registerRecipeFetchTool(server);
+  registerApiEndpointsListTool(server);
+  registerApiEndpointTool(server);
 
-// Centralized tool-call analytics + error mapping. The high-level McpServer
-// has no universal pre/post hook, so we wrap each registered handler once
-// via the (private but stable) `_registeredTools` map. Tool handlers can
-// throw `AppError` (e.g. NotFoundError) — wrapper converts them into a
-// proper MCP error result so individual tools stay a one-liner around the
-// usecase call.
-wrapToolHandlers(mcpServer);
+  // Centralized tool-call analytics + error mapping. The high-level McpServer
+  // has no universal pre/post hook, so we wrap each registered handler via
+  // the (private but stable) `_registeredTools` map. Tool handlers can throw
+  // `AppError` (e.g. NotFoundError) — wrapper converts them into a proper MCP
+  // error result so individual tools stay a one-liner around the usecase call.
+  wrapToolHandlers(server);
+
+  return server;
+}
 
 type ToolResult = {
   content: Array<{ type: 'text'; text: string }>;
