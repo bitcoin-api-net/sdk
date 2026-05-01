@@ -1,5 +1,6 @@
-import { apiEndpointUseCase } from '#src/usecases/docs/api-endpoint.usecase.js';
+import { openApiRepository } from '#src/repositories/openapi.repository.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { NotFoundError } from 'shared/src/errors.js';
 import { z } from 'zod';
 
 export function registerApiEndpointTool(server: McpServer): void {
@@ -8,32 +9,21 @@ export function registerApiEndpointTool(server: McpServer): void {
     {
       title: 'Get OpenAPI fragment for an endpoint',
       description:
-        'Returns the raw OpenAPI operation object (parameters, request/response schemas) for the given HTTP method and path.',
+        'Returns the raw OpenAPI operation object (parameters, request/response schemas) for the given operationId. Use api_endpoints_list to discover available operationIds.',
       inputSchema: {
-        method: z.string().min(3).max(7).describe('HTTP method: GET, POST, PUT, PATCH, DELETE.'),
-        path: z
-          .string()
-          .min(1)
-          .describe('Full API path including prefix, e.g. "/api/v1/prices/current".'),
+        operationId: z.string().min(1).describe('OpenAPI operationId of the endpoint, e.g. "getCurrentPrice".'),
       },
     },
-    async ({ method, path }) => {
-      const result = await apiEndpointUseCase.execute({ method, path });
+    async ({ operationId }) => {
+      const result = await openApiRepository.findOperationById(operationId);
       if (!result) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `No OpenAPI operation found for ${method.toUpperCase()} ${path}.`,
-            },
-          ],
-          isError: true,
-        };
+        throw new NotFoundError(`No OpenAPI operation found for operationId "${operationId}".`);
       }
+
       return {
         content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
         structuredContent: result,
       };
-    },
+    }
   );
 }

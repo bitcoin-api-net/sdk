@@ -1,8 +1,10 @@
 import { registerApiEndpointTool } from '#src/mcp/tools/api-endpoint.js';
+import { registerApiEndpointsListTool } from '#src/mcp/tools/api-endpoints-list.js';
 import { registerDocsFetchTool } from '#src/mcp/tools/docs-fetch.js';
 import { registerDocsSearchTool } from '#src/mcp/tools/docs-search.js';
 import { registerRecipeSearchTool } from '#src/mcp/tools/recipe-search.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { AppError } from 'shared/src/errors.js';
 import { logger } from 'shared/src/logging.js';
 
 export const mcpServer = new McpServer({
@@ -13,14 +15,24 @@ export const mcpServer = new McpServer({
 registerDocsSearchTool(mcpServer);
 registerDocsFetchTool(mcpServer);
 registerRecipeSearchTool(mcpServer);
+registerApiEndpointsListTool(mcpServer);
 registerApiEndpointTool(mcpServer);
 
-// Lightweight tool-call analytics. The high-level McpServer doesn't expose a
-// universal pre/post hook, so we wrap each registered tool's handler once
-// after registration via the (private but stable) `_registeredTools` map.
-wrapToolHandlersForLogging(mcpServer);
+// Centralized tool-call analytics + error mapping. The high-level McpServer
+// has no universal pre/post hook, so we wrap each registered handler once
+// via the (private but stable) `_registeredTools` map. Tool handlers can
+// throw `AppError` (e.g. NotFoundError) — wrapper converts them into a
+// proper MCP error result so individual tools stay a one-liner around the
+// usecase call.
+wrapToolHandlers(mcpServer);
 
-function wrapToolHandlersForLogging(server: McpServer): void {
+type ToolResult = {
+  content: Array<{ type: 'text'; text: string }>;
+  isError?: boolean;
+  structuredContent?: unknown;
+};
+
+function wrapToolHandlers(server: McpServer): void {
   const tools = (server as unknown as { _registeredTools: Record<string, RegisteredToolLike> })._registeredTools;
   if (!tools) return;
 
@@ -31,15 +43,30 @@ function wrapToolHandlersForLogging(server: McpServer): void {
     tool.handler = async (...args: unknown[]) => {
       const startedAt = Date.now();
       try {
-        const result = await (original as (...a: unknown[]) => Promise<unknown>)(...args);
+        const result = await (original as (...a: unknown[]) => Promise<ToolResult>)(...args);
         logger.info({ tool: name, durationMs: Date.now() - startedAt, ok: true }, 'mcp tool call');
         return result;
       } catch (err) {
-        logger.error({ tool: name, durationMs: Date.now() - startedAt, ok: false, err }, 'mcp tool call failed');
-        throw err;
+        const durationMs = Date.now() - startedAt;
+        if (err instanceof AppError) {
+          logger.info(
+            { tool: name, durationMs, ok: false, code: err.code, message: err.message },
+            'mcp tool call rejected',
+          );
+          return toErrorResult(err.code, err.message);
+        }
+        logger.error({ tool: name, durationMs, ok: false, err }, 'mcp tool call failed');
+        return toErrorResult('INTERNAL_ERROR', 'Internal server error.');
       }
     };
   }
+}
+
+function toErrorResult(code: string, message: string): ToolResult {
+  return {
+    content: [{ type: 'text', text: `${code}: ${message}` }],
+    isError: true,
+  };
 }
 
 type RegisteredToolLike = {

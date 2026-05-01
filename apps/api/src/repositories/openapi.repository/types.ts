@@ -31,3 +31,12 @@ export type FoundOperation = {
   path: string;
   operation: OpenApiOperation;
 };
+
+export type OperationSummary = {
+  operationId: string;
+  method: HttpMethod;
+  path: string;
+  summary?: string;
+  description?: string;
+  tags?: string[];
+};
