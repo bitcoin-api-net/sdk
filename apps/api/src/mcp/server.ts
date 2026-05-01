@@ -2,8 +2,8 @@ import { registerApiEndpointTool } from '#src/mcp/tools/get-api-endpoint.js';
 import { registerApiEndpointsListTool } from '#src/mcp/tools/get-api-endpoints-list.js';
 import { registerDocsFetchTool } from '#src/mcp/tools/get-doc.js';
 import { registerDocsListTool } from '#src/mcp/tools/get-docs-list.js';
-import { registerRecipeSearchTool } from '#src/mcp/tools/recipe-search.js';
-import { registerDocsSearchTool } from '#src/mcp/tools/search-docs.js';
+import { registerRecipeSearchTool } from '#src/mcp/tools/get-recepies-for-endpoint.js';
+import { registerRecipeFetchTool } from '#src/mcp/tools/get-recipe.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { AppError } from 'shared/src/errors.js';
 import { logger } from 'shared/src/logging.js';
@@ -13,10 +13,10 @@ export const mcpServer = new McpServer({
   version: '0.0.1',
 });
 
-registerDocsSearchTool(mcpServer);
 registerDocsListTool(mcpServer);
 registerDocsFetchTool(mcpServer);
 registerRecipeSearchTool(mcpServer);
+registerRecipeFetchTool(mcpServer);
 registerApiEndpointsListTool(mcpServer);
 registerApiEndpointTool(mcpServer);
 

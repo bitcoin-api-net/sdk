@@ -101,6 +101,13 @@ export class RecipeChunkRepository extends VectorChunkBaseRepository<PrismaClien
     return rows;
   }
 
+  async findByUrl(url: string): Promise<RecipeChunk[]> {
+    return this.model.findMany({
+      where: { url },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async findByEndpoint(operationId: string): Promise<RecipeChunk[]> {
     const rows = await prismaClient.$queryRaw<RecipeChunk[]>`
       SELECT "id", "url", "anchor", "title", "description", "language", "difficulty",
