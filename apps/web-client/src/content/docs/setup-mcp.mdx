@@ -10,24 +10,74 @@ tags:
   - integrations
 ---
 
-The Bitcoin API ships an MCP (Model Context Protocol) server that lets any
-MCP-compatible IDE agent (Cursor, Claude Code, Continue, …) search our docs,
-fetch full pages, look up code recipes, and inspect the OpenAPI schema —
-without you copy-pasting anything.
+The Bitcoin API ships an **MCP (Model Context Protocol) server** so any
+MCP-compatible AI tool — Cursor, VS Code (Copilot), Claude Code, Claude Desktop,
+Windsurf, Zed, Codex CLI, Gemini CLI, … — can search our docs, fetch full
+pages, look up code recipes, and inspect the OpenAPI schema while it writes
+your code.
 
-The endpoint is **public and read-only**. No API key is required.
+The endpoint is **public, read-only and free**. No API key is required.
 
-## Endpoint
+## Server details
 
+- **Name**: `bitcoin-api-docs`
+- **URL**: `https://api.bitcoinapi.dev/mcp`
+- **Transport**: Streamable HTTP
+
+## One-click install
+
+<p style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin:0 0 1.5rem;">
+  <a
+    href="cursor://anysphere.cursor-deeplink/mcp/install?name=bitcoin-api-docs&config=eyJ1cmwiOiJodHRwczovL2FwaS5iaXRjb2luYXBpLmRldi9tY3AifQ%3D%3D"
+    style="display:inline-block;line-height:0;">
+    <img
+      src="https://cursor.com/deeplink/mcp-install-dark.svg"
+      alt="Add bitcoin-api-docs MCP server to Cursor"
+      height="32"
+    />
+  </a>
+  <a
+    href="https://vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522bitcoin-api-docs%2522%252C%2522type%2522%253A%2522http%2522%252C%2522url%2522%253A%2522https%253A%252F%252Fapi.bitcoinapi.dev%252Fmcp%2522%257D"
+    style="display:inline-block;line-height:0;">
+    <img
+      src="https://img.shields.io/badge/VS_Code-Install_MCP-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white"
+      alt="Install bitcoin-api-docs MCP server in VS Code"
+      height="32"
+    />
+  </a>
+  <a
+    href="https://insiders.vscode.dev/redirect?url=vscode-insiders%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522bitcoin-api-docs%2522%252C%2522type%2522%253A%2522http%2522%252C%2522url%2522%253A%2522https%253A%252F%252Fapi.bitcoinapi.dev%252Fmcp%2522%257D"
+    style="display:inline-block;line-height:0;">
+    <img
+      src="https://img.shields.io/badge/VS_Code_Insiders-Install_MCP-24BFA5?style=for-the-badge&logo=visualstudiocode&logoColor=white"
+      alt="Install bitcoin-api-docs MCP server in VS Code Insiders"
+      height="32"
+    />
+  </a>
+</p>
+
+> Click a button above and your editor will pop up a confirmation dialog.
+> No copy-pasting JSON, no restart juggling.
+
+## Manual setup
+
+Most tools accept a common JSON config. If your tool isn't listed below, try
+adding this to its MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "bitcoin-api-docs": {
+      "type": "http",
+      "url": "https://api.bitcoinapi.dev/mcp"
+    }
+  }
+}
 ```
-https://api.bitcoinapi.dev/mcp
-```
 
-Transport: **Streamable HTTP** (single endpoint, both GET and POST).
+### Cursor
 
-## Cursor
-
-Add this to `~/.cursor/mcp.json`:
+Add to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in your project):
 
 ```json
 {
@@ -39,46 +89,142 @@ Add this to `~/.cursor/mcp.json`:
 }
 ```
 
-Restart Cursor. The agent will pick up four new tools (see below).
+Then restart Cursor. The agent will auto-discover the tools.
 
-## Claude Code
+### VS Code (GitHub Copilot)
+
+Either click the **Install MCP** button above, or add to your user
+`settings.json`:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "bitcoin-api-docs": {
+        "type": "http",
+        "url": "https://api.bitcoinapi.dev/mcp"
+      }
+    }
+  }
+}
+```
+
+### Claude Code
 
 ```bash
 claude mcp add --transport http bitcoin-api-docs https://api.bitcoinapi.dev/mcp
 ```
 
+### Claude Desktop
+
+1. Open **Settings → Connectors → Add custom connector**.
+2. Set name to `bitcoin-api-docs`.
+3. Set URL to `https://api.bitcoinapi.dev/mcp`.
+
+### Windsurf
+
+Windsurf doesn't speak Streamable HTTP yet, so use a local proxy. Add to
+`~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "bitcoin-api-docs": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://api.bitcoinapi.dev/mcp"]
+    }
+  }
+}
+```
+
+### Zed
+
+Add to `~/.config/zed/settings.json`:
+
+```json
+{
+  "context_servers": {
+    "bitcoin-api-docs": {
+      "settings": {},
+      "enabled": true,
+      "url": "https://api.bitcoinapi.dev/mcp"
+    }
+  }
+}
+```
+
+### Codex CLI
+
+Add to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.bitcoin-api-docs]
+command = "npx"
+args = ["-y", "mcp-remote", "https://api.bitcoinapi.dev/mcp"]
+```
+
+### Gemini CLI
+
+Add to `~/.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "bitcoin-api-docs": {
+      "httpUrl": "https://api.bitcoinapi.dev/mcp"
+    }
+  }
+}
+```
+
 ## Available tools
 
-### `docs_search(query, k?)`
+Once connected, your agent gets six tools:
 
-Semantic search across all documentation: narrative pages, code recipes, and
-OpenAPI endpoints. Returns the top-`k` chunks (default `8`) ranked by
-similarity. Use this first — then drill in with the more specific tools below.
+### `get_docs_list()`
 
-### `docs_fetch(url)`
+Returns every documentation chunk with `url`, `anchor` and `title`. Use this
+to discover what's available, then call `get_doc` to read a page in full.
 
-Returns the full markdown content of a documentation page by its URL/path
+### `get_doc(url)`
+
+Returns the full markdown of a documentation page by its URL/path
 (e.g. `/docs/quickstart`).
 
-### `recipe_search(operationId?, query?, language?)`
+### `get_api_endpoints_list()`
 
-Find code recipes. At least one of `operationId` or `query` is required.
+Returns all available API endpoints with `operationId`, `method`, `path`,
+`summary`, `description` and `tags`.
 
-- `operationId` — list every recipe that uses a given API operation.
-- `query` — free-form search.
-- `language` — optional filter (e.g. `"javascript"`, `"python"`).
+### `api_endpoint(operationId)`
 
-### `api_endpoint(method, path)`
+Returns the raw OpenAPI operation object (parameters, request/response
+schemas) for the given `operationId` — e.g. `getCurrentPrice`.
 
-Returns the raw OpenAPI fragment (parameters, request/response schemas) for
-an endpoint, e.g. `method: "GET"`, `path: "/api/v1/prices/current"`.
+### `get_recepies_for_endpoint(operationId)`
+
+Returns all code recipes that use a given endpoint, with `url`, `title`,
+`description` and `language`.
+
+### `get_recipe(url)`
+
+Returns the full markdown of a recipe by its URL/path, plus metadata
+(`language`, `tags`, `endpoints`, `runUrl`, …).
 
 ## Try it
 
 Once configured, ask your agent something like:
 
-> *"How do I subscribe to live BTC/USDT prices over WebSocket using Bitcoin
-> API? Use the bitcoin-api-docs MCP to find an example."*
+> _"Using the bitcoin-api-docs MCP, show me how to subscribe to live BTC/USDT
+> prices over WebSocket with Bitcoin API."_
 
-The agent will call `docs_search`, then `recipe_search` or `api_endpoint`,
-and produce a working snippet grounded in the current docs.
+The agent will call `get_api_endpoints_list` → `api_endpoint` →
+`get_recepies_for_endpoint` → `get_recipe` and produce a working snippet
+grounded in the current docs.
+
+## Troubleshooting
+
+- Make sure your tool supports **Streamable HTTP** transport. If not, use
+  the `mcp-remote` proxy snippets above (Windsurf / Codex CLI).
+- Double-check the URL: `https://api.bitcoinapi.dev/mcp`.
+- Restart your editor after editing config files.
