@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export function registerDocsSearchTool(server: McpServer): void {
   server.registerTool(
-    'docs_search',
+    'search_docs',
     {
       title: 'Search Bitcoin API documentation',
       description:

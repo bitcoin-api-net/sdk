@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export function registerDocsFetchTool(server: McpServer): void {
   server.registerTool(
-    'docs_fetch',
+    'get_doc',
     {
       title: 'Fetch full documentation page',
       description:

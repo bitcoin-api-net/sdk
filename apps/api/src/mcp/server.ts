@@ -1,8 +1,9 @@
-import { registerApiEndpointTool } from '#src/mcp/tools/api-endpoint.js';
-import { registerApiEndpointsListTool } from '#src/mcp/tools/api-endpoints-list.js';
-import { registerDocsFetchTool } from '#src/mcp/tools/docs-fetch.js';
-import { registerDocsSearchTool } from '#src/mcp/tools/docs-search.js';
+import { registerApiEndpointTool } from '#src/mcp/tools/get-api-endpoint.js';
+import { registerApiEndpointsListTool } from '#src/mcp/tools/get-api-endpoints-list.js';
+import { registerDocsFetchTool } from '#src/mcp/tools/get-doc.js';
+import { registerDocsListTool } from '#src/mcp/tools/get-docs-list.js';
 import { registerRecipeSearchTool } from '#src/mcp/tools/recipe-search.js';
+import { registerDocsSearchTool } from '#src/mcp/tools/search-docs.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { AppError } from 'shared/src/errors.js';
 import { logger } from 'shared/src/logging.js';
@@ -13,6 +14,7 @@ export const mcpServer = new McpServer({
 });
 
 registerDocsSearchTool(mcpServer);
+registerDocsListTool(mcpServer);
 registerDocsFetchTool(mcpServer);
 registerRecipeSearchTool(mcpServer);
 registerApiEndpointsListTool(mcpServer);
@@ -51,7 +53,7 @@ function wrapToolHandlers(server: McpServer): void {
         if (err instanceof AppError) {
           logger.info(
             { tool: name, durationMs, ok: false, code: err.code, message: err.message },
-            'mcp tool call rejected',
+            'mcp tool call rejected'
           );
           return toErrorResult(err.code, err.message);
         }

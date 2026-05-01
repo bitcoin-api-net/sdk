@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerApiEndpointsListTool(server: McpServer): void {
   server.registerTool(
-    'api_endpoints_list',
+    'get_api_endpoints_list',
     {
       title: 'List all API endpoints',
       description:

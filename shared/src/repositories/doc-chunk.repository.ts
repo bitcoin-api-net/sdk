@@ -88,6 +88,13 @@ export class DocChunkRepository extends VectorChunkBaseRepository<PrismaClient['
       orderBy: { createdAt: 'asc' },
     });
   }
+
+  async listAll(): Promise<Array<Pick<DocChunk, 'url' | 'anchor' | 'title'>>> {
+    return this.model.findMany({
+      select: { url: true, anchor: true, title: true },
+      orderBy: [{ url: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
 }
 
 export const docChunkRepository = new DocChunkRepository(prismaClient.docChunk);
