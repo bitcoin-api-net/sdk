@@ -5,7 +5,7 @@
 Два независимых механизма в одном Redis-инстансе:
 
 ```
-REST request ──► onRequest: X-Api-Key → userId (401 если ключ невалиден) ──► resolveLimit(userId?, ip, routeId) ──► fixed-window counter per (userId|ip, routeId) ──► allow / 429
+REST request ──► onRequest: Authorization: Bearer <token> → userId (401 если ключ невалиден) ──► resolveLimit(userId?, ip, routeId) ──► fixed-window counter per (userId|ip, routeId) ──► allow / 429
                                                 │                                           │
                                                 │                                           ├── Redis cache (TTL 60s)  ◄── invalidate (DEL) на purchase / key rotate
                                                 │                                           └── Postgres (ApiKey, Boost) — fallback при miss
@@ -28,7 +28,7 @@ WS connect ──► auth (apiKey → userId) ──► connect-rate counter per
 - **Конфиг лимитов** в БД: `ApiKey` (сами ключи: `token` + метаданные) + `Boost` (sparse — одна запись на каждый купленный per-route буст; принадлежит юзеру через `userId` + FK). **Дефолты — прямо в schema роута**, в OpenAPI extensions `x-default-rate-limit` (число, REST) и `x-default-ws-connections-limit` (число, WS). Анонимы и аутентифицированные без буста используют один и тот же дефолт.
 - **Резолв лимита**: `token → userId` через Redis-кеш (TTL ~60s) → `(userId, routeId) → boost` через Redis-кеш → Postgres при miss → дефолт из `schema['x-default-rate-limit']` при отсутствии буста. Инвалидация — прямой `DEL` ключей в Redis при покупке буста / ротации/удалении ключа (Redis shared между инстансами, поэтому pub/sub не нужен).
 - **Дефолт = anonymous = authenticated-without-boost**. Один и тот же лимит и для анонимов (по IP), и для запросов с ключом без буста. Буст полностью замещает дефолт для конкретного `(userId, operationId)` (контракт: tier'ы в Stripe всегда > дефолта).
-- **Невалидный/неактивный ключ → 401**. Если в `X-Api-Key` прислали неизвестный токен или ключ с `isActive=false` — сразу 401 Unauthorized до `@fastify/rate-limit`. Это чётче для DX: клиент не получает молчаливый fallback на дефолт по IP.
+- **Невалидный/неактивный ключ → 401**. Если в `Authorization: Bearer <token>` прислали неизвестный токен или ключ с `isActive=false` — сразу 401 Unauthorized до `@fastify/rate-limit`. Это чётче для DX: клиент не получает молчаливый fallback на дефолт по IP.
 - **Headers ответа**: `x-ratelimit-limit`, `x-ratelimit-remaining`, `x-ratelimit-reset`, `retry-after` при 429 — выдаются `@fastify/rate-limit` автоматически.
 
 ## Какие алгоритмы рассматривали
@@ -221,8 +221,8 @@ OpenAPI extensions (`x-*`) автоматически копируются `@fas
 
 На `onRequest` auth-хук:
 
-1. Нет `X-Api-Key` → аноним, `req.userId` остаётся `undefined`. Идём дальше.
-2. `X-Api-Key` есть:
+1. Нет `Authorization` заголовка (или не bearer) → аноним, `req.userId` остаётся `undefined`. Идём дальше.
+2. `Authorization: Bearer <token>` есть:
    - `GET rl:cache:key:<token>` в Redis → `{userId, isActive}` либо `{notFound: true}` (TTL 60s). При miss — `apiKeyRepository.findByToken(token)`, кладём в Redis через `SET ... EX 60`.
    - Ключ не найден или `isActive=false` → **401 Unauthorized** сразу (до `@fastify/rate-limit`).
    - Иначе: `req.userId = userId`, `req.apiKeyId = apiKey.id`, `req.apiKey = token` (последнее — только для логов/отладки).
@@ -411,9 +411,9 @@ Stripe сам ведёт dunning. Поведение:
 
 9. Установить `@fastify/rate-limit` (`ioredis` НЕ ставим). Реализовать кастомный store в `apps/api/src/plugins/rate-limit.store.ts` поверх существующего `node-redis` клиента из `shared/src/redis.ts`. Store должен соответствовать интерфейсу `@fastify/rate-limit` (методы `incr(key, cb)` и `child(routeOptions)` — посмотреть актуальную сигнатуру в README либы перед реализацией). Внутри: `MULTI` → `INCR rl:rest:<key>` + `PEXPIRE` на длину окна (только при первом инкременте), либо отдельный `INCR` + `EXPIRE NX`. На любую ошибку Redis — пробрасываем наверх (плагин с `skipOnError: true` сам решит fail open).
 10. `apps/api/src/plugins/rate-limit.ts` (через `fp(...)`):
-    - **`onRequest` auth-хук (до `@fastify/rate-limit`)**: парсит `X-Api-Key`:
-      - нет заголовка → аноним, идём дальше;
-      - есть заголовок → `apiKeyRepository.findByToken(token)` (репозиторий сам ходит в кеш). Если `undefined` или `isActive=false` → отвечаем **401** и прерываем цепочку;
+    - **`onRequest` auth-хук (до `@fastify/rate-limit`)**: парсит `Authorization: Bearer <token>`:
+      - нет заголовка или схема не `Bearer` → аноним, идём дальше;
+      - схема `Bearer` с токеном → `apiKeyRepository.findByToken(token)` (репозиторий сам ходит в кеш). Если `undefined` или `isActive=false` → отвечаем **401** и прерываем цепочку;
       - иначе: `req.userId = userId`, `req.apiKeyId = apiKey.id`. Плейн-токен в `req` НЕ кладём (в логи он тоже не уходит, см. Фаза 9).
     - регистрирует `@fastify/rate-limit` глобально с:
       - `store: customRedisStore` (наш адаптер поверх node-redis);
