@@ -19,7 +19,7 @@ WS connect ──► auth (apiKey → userId) ──► connect-rate counter per
 
 Ключевые решения:
 
-- **REST**: `@fastify/rate-limit` с **кастомным store** поверх существующего `node-redis` клиента (`shared/src/redis.ts`). Встроенный Redis-store либы требует `ioredis` — мы его не тянем, чтобы не держать два Redis-клиента. Store реализует интерфейс либы (`incr` / `child`) через `INCR` + `EXPIRE`. Алгоритм — **fixed window** (как и встроенный store). Динамический `max` через callback резолвит лимит из Redis-кеша → Postgres. Изоляция счётчиков **per route** — через встроенный `groupId` (передаём `routeId` = `routeOptions.schema.operationId`). Префикс ключей в Redis — `rl:rest:` (для симметрии с `rl:ws:gauge:`).
+- **REST**: `@fastify/rate-limit` с **кастомным store** поверх существующего `node-redis` клиента (`shared/src/redis.ts`). Встроенный Redis-store либы требует `ioredis` — мы его не тянем, чтобы не держать два Redis-клиента. Store реализует интерфейс либы (`incr` / `child`) через `MULTI: INCR + PEXPIRE NX + PTTL`. Алгоритм — **fixed window** (как и встроенный store). Динамический `max` через callback резолвит лимит из Redis-кеша → Postgres. Изоляция счётчиков **per route** — `routeId` (= `routeOptions.schema.operationId`) склеивается прямо в `keyGenerator` (опция `groupId` либы — статический string, поэтому динамику делаем через ключ). Префикс ключей в Redis — `rl:rest:` (для симметрии с `rl:ws:gauge:`).
 - **WS**: кастомный плагин (готового под concurrent connections нет). Два слоя: rate (новые коннекты/мин) + gauge (одновременные).
 - **Окно**: **только per-minute** для всех роутов. Без дневных/часовых квот — простота.
 - **Тарифов нет**. Только дефолты в коде + sparse-таблица купленных бустов на конкретные роуты. Юзер платит точечно за то, что ему нужно.
@@ -241,12 +241,12 @@ OpenAPI extensions (`x-*`) автоматически копируются `@fas
 
 `@fastify/rate-limit` поддерживает кастомный `store` — реализуем тонкий адаптер поверх существующего `node-redis` клиента. Store делает `INCR <key>` + `EXPIRE 60` при первом инкременте (классический fixed window). Это десятки строк кода, зато не тянем второй Redis-клиент.
 
-- Префикс ключей: `rl:rest:` (явно задаём через опцию `nameSpace` либы или внутри store).
-- Ключ счётчика формируется через `keyGenerator: (req) => req.userId ? 'u:' + req.userId : 'ip:' + req.ip`.
-- Изоляция счётчиков per route — через встроенный `groupId` (передаём `routeId`, либа склеивает с key).
+- Префикс ключей: `rl:rest:` (добавляется внутри store).
+- Ключ от `keyGenerator` склеивает `operationId` и subject: `<operationId>:<u:userId | ip:ip>`. Изоляция счётчиков per route — через сам ключ (опция `groupId` либы — статический string, не подходит для глобальной регистрации).
 - Префиксы `u:` / `ip:` нужны, чтобы юзер и аноним с тем же значением (теоретический случай) не сошлись в один ключ.
-- Итоговый Redis-ключ: `rl:rest:<groupId>:<u|ip>:<value>`.
+- Итоговый Redis-ключ: `rl:rest:<operationId>:<u|ip>:<value>`.
 - Окно фиксировано — 60 секунд (`timeWindow: '1 minute'`).
+- Хук плагина — `preHandler`, чтобы наш `onRequest` auth-хук (см. `apiKeyAuthPlugin`) гарантированно отработал раньше и проставил `req.userId`.
 - При ошибках Redis store возвращает ошибку → `@fastify/rate-limit` с `skipOnError: true` пропускает запрос (fail open). Сам store настроен на быстрый fail: не копит запросы в очереди, при недоступности Redis сразу бросает.
 
 ### Concurrent gauge для WS
@@ -413,22 +413,31 @@ Stripe сам ведёт dunning. Поведение:
 
 ### Фаза 3. Плагин Fastify для REST
 
-9. Установить `@fastify/rate-limit` (`ioredis` НЕ ставим). Реализовать кастомный store в `apps/api/src/plugins/rate-limit.store.ts` поверх существующего `node-redis` клиента из `shared/src/redis.ts`. Store должен соответствовать интерфейсу `@fastify/rate-limit` (методы `incr(key, cb)` и `child(routeOptions)` — посмотреть актуальную сигнатуру в README либы перед реализацией). Внутри: `MULTI` → `INCR rl:rest:<key>` + `PEXPIRE` на длину окна (только при первом инкременте), либо отдельный `INCR` + `EXPIRE NX`. На любую ошибку Redis — пробрасываем наверх (плагин с `skipOnError: true` сам решит fail open).
-10. `apps/api/src/plugins/rate-limit.ts` (через `fp(...)`):
-    - **`onRequest` auth-хук (до `@fastify/rate-limit`)**: парсит `Authorization: Bearer <token>`:
+Auth по API-ключу и rate-limit намеренно разнесены в **два разных плагина**, чтобы не смешивать ответственности:
+
+- `apiKeyAuthPlugin` — только парсинг `Authorization: Bearer` и заполнение `req.userId` / `req.apiKeyId`.
+- `rateLimitPlugin` — только лимиты, читает уже готовые поля из `req`.
+
+Плюс `trustProxy: true` в Fastify (API стоит за nginx, см. «Открытые вопросы»), `req.ip` будет парситься из `X-Forwarded-For`.
+
+9. Установить `@fastify/rate-limit` (`ioredis` НЕ ставим). Реализовать кастомный store в `apps/api/src/plugins/rate-limit.store.ts` поверх существующего `node-redis` клиента из `shared/src/redis.ts`. Store соответствует интерфейсу `@fastify/rate-limit` (`incr(key, cb)` + `child(routeOptions)`). Внутри `incr`: `MULTI` → `INCR rl:rest:<key>` + `PEXPIRE rl:rest:<key> <timeWindow> NX` + `PTTL rl:rest:<key>`. `child()` возвращает новый экземпляр с тем же `timeWindow` (per-route состояние нам не нужно — `routeId` уже зашит в ключ от `keyGenerator`). На любую ошибку Redis — пробрасываем наверх (плагин с `skipOnError: true` сам решит fail open).
+10. `apps/api/src/plugins/api-key-auth.ts` (через `fp(...)`):
+    - `onRequest` хук парсит `Authorization: Bearer <token>`:
       - нет заголовка или схема не `Bearer` → аноним, идём дальше;
-      - схема `Bearer` с токеном → `apiKeyRepository.findByToken(token)` (репозиторий сам ходит в кеш). Если `undefined` или `isActive=false` → отвечаем **401** и прерываем цепочку;
+      - схема `Bearer` с токеном → `apiKeyRepository.findByToken(token)` (репозиторий сам ходит в кеш). Если `undefined` или `isActive=false` → бросаем **401** (`UnauthorizedError`);
       - иначе: `req.userId = userId`, `req.apiKeyId = apiKey.id`. Плейн-токен в `req` НЕ кладём (в логи он тоже не уходит, см. Фаза 9).
-    - регистрирует `@fastify/rate-limit` глобально с:
-      - `store: customRedisStore` (наш адаптер поверх node-redis);
-      - `timeWindow: '1 minute'`;
-      - `skipOnError: true` (fail open);
-      - `keyGenerator: (req) => req.userId ? 'u:' + req.userId : 'ip:' + req.ip` (или CF-IP, см. открытый вопрос);
-      - `groupId: (req) => req.routeOptions.schema.operationId` — счётчик per-route, встроенная фича либы (валидация на старте гарантирует, что `operationId` всегда есть);
-      - `max: async (req) => req.userId ? await boostRepository.resolveRateLimit(req.userId, req.routeOptions.schema.operationId, req.routeOptions.schema['x-default-rate-limit']) : req.routeOptions.schema['x-default-rate-limit']`;
-      - `errorResponseBuilder` — формат `AppError`-style для consistency;
-    - регистрируется ПОСЛЕ `jwtAuthPlugin`.
-11. Расширить `FastifyRequest` полями `userId?: string`, `apiKeyId?: string` через `declare module 'fastify'`. (`userId` может уже быть объявлен JWT-плагином — проверить на коллизию при реализации: если да, договариваемся о едином поле и используем его.)
+    - тут же `declare module 'fastify'` расширяет `FastifyRequest` полями `userId?: string`, `apiKeyId?: string`.
+11. `apps/api/src/plugins/rate-limit.ts` (через `fp(...)`) — регистрирует `@fastify/rate-limit` глобально:
+    - `store: RedisRateLimitStore` (наш адаптер поверх node-redis);
+    - `hook: 'preHandler'` — чтобы `apiKeyAuthPlugin`'овский `onRequest` отработал раньше и заполнил `req.userId`;
+    - `timeWindow: '1 minute'`;
+    - `skipOnError: true` (fail open при недоступности Redis);
+    - `keyGenerator: (req) => '<operationId>:<u:userId | ip:ip>'` — `routeId` зашит прямо в ключ (опция `groupId` у либы — статический string, не подходит для глобальной регистрации с динамическим routeId);
+    - `max: async (req) => req.userId ? boostRepository.resolveRateLimit(req.userId, operationId, defaultLimit) : defaultLimit`, где `defaultLimit = req.routeOptions.schema['x-default-rate-limit']`;
+    - `errorResponseBuilder` возвращает `{ code: 'RATE_LIMIT_EXCEEDED', message }` — формат `AppError`-style для consistency.
+12. Порядок регистрации в `app.ts`: `jwtAuthPlugin` → `apiKeyAuthPlugin` → `rateLimitPlugin`. `trustProxy: true` в опциях `Fastify({...})`.
+
+> До Фазы 5 ни один роут ещё не помечен `x-default-rate-limit`, поэтому `max`-callback бросит при любом запросе (намеренный fail-fast — соответствует контракту «без лимита роут не регистрируется»). Фаза 5 проставляет поля и валидирует их на `onReady`.
 
 #### AI правила
 
@@ -442,7 +451,7 @@ Stripe сам ведёт dunning. Поведение:
 
 12. `apps/api/src/plugins/rate-limit-ws.ts`:
     - оборачивает upgrade через `addHook('preHandler', ...)` — Fastify даёт хук до апгрейда коннекта;
-    - тот же `onRequest` auth-хук из REST-плагина уже проставит `req.userId` (или вернёт 401 для невалидного ключа) — WS-плагин переиспользует результат;
+    - `apiKeyAuthPlugin` (Фаза 3) уже проставит `req.userId` / `req.apiKeyId` на `onRequest` (или вернёт 401 для невалидного ключа) — WS-плагин просто читает готовые поля;
     - берёт `operationId` и оба лимита из `routeOptions.schema`:
       - `connectRateDefault = schema['x-default-rate-limit']`
       - `concurrentDefault = schema['x-default-ws-connections-limit']`

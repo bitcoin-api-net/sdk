@@ -1,8 +1,10 @@
+import apiKeyAuthPlugin from '#src/plugins/api-key-auth.js';
 import corsPlugin from '#src/plugins/cors.js';
 import errorHandlerPlugin from '#src/plugins/error-handler.js';
 import jwtAuthPlugin from '#src/plugins/jwt-auth.js';
 import loggingPlugin from '#src/plugins/logging.js';
 import mcpPlugin from '#src/plugins/mcp.js';
+import rateLimitPlugin from '#src/plugins/rate-limit.js';
 import ssePlugin from '#src/plugins/sse.js';
 import { openApiRepository } from '#src/repositories/openapi.repository.js';
 import fastifyAutoload from '@fastify/autoload';
@@ -29,7 +31,7 @@ async function main() {
   await redis.connectSubscriber();
   await connectToDb();
 
-  const app = Fastify({ logger: defaultOptions });
+  const app = Fastify({ logger: defaultOptions, trustProxy: true });
 
   await app.register(loggingPlugin);
   await app.register(errorHandlerPlugin);
@@ -46,6 +48,8 @@ async function main() {
   });
 
   await app.register(jwtAuthPlugin);
+  await app.register(apiKeyAuthPlugin);
+  await app.register(rateLimitPlugin);
 
   await app.register(fastifyWebsocket);
 
