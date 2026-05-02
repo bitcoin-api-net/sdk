@@ -360,10 +360,10 @@ Stripe сам ведёт dunning. Поведение:
 
 ### Фаза 1. Модели и миграция
 
-1. Создать `prisma/models/api-key.prisma`, `boost.prisma`.
-2. Дополнить `prisma/models/user.prisma` relation-полями `apiKeys ApiKey[]` и `boosts Boost[]`.
-3. `prisma migrate dev --name api_keys_and_rate_limits`.
-4. Сидер не нужен — никаких справочных данных в БД нет, дефолты в коде.
+- Создать `prisma/models/api-key.prisma`, `boost.prisma`.
+- Дополнить `prisma/models/user.prisma` relation-полями `apiKeys ApiKey[]` и `boosts Boost[]`.
+- `prisma migrate dev --name api_keys_and_rate_limits`.
+- Сидер не нужен — никаких справочных данных в БД нет, дефолты в коде.
 
 #### AI правила
 
@@ -377,37 +377,37 @@ Stripe сам ведёт dunning. Поведение:
 
 Структура — по правилу `repositories.mdc`: shared-репозиторий = чистый Postgres (через Prisma), application-репозиторий в `apps/api` наследуется от shared и добавляет кеш.
 
-5. `shared/src/repositories/api-key.repository.ts` (чистый Postgres):
+- `shared/src/repositories/api-key.repository.ts` (чистый Postgres):
 
-   - `findByToken(token)` (hot path, возвращает `{id, userId, isActive, ...} | undefined`),
-   - `findById(id)`,
-   - `listByUserId(userId)`,
-   - `create({userId, name})` (генерит токен, пишет в `ApiKey`, возвращает целиком),
-   - `setActive(id, isActive)`,
-   - `delete(id)`.
+  - `findByToken(token)` (hot path, возвращает `{id, userId, isActive, ...} | undefined`),
+  - `findById(id)`,
+  - `listByUserId(userId)`,
+  - `create({userId, name})` (генерит токен, пишет в `ApiKey`, возвращает целиком),
+  - `setActive(id, isActive)`,
+  - `delete(id)`.
 
-6. `shared/src/repositories/boost.repository.ts` (чистый Postgres):
+- `shared/src/repositories/boost.repository.ts` (чистый Postgres):
 
-   - `findByUserAndRoute(userId, routeId)` через `findUnique` по `@@unique([userId, routeId])` — без фильтра по `expiresAt` (отсев expired делает наследник в `apps/api`),
-   - `upsert({userId, routeId, rateLimit, maxConcurrent, expiresAt, paymentSubscriptionItemId, paymentPlanId})`,
-   - `deleteByPaymentSubscriptionItemId(itemId)`,
-   - `listByUserId(userId)`.
+  - `findByUserAndRoute(userId, routeId)` через `findUnique` по `@@unique([userId, routeId])` — без фильтра по `expiresAt` (отсев expired делает наследник в `apps/api`),
+  - `upsert({userId, routeId, rateLimit, maxConcurrent, expiresAt, paymentSubscriptionItemId, paymentPlanId})`,
+  - `deleteByPaymentSubscriptionItemId(itemId)`,
+  - `listByUserId(userId)`.
 
-7. `apps/api/src/repositories/api-key.repository.ts` extends shared:
+- `apps/api/src/repositories/api-key.repository.ts` extends shared:
 
-   - Переопределяет `findByToken(token)`: сначала `GET rl:cache:key:<token>` в Redis → JSON.parse → если `{notFound: true}` или `{isActive: false}` — вернуть `undefined`; иначе вернуть закешированное `{id, userId, isActive}`. При miss — зовёт `super.findByToken(token)`, результат сериализует (`{id, userId, isActive}` либо `{notFound: true}` для null) и пишет `SET rl:cache:key:<token> <json> EX 60`.
-   - Переопределяет `setActive(id, isActive)` и `delete(id)`: вызывает `super.*`, затем `DEL rl:cache:key:<token>` (token достаём из БД до операции либо хранит вызов токен снаружи — деталь реализации).
-   - На любую ошибку Redis — логирует и пробрасывает наверх. `@fastify/rate-limit` с `skipOnError: true` сам решит fail open.
+  - Переопределяет `findByToken(token)`: сначала `GET rl:cache:key:<token>` в Redis → JSON.parse → если `{notFound: true}` или `{isActive: false}` — вернуть `undefined`; иначе вернуть закешированное `{id, userId, isActive}`. При miss — зовёт `super.findByToken(token)`, результат сериализует (`{id, userId, isActive}` либо `{notFound: true}` для null) и пишет `SET rl:cache:key:<token> <json> EX 60`.
+  - Переопределяет `setActive(id, isActive)` и `delete(id)`: вызывает `super.*`, затем `DEL rl:cache:key:<token>` (token достаём из БД до операции либо хранит вызов токен снаружи — деталь реализации).
+  - На любую ошибку Redis — логирует и пробрасывает наверх. `@fastify/rate-limit` с `skipOnError: true` сам решит fail open.
 
-8. `apps/api/src/repositories/boost.repository.ts` extends shared:
+- `apps/api/src/repositories/boost.repository.ts` extends shared:
 
-   - Добавляет `resolveLimits(userId: string, routeId: string, defaults: { rateLimit: number; maxConcurrent?: number }): Promise<{ rateLimit: number; maxConcurrent?: number }>` — единственный публичный метод hot path:
-     - `GET rl:cache:boost:<userId>:<routeId>` → JSON `{rateLimit, maxConcurrent, expiresAt}` → если валидно (`expiresAt === null || expiresAt > now`) — вернуть `{rateLimit, maxConcurrent: maxConcurrent ?? defaults.maxConcurrent}`;
-     - miss/expired → `super.findByUserAndRoute(userId, routeId)`: если есть и не expired → сериализуем `{rateLimit: boost.rateLimit, maxConcurrent: boost.maxConcurrent, expiresAt: boost.expiresAt}`; иначе `{rateLimit: defaults.rateLimit, maxConcurrent: undefined, expiresAt: null}`;
-     - `SET rl:cache:boost:<userId>:<routeId> <json> EX 60`, вернуть резолвленные лимиты (подставив дефолт concurrent, если в бусте `maxConcurrent === undefined`).
-   - Вспомогательный thin-wrapper `resolveRateLimit(userId, routeId, defaultRateLimit)` для REST-плагина — зовёт `resolveLimits` и возвращает только `rateLimit`.
-   - Переопределяет `upsert(...)` и `deleteByPaymentSubscriptionItemId(...)`: после `super.*` делает `DEL rl:cache:boost:<userId>:<routeId>`.
-   - `defaults` приходят снаружи (из `schema['x-default-rate-limit']` и `schema['x-default-ws-connections-limit']` роута) — никакой центральной карты дефолтов в репозитории нет.
+  - Добавляет `resolveLimits(userId: string, routeId: string, defaults: { rateLimit: number; maxConcurrent?: number }): Promise<{ rateLimit: number; maxConcurrent?: number }>` — единственный публичный метод hot path:
+    - `GET rl:cache:boost:<userId>:<routeId>` → JSON `{rateLimit, maxConcurrent, expiresAt}` → если валидно (`expiresAt === null || expiresAt > now`) — вернуть `{rateLimit, maxConcurrent: maxConcurrent ?? defaults.maxConcurrent}`;
+    - miss/expired → `super.findByUserAndRoute(userId, routeId)`: если есть и не expired → сериализуем `{rateLimit: boost.rateLimit, maxConcurrent: boost.maxConcurrent, expiresAt: boost.expiresAt}`; иначе `{rateLimit: defaults.rateLimit, maxConcurrent: undefined, expiresAt: null}`;
+    - `SET rl:cache:boost:<userId>:<routeId> <json> EX 60`, вернуть резолвленные лимиты (подставив дефолт concurrent, если в бусте `maxConcurrent === undefined`).
+  - Вспомогательный thin-wrapper `resolveRateLimit(userId, routeId, defaultRateLimit)` для REST-плагина — зовёт `resolveLimits` и возвращает только `rateLimit`.
+  - Переопределяет `upsert(...)` и `deleteByPaymentSubscriptionItemId(...)`: после `super.*` делает `DEL rl:cache:boost:<userId>:<routeId>`.
+  - `defaults` приходят снаружи (из `schema['x-default-rate-limit']` и `schema['x-default-ws-connections-limit']` роута) — никакой центральной карты дефолтов в репозитории нет.
 
 #### AI правила
 
@@ -438,27 +438,27 @@ apps/api/src/plugins/
         └── utils.ts            — getOperationId, getSchemaLimit, buildRateLimitKey
 ```
 
-9. Установить `@fastify/rate-limit` (`ioredis` НЕ ставим). Реализовать абстрактный store в `apps/api/src/plugins/rate-limit/shared/store.ts` поверх существующего `node-redis` клиента из `shared/src/redis.ts`. Store соответствует интерфейсу `@fastify/rate-limit` (`incr(key, cb)` + `child(routeOptions)`). Внутри `incr`: `MULTI` → `INCR <prefix><key>` + `PEXPIRE <prefix><key> <timeWindow> NX` + `PTTL <prefix><key>`. Префикс — абстрактное readonly-поле, наследники задают его константой (`'rl:rest:'` / `'rl:ws:rate:'`). `child()` возвращает новый экземпляр того же класса с тем же `timeWindow` (per-route состояние нам не нужно — `routeId` уже зашит в ключ от `keyGenerator`). На любую ошибку Redis — пробрасываем наверх (плагин с `skipOnError: true` сам решит fail open).
-10. `apps/api/src/plugins/rate-limit/shared/utils.ts` — три function declaration'а, переиспользуемые в обоих плагинах:
-    - `getOperationId(req)` — читает `req.routeOptions.schema.operationId`, бросает если пусто;
-    - `getSchemaLimit(req, field)` — читает любой `x-*` numeric field из `routeOptions.schema`, бросает если не задано или `<= 0`. Обслуживает и `x-default-rate-limit`, и `x-default-ws-connections-limit`;
-    - `buildRateLimitKey(req, operationId)` — собирает `<operationId>:<u:userId | ip:ip>`.
-11. `apps/api/src/plugins/api-key-auth.ts` (через `fp(...)`):
-    - `onRequest` хук парсит `Authorization: Bearer <token>`:
-      - нет заголовка или схема не `Bearer` → аноним, идём дальше;
-      - схема `Bearer` с токеном → `apiKeyRepository.findByToken(token)` (репозиторий сам ходит в кеш). Если `undefined` или `isActive=false` → бросаем **401** (`UnauthorizedError`);
-      - иначе: `req.userId = userId`, `req.apiKeyId = apiKey.id`. Плейн-токен в `req` НЕ кладём (в логи он тоже не уходит, см. Фаза 9).
-    - тут же `declare module 'fastify'` расширяет `FastifyRequest` полями `userId?: string`, `apiKeyId?: string`.
-12. `apps/api/src/plugins/rate-limit/rate-limit.rest.ts` (через `fp(...)`) — регистрирует `@fastify/rate-limit` глобально:
-    - локальный класс `RestRedisStore extends RedisStore` с `prefix = 'rl:rest:'`;
-    - `store: RestRedisStore`;
-    - `hook: 'preHandler'` — чтобы `apiKeyAuthPlugin`'овский `onRequest` отработал раньше и заполнил `req.userId`;
-    - `timeWindow: '1 minute'`;
-    - `skipOnError: true` (fail open при недоступности Redis);
-    - `keyGenerator: (req) => buildRateLimitKey(req, getOperationId(req))` — `routeId` зашит прямо в ключ (опция `groupId` у либы — статический string, не подходит для глобальной регистрации с динамическим routeId);
-    - `max: async (req) => req.userId ? boostRepository.resolveRateLimit(req.userId, operationId, defaultLimit) : defaultLimit`, где `defaultLimit = getSchemaLimit(req, 'x-default-rate-limit')`;
-    - `errorResponseBuilder` возвращает `{ code: 'RATE_LIMIT_EXCEEDED', message }` — формат `AppError`-style для consistency.
-13. Порядок регистрации в `app.ts`: `jwtAuthPlugin` → `apiKeyAuthPlugin` → `rateLimitPlugin`. `trustProxy: true` в опциях `Fastify({...})`.
+- Установить `@fastify/rate-limit` (`ioredis` НЕ ставим). Реализовать абстрактный store в `apps/api/src/plugins/rate-limit/shared/store.ts` поверх существующего `node-redis` клиента из `shared/src/redis.ts`. Store соответствует интерфейсу `@fastify/rate-limit` (`incr(key, cb)` + `child(routeOptions)`). Внутри `incr`: `MULTI` → `INCR <prefix><key>` + `PEXPIRE <prefix><key> <timeWindow> NX` + `PTTL <prefix><key>`. Префикс — абстрактное readonly-поле, наследники задают его константой (`'rl:rest:'` / `'rl:ws:rate:'`). `child()` возвращает новый экземпляр того же класса с тем же `timeWindow` (per-route состояние нам не нужно — `routeId` уже зашит в ключ от `keyGenerator`). На любую ошибку Redis — пробрасываем наверх (плагин с `skipOnError: true` сам решит fail open).
+- `apps/api/src/plugins/rate-limit/shared/utils.ts` — три function declaration'а, переиспользуемые в обоих плагинах:
+  - `getOperationId(req)` — читает `req.routeOptions.schema.operationId`, бросает если пусто;
+  - `getSchemaLimit(req, field)` — читает любой `x-*` numeric field из `routeOptions.schema`, бросает если не задано или `<= 0`. Обслуживает и `x-default-rate-limit`, и `x-default-ws-connections-limit`;
+  - `buildRateLimitKey(req, operationId)` — собирает `<operationId>:<u:userId | ip:ip>`.
+- `apps/api/src/plugins/api-key-auth.ts` (через `fp(...)`):
+  - `onRequest` хук парсит `Authorization: Bearer <token>`:
+    - нет заголовка или схема не `Bearer` → аноним, идём дальше;
+    - схема `Bearer` с токеном → `apiKeyRepository.findByToken(token)` (репозиторий сам ходит в кеш). Если `undefined` или `isActive=false` → бросаем **401** (`UnauthorizedError`);
+    - иначе: `req.userId = userId`, `req.apiKeyId = apiKey.id`. Плейн-токен в `req` НЕ кладём (в логи он тоже не уходит, см. фазу «Наблюдаемость»).
+  - тут же `declare module 'fastify'` расширяет `FastifyRequest` полями `userId?: string`, `apiKeyId?: string`.
+- `apps/api/src/plugins/rate-limit/rate-limit.rest.ts` (через `fp(...)`) — регистрирует `@fastify/rate-limit` глобально:
+  - локальный класс `RestRedisStore extends RedisStore` с `prefix = 'rl:rest:'`;
+  - `store: RestRedisStore`;
+  - `hook: 'preHandler'` — чтобы `apiKeyAuthPlugin`'овский `onRequest` отработал раньше и заполнил `req.userId`;
+  - `timeWindow: '1 minute'`;
+  - `skipOnError: true` (fail open при недоступности Redis);
+  - `keyGenerator: (req) => buildRateLimitKey(req, getOperationId(req))` — `routeId` зашит прямо в ключ (опция `groupId` у либы — статический string, не подходит для глобальной регистрации с динамическим routeId);
+  - `max: async (req) => req.userId ? boostRepository.resolveRateLimit(req.userId, operationId, defaultLimit) : defaultLimit`, где `defaultLimit = getSchemaLimit(req, 'x-default-rate-limit')`;
+  - `errorResponseBuilder` возвращает `{ code: 'RATE_LIMIT_EXCEEDED', message }` — формат `AppError`-style для consistency.
+- Порядок регистрации в `app.ts`: `jwtAuthPlugin` → `apiKeyAuthPlugin` → `rateLimitPlugin`. `trustProxy: true` в опциях `Fastify({...})`.
 
 > До Фазы 5 ни один роут ещё не помечен `x-default-rate-limit`, поэтому `max`-callback бросит при любом запросе (намеренный fail-fast — соответствует контракту «без лимита роут не регистрируется»). Фаза 5 проставляет поля и валидирует их на `onReady`.
 
@@ -472,15 +472,15 @@ apps/api/src/plugins/
 
 ### Фаза 4. Плагин для WS
 
-14. `apps/api/src/plugins/rate-limit/rate-limit.ws.ts` (через `fp(...)`):
-    - локальный класс `WsRateRedisStore extends RedisStore` (из `shared/store.ts`) с `prefix = 'rl:ws:rate:'`;
-    - `apiKeyAuthPlugin` (Фаза 3) уже проставит `req.userId` / `req.apiKeyId` на `onRequest` (или вернёт 401 для невалидного ключа) — WS-плагин просто читает готовые поля;
-    - **rate-counter** (новые connections per minute, per `(userId | ip, operationId)`) — переиспользуем `@fastify/rate-limit` через `fastify.createRateLimit({...})` (либа экспортирует такой API в v10+, это чистая функция-проверка без авто-ответа 429, идеально для WS preHandler). Опции — те же, что у REST-плагина: `store: WsRateRedisStore`, `timeWindow: '1 minute'`, `skipOnError: true`, тот же `keyGenerator` и `max`-callback, что резолвит лимит через `boostRepository.resolveLimits(req.userId, operationId, { rateLimit: connectRateDefault, maxConcurrent: concurrentDefault })` для аутентифицированных (берём `.rateLimit` из результата) или `connectRateDefault` (= `getSchemaLimit(req, 'x-default-rate-limit')`) для анонимов. Тот же вызов `resolveLimits` ещё раз **не делаем** — preHandler и wsHandler-обёртка должны разделить один запрос к кешу (храним результат в `req` через симпл-поле типа `req.wsLimits`);
-    - **gauge** (concurrent connections, per `(userId | ip, operationId)`) — ручной INCR/DECR с TTL safety-net. Ключ `rl:ws:gauge:<operationId>:<u:userId | ip:ip>`. Лимит для аутентифицированных резолвится через `boostRepository.resolveLimits(req.userId, operationId, { rateLimit: connectRateDefault, maxConcurrent: concurrentDefault })` и читается из поля `maxConcurrent` результата (для анонимов — `concurrentDefault = getSchemaLimit(req, 'x-default-ws-connections-limit')`). TTL — 5 минут (safety net на случай зависшего DECR);
-    - per-route навеска через `fastify.addHook('onRoute', ...)`: для роутов с `wsHandler` отключаем глобальный REST-rate-limit (`routeOptions.config.rateLimit = false`, чтобы счётчик connection'а не учитывался дважды), добавляем preHandler с rate-check и оборачиваем `wsHandler`:
-      - **preHandler** вызывает `checkConnectRate(req)`. Если `!isAllowed && isExceeded` → throw `AppError({ code: 'RATE_LIMIT_EXCEEDED', httpCode: 429 })` ДО апгрейда (стандартный `errorHandlerPlugin` ответит 429);
-      - **wsHandler-обёртка** (после успешного апгрейда): `MULTI: INCR rl:ws:gauge:<key> + EXPIRE NX <ttl>`. Если `current > limit` → `DECR` (откат) + `socket.close(1008, 'rate limit')` и выходим. Иначе — подписываемся на `socket.on('close', ...)` для `DECR` и вызываем оригинальный `wsHandler`.
-15. Регистрация в `app.ts` сразу после `fastifyWebsocket`: `fastifyWebsocket` → `rateLimitWsPlugin`. `rateLimitWsPlugin` (REST) обязан быть зарегистрирован раньше — `createRateLimit` появляется на инстансе только после регистрации `@fastify/rate-limit`.
+- `apps/api/src/plugins/rate-limit/rate-limit.ws.ts` (через `fp(...)`):
+  - локальный класс `WsRateRedisStore extends RedisStore` (из `shared/store.ts`) с `prefix = 'rl:ws:rate:'`;
+  - `apiKeyAuthPlugin` уже проставит `req.userId` / `req.apiKeyId` на `onRequest` (или вернёт 401 для невалидного ключа) — WS-плагин просто читает готовые поля;
+  - **rate-counter** (новые connections per minute, per `(userId | ip, operationId)`) — переиспользуем `@fastify/rate-limit` через `fastify.createRateLimit({...})` (либа экспортирует такой API в v10+, это чистая функция-проверка без авто-ответа 429, идеально для WS preHandler). Опции — те же, что у REST-плагина: `store: WsRateRedisStore`, `timeWindow: '1 minute'`, `skipOnError: true`, тот же `keyGenerator` и `max`-callback, что резолвит лимит через `boostRepository.resolveLimits(req.userId, operationId, { rateLimit: connectRateDefault, maxConcurrent: concurrentDefault })` для аутентифицированных (берём `.rateLimit` из результата) или `connectRateDefault` (= `getSchemaLimit(req, 'x-default-rate-limit')`) для анонимов. Тот же вызов `resolveLimits` ещё раз **не делаем** — preHandler и wsHandler-обёртка должны разделить один запрос к кешу (храним результат в `req` через симпл-поле типа `req.wsLimits`);
+  - **gauge** (concurrent connections, per `(userId | ip, operationId)`) — ручной INCR/DECR с TTL safety-net. Ключ `rl:ws:gauge:<operationId>:<u:userId | ip:ip>`. Лимит для аутентифицированных резолвится через `boostRepository.resolveLimits(req.userId, operationId, { rateLimit: connectRateDefault, maxConcurrent: concurrentDefault })` и читается из поля `maxConcurrent` результата (для анонимов — `concurrentDefault = getSchemaLimit(req, 'x-default-ws-connections-limit')`). TTL — 5 минут (safety net на случай зависшего DECR);
+  - per-route навеска через `fastify.addHook('onRoute', ...)`: для роутов с `wsHandler` отключаем глобальный REST-rate-limit (`routeOptions.config.rateLimit = false`, чтобы счётчик connection'а не учитывался дважды), добавляем preHandler с rate-check и оборачиваем `wsHandler`:
+    - **preHandler** вызывает `checkConnectRate(req)`. Если `!isAllowed && isExceeded` → throw `AppError({ code: 'RATE_LIMIT_EXCEEDED', httpCode: 429 })` ДО апгрейда (стандартный `errorHandlerPlugin` ответит 429);
+    - **wsHandler-обёртка** (после успешного апгрейда): `MULTI: INCR rl:ws:gauge:<key> + EXPIRE NX <ttl>`. Если `current > limit` → `DECR` (откат) + `socket.close(1008, 'rate limit')` и выходим. Иначе — подписываемся на `socket.on('close', ...)` для `DECR` и вызываем оригинальный `wsHandler`.
+- Регистрация в `app.ts` сразу после `fastifyWebsocket`: `fastifyWebsocket` → `rateLimitWsPlugin`. `rateLimitWsPlugin` (REST) обязан быть зарегистрирован раньше — `createRateLimit` появляется на инстансе только после регистрации `@fastify/rate-limit`.
 
 > `maxConcurrent` в `Boost` опциональный: если в Price'е tier'а не задано `wsConnectionsLimit` (например, REST-роуты), буст бустит только `rateLimit`, а concurrent остаётся на дефолте.
 
@@ -493,17 +493,17 @@ apps/api/src/plugins/
 
 ### Фаза 5. Маркировка роутов и валидация
 
-16. `apps/api/src/plugins/rate-limit/shared/types.ts` — отдельный side-effect-only модуль, расширяющий `FastifySchema` через `declare module 'fastify'` полями:
-    - `'x-default-rate-limit'?: number` — req/min для REST и connect/min для WS.
-    - `'x-default-ws-connections-limit'?: number` — concurrent connections (только WS).
-17. Пройти по всем существующим роутам и проставить эти поля в `schema` (значения — из таблицы выше или согласованные).
-18. `apps/api/src/plugins/rate-limit/rate-limit.validation.ts` (через `fp(...)`) — копит роуты через `fastify.addHook('onRoute', ...)` и в `onReady`-хуке для каждого роута проверяет:
-    - `schema.operationId` задан и уникален во всём приложении;
-    - `schema['x-default-rate-limit']` задан, число > 0;
-    - если у роута есть `wsHandler` (тот же критерий, что в `rate-limit.ws.ts`), дополнительно: `schema['x-default-ws-connections-limit']` задан, число > 0.
-      При нарушении — `throw` (fail fast, сервер не поднимается). Без отдельной центральной карты — schema роута сама себе источник правды.
-19. Регистрация в `app.ts` — после `rateLimitWsPlugin` и **до** autoload-а роутов: `fastifyWebsocket` → `rateLimitWsPlugin` → `rateLimitValidationPlugin` → `autoload(routes)`. Так `onRoute`-хук валидатора ловит все последующие регистрации.
-20. `@fastify/swagger` копирует `x-*` extensions в OpenAPI как есть → фронт читает `paths.<path>.<method>['x-default-rate-limit']` напрямую из `/openapi.json`. Отдельный endpoint типа `/v1/meta/rate-limits` не нужен.
+- `apps/api/src/plugins/rate-limit/shared/types.ts` — отдельный side-effect-only модуль, расширяющий `FastifySchema` через `declare module 'fastify'` полями:
+  - `'x-default-rate-limit'?: number` — req/min для REST и connect/min для WS.
+  - `'x-default-ws-connections-limit'?: number` — concurrent connections (только WS).
+- Пройти по всем существующим роутам и проставить эти поля в `schema` (значения — из таблицы выше или согласованные).
+- `apps/api/src/plugins/rate-limit/rate-limit.validation.ts` (через `fp(...)`) — копит роуты через `fastify.addHook('onRoute', ...)` и в `onReady`-хуке для каждого роута проверяет:
+  - `schema.operationId` задан и уникален во всём приложении;
+  - `schema['x-default-rate-limit']` задан, число > 0;
+  - если у роута есть `wsHandler` (тот же критерий, что в `rate-limit.ws.ts`), дополнительно: `schema['x-default-ws-connections-limit']` задан, число > 0.
+    При нарушении — `throw` (fail fast, сервер не поднимается). Без отдельной центральной карты — schema роута сама себе источник правды.
+- Регистрация в `app.ts` — после `rateLimitWsPlugin` и **до** autoload-а роутов: `fastifyWebsocket` → `rateLimitWsPlugin` → `rateLimitValidationPlugin` → `autoload(routes)`. Так `onRoute`-хук валидатора ловит все последующие регистрации.
+- `@fastify/swagger` копирует `x-*` extensions в OpenAPI как есть → фронт читает `paths.<path>.<method>['x-default-rate-limit']` напрямую из `/openapi.json`. Отдельный endpoint типа `/v1/meta/rate-limits` не нужен.
 
 #### AI правила
 
@@ -514,13 +514,13 @@ apps/api/src/plugins/
 
 Все юзкейсы работают только с репозиториями — инвалидация кеша происходит **внутри** репозиторных методов (`setActive`, `delete`, `upsert`, `deleteByPaymentSubscriptionItemId`). Снаружи о Redis никто не знает.
 
-21. `apps/api/src/usecases/api-keys/create-api-key.usecase.ts` — генерит токен (cryptographically random, напр. `nanoid(40)` с префиксом `bcn_`), сохраняет через `apiKeyRepository.create(...)`, возвращает целиком.
-22. `apps/api/src/usecases/api-keys/rotate-api-key.usecase.ts` — `apiKeyRepository.delete(oldId)` + `apiKeyRepository.create(...)` с тем же `userId`/`name`. `Boost` **не трогаем** (они привязаны к `userId`). Инвалидация кеша старого токена — внутри `delete`.
-23. `apps/api/src/usecases/api-keys/delete-api-key.usecase.ts` — `apiKeyRepository.delete(id)`. `Boost` юзера не трогаем — они применятся к его остальным ключам.
-24. `apps/api/src/usecases/boosts/apply-boost.usecase.ts` — `boostRepository.upsert(...)` per `(userId, routeId)`. Инвалидация кеша — внутри `upsert`. Вызывается из webhook-handler'а Stripe.
-25. Соответствующие REST роуты:
-    - `POST /v1/me/api-keys`, `POST /v1/me/api-keys/:id/rotate`, `DELETE /v1/me/api-keys/:id`, `GET /v1/me/api-keys` — управление ключами.
-    - `GET /v1/me/boosts` — список активных бустов юзера (бусты теперь принадлежат юзеру, не ключу).
+- `apps/api/src/usecases/api-keys/create-api-key.usecase.ts` — генерит токен (cryptographically random, напр. `nanoid(40)` с префиксом `bcn_`), сохраняет через `apiKeyRepository.create(...)`, возвращает целиком.
+- `apps/api/src/usecases/api-keys/rotate-api-key.usecase.ts` — `apiKeyRepository.delete(oldId)` + `apiKeyRepository.create(...)` с тем же `userId`/`name`. `Boost` **не трогаем** (они привязаны к `userId`). Инвалидация кеша старого токена — внутри `delete`.
+- `apps/api/src/usecases/api-keys/delete-api-key.usecase.ts` — `apiKeyRepository.delete(id)`. `Boost` юзера не трогаем — они применятся к его остальным ключам.
+- `apps/api/src/usecases/boosts/apply-boost.usecase.ts` — `boostRepository.upsert(...)` per `(userId, routeId)`. Инвалидация кеша — внутри `upsert`. Вызывается из webhook-handler'а Stripe.
+- Соответствующие REST роуты:
+  - `POST /v1/me/api-keys`, `POST /v1/me/api-keys/:id/rotate`, `DELETE /v1/me/api-keys/:id`, `GET /v1/me/api-keys` — управление ключами.
+  - `GET /v1/me/boosts` — список активных бустов юзера (бусты теперь принадлежат юзеру, не ключу).
 
 #### AI правила
 
@@ -532,28 +532,28 @@ apps/api/src/plugins/
 
 ### Фаза 7. Stripe billing
 
-26. Установить `stripe` (Node SDK) — спросить про депу. Singleton клиента в `shared/src/stripe.ts`.
-27. **Products/Prices создаются вручную в Stripe Dashboard** для MVP. Конвенция:
-    - Один Product на каждый платный роут (имя = `operationId`).
-    - Три Price'а на Product, recurring monthly, по tier'ам:
-      - tier 1 — **$1/мес**
-      - tier 2 — **$3/мес**
-      - tier 3 — **$6/мес**
-    - **Metadata на Price** (обязательно, читается webhook'ом):
-      - `routeId: "<operationId>"`
-      - `rateLimit: <число req/min>`
-      - `wsConnectionsLimit: <число>` — опционально, только для WS-роутов (concurrent gauge)
-      - `tier: "1" | "2" | "3"`
-    - Никаких минимальных платежей и bundle'ов. Юзер платит только за то, что купил.
-    - Когда роутов станет много — переедем на idempotent sync-скрипт (см. «Чего НЕ делаем в MVP»).
-28. `apps/api/src/usecases/billing/create-checkout-session.usecase.ts` — создаёт Checkout Session для апгрейда подписки на конкретные items.
-29. `apps/api/src/usecases/billing/create-portal-session.usecase.ts` — Stripe Customer Portal для управления подпиской.
-30. `apps/api/src/routes/v1/billing/webhook.ts` — endpoint `POST /v1/billing/webhook`:
-    - валидирует подпись через `stripe.webhooks.constructEvent`;
-    - обрабатывает `customer.subscription.{created,updated,deleted}`;
-    - резолвит `User` через `subscription.customer` → `User.stripeCustomerId`;
-    - для каждого `SubscriptionItem` — `boostRepository.upsert(...)` или `boostRepository.deleteByPaymentSubscriptionItemId(...)` (инвалидация кеша происходит внутри репозитория).
-31. Добавить в `User` поле `stripeCustomerId String? @unique`. Создаётся лениво при первой покупке.
+- Установить `stripe` (Node SDK) — спросить про депу. Singleton клиента в `shared/src/stripe.ts`.
+- **Products/Prices создаются вручную в Stripe Dashboard** для MVP. Конвенция:
+  - Один Product на каждый платный роут (имя = `operationId`).
+  - Три Price'а на Product, recurring monthly, по tier'ам:
+    - tier 1 — **$1/мес**
+    - tier 2 — **$3/мес**
+    - tier 3 — **$6/мес**
+  - **Metadata на Price** (обязательно, читается webhook'ом):
+    - `routeId: "<operationId>"`
+    - `rateLimit: <число req/min>`
+    - `wsConnectionsLimit: <число>` — опционально, только для WS-роутов (concurrent gauge)
+    - `tier: "1" | "2" | "3"`
+  - Никаких минимальных платежей и bundle'ов. Юзер платит только за то, что купил.
+  - Когда роутов станет много — переедем на idempotent sync-скрипт (см. «Чего НЕ делаем в MVP»).
+- `apps/api/src/usecases/billing/create-checkout-session.usecase.ts` — создаёт Checkout Session для апгрейда подписки на конкретные items.
+- `apps/api/src/usecases/billing/create-portal-session.usecase.ts` — Stripe Customer Portal для управления подпиской.
+- `apps/api/src/routes/v1/billing/webhook.ts` — endpoint `POST /v1/billing/webhook`:
+  - валидирует подпись через `stripe.webhooks.constructEvent`;
+  - обрабатывает `customer.subscription.{created,updated,deleted}`;
+  - резолвит `User` через `subscription.customer` → `User.stripeCustomerId`;
+  - для каждого `SubscriptionItem` — `boostRepository.upsert(...)` или `boostRepository.deleteByPaymentSubscriptionItemId(...)` (инвалидация кеша происходит внутри репозитория).
+- Добавить в `User` поле `stripeCustomerId String? @unique`. Создаётся лениво при первой покупке.
 
 #### AI правила
 
@@ -568,13 +568,13 @@ apps/api/src/plugins/
 
 ### Фаза 8. Документация и DX
 
-32. `apps/web-client/src/content/docs/rate-limits.mdx` — описание дефолтных лимитов (таблица по роутам, сгруппированная UI-категориями), как читать `x-ratelimit-*` headers, как покупать буст на конкретный роут, как ротировать ключи. Явно указать: **лимит считается на аккаунт** — все ключи юзера делят один и тот же счётчик и один и тот же активный буст.
-33. Пример рецепта `apps/web-client/src/content/recipes/handle-rate-limit.mdx` — экспоненциальный backoff на основе `retry-after`.
+- `apps/web-client/src/content/docs/rate-limits.mdx` — описание дефолтных лимитов (таблица по роутам, сгруппированная UI-категориями), как читать `x-ratelimit-*` headers, как покупать буст на конкретный роут, как ротировать ключи. Явно указать: **лимит считается на аккаунт** — все ключи юзера делят один и тот же счётчик и один и тот же активный буст.
+- Пример рецепта `apps/web-client/src/content/recipes/handle-rate-limit.mdx` — экспоненциальный backoff на основе `retry-after`.
 
 ### Фаза 9. Наблюдаемость
 
-34. Логи warn при 429 (с `userId` / `apiKeyId` / `ip` / `routeId`) — через `errorResponseBuilder` + `request.log.warn`. Плейн-токен в логи **не пишем** (хоть он и хранится в БД — в логах он лишний шум и лишняя поверхность утечки). Логируем `userId` (связь с бустом при дебаге) и `apiKeyId` (какой именно ключ юзера сейчас упирается в лимит).
-35. Metrics (если будет prometheus exporter — пост-MVP).
+- Логи warn при 429 (с `userId` / `apiKeyId` / `ip` / `routeId`) — через `errorResponseBuilder` + `request.log.warn`. Плейн-токен в логи **не пишем** (хоть он и хранится в БД — в логах он лишний шум и лишняя поверхность утечки). Логируем `userId` (связь с бустом при дебаге) и `apiKeyId` (какой именно ключ юзера сейчас упирается в лимит).
+- Metrics (если будет prometheus exporter — пост-MVP).
 
 #### AI правила
 
