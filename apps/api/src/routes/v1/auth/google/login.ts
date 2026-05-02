@@ -10,6 +10,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       summary: 'Start Google OAuth login flow',
       description: 'Redirects the user to the Google OAuth consent screen.',
       tags: ['auth'],
+      'x-default-rate-limit': 10,
     },
     handler: async (_req, reply) => {
       const url = googleProvider.getAuthUrl();

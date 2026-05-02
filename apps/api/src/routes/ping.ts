@@ -9,6 +9,7 @@ export default async function (fastify: FastifyInstance) {
       summary: 'Health check',
       description: 'Returns "ok" if the API is up and running.',
       tags: ['health'],
+      'x-default-rate-limit': 120,
     },
     handler: async () => {
       return 'ok';

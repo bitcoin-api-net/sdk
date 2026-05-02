@@ -27,6 +27,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
         'Streams an AI-generated answer over Server-Sent Events. Events: `sources`, `token`, `done`. Client MUST send `Accept: text/event-stream`.',
       tags: ['docs'],
       body: bodySchema,
+      'x-default-rate-limit': 5,
     },
     handler: async (req, reply) => {
       await reply.sse.send(toSseMessages(askAiUseCase.execute({ query: req.body.query })));

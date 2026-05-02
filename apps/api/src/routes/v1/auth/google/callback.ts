@@ -1,7 +1,7 @@
+import { loginWithGoogleUsecase } from '#src/usecases/login-with-google.usecase.js';
 import { JSONSchemaType } from '@fastify/ajv-compiler/node_modules/ajv';
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import env, { required } from 'shared/src/env.js';
-import { loginWithGoogleUsecase } from '#src/usecases/login-with-google.usecase.js';
 
 const NODE_ENV = required(env.NODE_ENV);
 const SITE_URL = required(env.SITE_URL);
@@ -29,6 +29,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       description: 'Handles the redirect from Google, exchanges the auth code, and sets the access cookie.',
       tags: ['auth'],
       querystring: querySchema,
+      'x-default-rate-limit': 10,
     },
     handler: async (req, reply) => {
       const user = await loginWithGoogleUsecase.execute({ code: req.query.code });

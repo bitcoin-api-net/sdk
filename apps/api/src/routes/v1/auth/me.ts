@@ -26,6 +26,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       response: {
         200: responseSchema,
       },
+      'x-default-rate-limit': 60,
     },
     handler: async (req, reply) => {
       return reply.status(200).send({ email: req.user.email });

@@ -31,6 +31,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       description: 'Activates the user account associated with the verification token and sets the access cookie.',
       tags: ['auth'],
       querystring: querySchema,
+      'x-default-rate-limit': 5,
     },
     handler: async (req, reply) => {
       let email: string;

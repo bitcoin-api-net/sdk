@@ -193,20 +193,20 @@ OpenAPI extensions (`x-*`) автоматически копируются `@fas
 
 Цифры утверждаем перед стартом, проставляются в schema каждого роута:
 
-| operationId       | x-default-rate-limit (req/min) | примечание           |
-| ----------------- | ------------------------------ | -------------------- |
-| `ping`            | 120                            | системный            |
-| `getCurrentPrice` | 60                             |                      |
-| `askAiDocs`       | 5                              | дорогой LLM-эндпоинт |
-| `signUp`          | 10                             |                      |
-| `login`           | 10                             |                      |
-| `logout`          | 30                             |                      |
-| `getMe`           | 60                             |                      |
-| `forgotPassword`  | 3                              | защита от спама      |
-| `resetPassword`   | 3                              |                      |
-| `verifyEmail`     | 5                              |                      |
-| `googleLogin`     | 10                             |                      |
-| `googleCallback`  | 10                             |                      |
+| operationId       | x-default-rate-limit (req/min) | x-default-ws-connections-limit | примечание           |
+| ----------------- | ------------------------------ | ------------------------------ | -------------------- |
+| `ping`            | 120                            | —                              | системный            |
+| `getCurrentPrice` | 60                             | 5                              | REST + WS            |
+| `askAiDocs`       | 5                              | —                              | дорогой LLM-эндпоинт |
+| `signUp`          | 10                             | —                              |                      |
+| `login`           | 10                             | —                              |                      |
+| `logout`          | 30                             | —                              |                      |
+| `getMe`           | 60                             | —                              |                      |
+| `forgotPassword`  | 3                              | —                              | защита от спама      |
+| `resetPassword`   | 3                              | —                              |                      |
+| `verifyEmail`     | 5                              | —                              |                      |
+| `googleLogin`     | 10                             | —                              |                      |
+| `googleCallback`  | 10                             | —                              |                      |
 
 Все эндпоинты public — ключ не required нигде. Если когда-то понадобится сделать роут closed (`getMe` и т.п. — спорно), решение будет приниматься отдельно через auth-плагин, не через рейт-лимиты.
 
@@ -216,7 +216,7 @@ OpenAPI extensions (`x-*`) автоматически копируются `@fas
 
 1. `schema.operationId` задан и уникален.
 2. `schema['x-default-rate-limit']` задан, число > 0.
-3. Для WS-роутов (`websocket: true`) дополнительно: `schema['x-default-ws-connections-limit']` задан, число > 0.
+3. Для WS-роутов (роуты с `wsHandler`) дополнительно: `schema['x-default-ws-connections-limit']` задан, число > 0.
 
 Если что-то нарушено — **fail fast**, сервер не стартует. Это явная договорённость: без лимита роут не регистрируется.
 
@@ -493,16 +493,17 @@ apps/api/src/plugins/
 
 ### Фаза 5. Маркировка роутов и валидация
 
-16. Расширить тип `FastifySchema` (через `declare module 'fastify'`) полями:
+16. `apps/api/src/plugins/rate-limit/shared/types.ts` — отдельный side-effect-only модуль, расширяющий `FastifySchema` через `declare module 'fastify'` полями:
     - `'x-default-rate-limit'?: number` — req/min для REST и connect/min для WS.
     - `'x-default-ws-connections-limit'?: number` — concurrent connections (только WS).
 17. Пройти по всем существующим роутам и проставить эти поля в `schema` (значения — из таблицы выше или согласованные).
-18. На старте сервера — валидация в `onReady`-хуке. Для каждого зарегистрированного роута проверить:
+18. `apps/api/src/plugins/rate-limit/rate-limit.validation.ts` (через `fp(...)`) — копит роуты через `fastify.addHook('onRoute', ...)` и в `onReady`-хуке для каждого роута проверяет:
     - `schema.operationId` задан и уникален во всём приложении;
     - `schema['x-default-rate-limit']` задан, число > 0;
-    - если `routeOptions.websocket === true`, дополнительно: `schema['x-default-ws-connections-limit']` задан, число > 0.
+    - если у роута есть `wsHandler` (тот же критерий, что в `rate-limit.ws.ts`), дополнительно: `schema['x-default-ws-connections-limit']` задан, число > 0.
       При нарушении — `throw` (fail fast, сервер не поднимается). Без отдельной центральной карты — schema роута сама себе источник правды.
-19. `@fastify/swagger` копирует `x-*` extensions в OpenAPI как есть → фронт читает `paths.<path>.<method>['x-default-rate-limit']` напрямую из `/openapi.json`. Отдельный endpoint типа `/v1/meta/rate-limits` не нужен.
+19. Регистрация в `app.ts` — после `rateLimitWsPlugin` и **до** autoload-а роутов: `fastifyWebsocket` → `rateLimitWsPlugin` → `rateLimitValidationPlugin` → `autoload(routes)`. Так `onRoute`-хук валидатора ловит все последующие регистрации.
+20. `@fastify/swagger` копирует `x-*` extensions в OpenAPI как есть → фронт читает `paths.<path>.<method>['x-default-rate-limit']` напрямую из `/openapi.json`. Отдельный endpoint типа `/v1/meta/rate-limits` не нужен.
 
 #### AI правила
 
@@ -513,11 +514,11 @@ apps/api/src/plugins/
 
 Все юзкейсы работают только с репозиториями — инвалидация кеша происходит **внутри** репозиторных методов (`setActive`, `delete`, `upsert`, `deleteByPaymentSubscriptionItemId`). Снаружи о Redis никто не знает.
 
-20. `apps/api/src/usecases/api-keys/create-api-key.usecase.ts` — генерит токен (cryptographically random, напр. `nanoid(40)` с префиксом `bcn_`), сохраняет через `apiKeyRepository.create(...)`, возвращает целиком.
-21. `apps/api/src/usecases/api-keys/rotate-api-key.usecase.ts` — `apiKeyRepository.delete(oldId)` + `apiKeyRepository.create(...)` с тем же `userId`/`name`. `Boost` **не трогаем** (они привязаны к `userId`). Инвалидация кеша старого токена — внутри `delete`.
-22. `apps/api/src/usecases/api-keys/delete-api-key.usecase.ts` — `apiKeyRepository.delete(id)`. `Boost` юзера не трогаем — они применятся к его остальным ключам.
-23. `apps/api/src/usecases/boosts/apply-boost.usecase.ts` — `boostRepository.upsert(...)` per `(userId, routeId)`. Инвалидация кеша — внутри `upsert`. Вызывается из webhook-handler'а Stripe.
-24. Соответствующие REST роуты:
+21. `apps/api/src/usecases/api-keys/create-api-key.usecase.ts` — генерит токен (cryptographically random, напр. `nanoid(40)` с префиксом `bcn_`), сохраняет через `apiKeyRepository.create(...)`, возвращает целиком.
+22. `apps/api/src/usecases/api-keys/rotate-api-key.usecase.ts` — `apiKeyRepository.delete(oldId)` + `apiKeyRepository.create(...)` с тем же `userId`/`name`. `Boost` **не трогаем** (они привязаны к `userId`). Инвалидация кеша старого токена — внутри `delete`.
+23. `apps/api/src/usecases/api-keys/delete-api-key.usecase.ts` — `apiKeyRepository.delete(id)`. `Boost` юзера не трогаем — они применятся к его остальным ключам.
+24. `apps/api/src/usecases/boosts/apply-boost.usecase.ts` — `boostRepository.upsert(...)` per `(userId, routeId)`. Инвалидация кеша — внутри `upsert`. Вызывается из webhook-handler'а Stripe.
+25. Соответствующие REST роуты:
     - `POST /v1/me/api-keys`, `POST /v1/me/api-keys/:id/rotate`, `DELETE /v1/me/api-keys/:id`, `GET /v1/me/api-keys` — управление ключами.
     - `GET /v1/me/boosts` — список активных бустов юзера (бусты теперь принадлежат юзеру, не ключу).
 
@@ -531,8 +532,8 @@ apps/api/src/plugins/
 
 ### Фаза 7. Stripe billing
 
-25. Установить `stripe` (Node SDK) — спросить про депу. Singleton клиента в `shared/src/stripe.ts`.
-26. **Products/Prices создаются вручную в Stripe Dashboard** для MVP. Конвенция:
+26. Установить `stripe` (Node SDK) — спросить про депу. Singleton клиента в `shared/src/stripe.ts`.
+27. **Products/Prices создаются вручную в Stripe Dashboard** для MVP. Конвенция:
     - Один Product на каждый платный роут (имя = `operationId`).
     - Три Price'а на Product, recurring monthly, по tier'ам:
       - tier 1 — **$1/мес**
@@ -545,14 +546,14 @@ apps/api/src/plugins/
       - `tier: "1" | "2" | "3"`
     - Никаких минимальных платежей и bundle'ов. Юзер платит только за то, что купил.
     - Когда роутов станет много — переедем на idempotent sync-скрипт (см. «Чего НЕ делаем в MVP»).
-27. `apps/api/src/usecases/billing/create-checkout-session.usecase.ts` — создаёт Checkout Session для апгрейда подписки на конкретные items.
-28. `apps/api/src/usecases/billing/create-portal-session.usecase.ts` — Stripe Customer Portal для управления подпиской.
-29. `apps/api/src/routes/v1/billing/webhook.ts` — endpoint `POST /v1/billing/webhook`:
+28. `apps/api/src/usecases/billing/create-checkout-session.usecase.ts` — создаёт Checkout Session для апгрейда подписки на конкретные items.
+29. `apps/api/src/usecases/billing/create-portal-session.usecase.ts` — Stripe Customer Portal для управления подпиской.
+30. `apps/api/src/routes/v1/billing/webhook.ts` — endpoint `POST /v1/billing/webhook`:
     - валидирует подпись через `stripe.webhooks.constructEvent`;
     - обрабатывает `customer.subscription.{created,updated,deleted}`;
     - резолвит `User` через `subscription.customer` → `User.stripeCustomerId`;
     - для каждого `SubscriptionItem` — `boostRepository.upsert(...)` или `boostRepository.deleteByPaymentSubscriptionItemId(...)` (инвалидация кеша происходит внутри репозитория).
-30. Добавить в `User` поле `stripeCustomerId String? @unique`. Создаётся лениво при первой покупке.
+31. Добавить в `User` поле `stripeCustomerId String? @unique`. Создаётся лениво при первой покупке.
 
 #### AI правила
 
@@ -567,13 +568,13 @@ apps/api/src/plugins/
 
 ### Фаза 8. Документация и DX
 
-31. `apps/web-client/src/content/docs/rate-limits.mdx` — описание дефолтных лимитов (таблица по роутам, сгруппированная UI-категориями), как читать `x-ratelimit-*` headers, как покупать буст на конкретный роут, как ротировать ключи. Явно указать: **лимит считается на аккаунт** — все ключи юзера делят один и тот же счётчик и один и тот же активный буст.
-32. Пример рецепта `apps/web-client/src/content/recipes/handle-rate-limit.mdx` — экспоненциальный backoff на основе `retry-after`.
+32. `apps/web-client/src/content/docs/rate-limits.mdx` — описание дефолтных лимитов (таблица по роутам, сгруппированная UI-категориями), как читать `x-ratelimit-*` headers, как покупать буст на конкретный роут, как ротировать ключи. Явно указать: **лимит считается на аккаунт** — все ключи юзера делят один и тот же счётчик и один и тот же активный буст.
+33. Пример рецепта `apps/web-client/src/content/recipes/handle-rate-limit.mdx` — экспоненциальный backoff на основе `retry-after`.
 
 ### Фаза 9. Наблюдаемость
 
-33. Логи warn при 429 (с `userId` / `apiKeyId` / `ip` / `routeId`) — через `errorResponseBuilder` + `request.log.warn`. Плейн-токен в логи **не пишем** (хоть он и хранится в БД — в логах он лишний шум и лишняя поверхность утечки). Логируем `userId` (связь с бустом при дебаге) и `apiKeyId` (какой именно ключ юзера сейчас упирается в лимит).
-34. Metrics (если будет prometheus exporter — пост-MVP).
+34. Логи warn при 429 (с `userId` / `apiKeyId` / `ip` / `routeId`) — через `errorResponseBuilder` + `request.log.warn`. Плейн-токен в логи **не пишем** (хоть он и хранится в БД — в логах он лишний шум и лишняя поверхность утечки). Логируем `userId` (связь с бустом при дебаге) и `apiKeyId` (какой именно ключ юзера сейчас упирается в лимит).
+35. Metrics (если будет prometheus exporter — пост-MVP).
 
 #### AI правила
 

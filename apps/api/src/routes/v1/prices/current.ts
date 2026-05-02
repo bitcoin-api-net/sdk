@@ -50,6 +50,8 @@ export default async function (fastify: FastifyInstance) {
       response: {
         200: responseSchema,
       },
+      'x-default-rate-limit': 60,
+      'x-default-ws-connections-limit': 5,
     },
     handler: async (req, reply) => {
       const { symbol } = req.query;

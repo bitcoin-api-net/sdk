@@ -41,6 +41,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       response: {
         201: responseSchema,
       },
+      'x-default-rate-limit': 10,
     },
     handler: async (req, reply) => {
       const { email, password } = req.body;

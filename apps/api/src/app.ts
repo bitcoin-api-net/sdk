@@ -5,6 +5,7 @@ import jwtAuthPlugin from '#src/plugins/jwt-auth.js';
 import loggingPlugin from '#src/plugins/logging.js';
 import mcpPlugin from '#src/plugins/mcp.js';
 import rateLimitPlugin from '#src/plugins/rate-limit/rate-limit.rest.js';
+import rateLimitValidationPlugin from '#src/plugins/rate-limit/rate-limit.validation.js';
 import rateLimitWsPlugin from '#src/plugins/rate-limit/rate-limit.ws.js';
 import ssePlugin from '#src/plugins/sse.js';
 import { openApiRepository } from '#src/repositories/openapi.repository.js';
@@ -54,6 +55,7 @@ async function main() {
 
   await app.register(fastifyWebsocket);
   await app.register(rateLimitWsPlugin);
+  await app.register(rateLimitValidationPlugin);
 
   await app.register(ssePlugin);
 

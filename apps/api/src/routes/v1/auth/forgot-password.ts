@@ -24,6 +24,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       description: 'Sends a password reset link to the given email if the account exists.',
       tags: ['auth'],
       body: bodySchema,
+      'x-default-rate-limit': 3,
     },
     handler: async (req, reply) => {
       await forgotPasswordUsecase.execute({ email: req.body.email });

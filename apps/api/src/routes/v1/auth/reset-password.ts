@@ -26,6 +26,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       description: 'Sets a new password for the user identified by the reset token from the email.',
       tags: ['auth'],
       body: bodySchema,
+      'x-default-rate-limit': 3,
     },
     handler: async (req, reply) => {
       const { token, password } = req.body;

@@ -10,6 +10,7 @@ export default async function (app: FastifyInstance, _: FastifyPluginOptions) {
       summary: 'Log out the current user',
       description: 'Clears the access cookie for the authenticated user.',
       tags: ['auth'],
+      'x-default-rate-limit': 30,
     },
     handler: async (_req, reply) => {
       return reply
