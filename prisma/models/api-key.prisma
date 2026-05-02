@@ -1,0 +1,13 @@
+model ApiKey {
+  id        String   @id @default(uuid(7))
+  userId    String   @map("user_id")
+  token     String   @unique
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_keys")
+}

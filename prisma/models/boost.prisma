@@ -1,0 +1,16 @@
+model Boost {
+  id                       String    @id @default(uuid(7))
+  userId                   String    @map("user_id")
+  routeId                  String    @map("route_id")
+  rateLimit                Int       @map("rate_limit")
+  expiresAt                DateTime? @map("expires_at")
+  stripeSubscriptionItemId String?   @unique @map("stripe_subscription_item_id")
+  stripePriceId            String?   @map("stripe_price_id")
+  createdAt                DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, routeId])
+  @@index([userId])
+  @@map("boosts")
+}

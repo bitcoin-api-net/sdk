@@ -4,5 +4,8 @@ model User {
   password String
   isActive Boolean @default(false) @map("is_active")
 
+  apiKeys ApiKey[]
+  boosts  Boost[]
+
   @@map("users")
 }
