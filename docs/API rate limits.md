@@ -364,6 +364,7 @@ Stripe сам ведёт dunning. Поведение:
 #### AI правила
 
 - .cursor/rules/shared/development/backend/database/create-model.mdc
+- .cursor/rules/shared/development/backend/database/prisma.mdc
 - .cursor/rules/shared/development/backend/database/repositories.mdc
 
 ### Фаза 2. Репозитории
@@ -406,6 +407,9 @@ Stripe сам ведёт dunning. Поведение:
 #### AI правила
 
 - .cursor/rules/shared/development/backend/database/repositories.mdc
+- .cursor/rules/shared/development/backend/architecture/architecture.mdc
+- .cursor/rules/shared/development/backend/errors.mdc
+- .cursor/rules/shared/development/backend/logging.mdc
 
 ### Фаза 3. Плагин Fastify для REST
 
@@ -426,6 +430,14 @@ Stripe сам ведёт dunning. Поведение:
     - регистрируется ПОСЛЕ `jwtAuthPlugin`.
 11. Расширить `FastifyRequest` полями `userId?: string`, `apiKeyId?: string` через `declare module 'fastify'`. (`userId` может уже быть объявлен JWT-плагином — проверить на коллизию при реализации: если да, договариваемся о едином поле и используем его.)
 
+#### AI правила
+
+- .cursor/rules/shared/development/backend/api/api.mdc
+- .cursor/rules/shared/development/backend/envs.mdc
+- .cursor/rules/shared/development/backend/errors.mdc
+- .cursor/rules/shared/development/backend/logging.mdc
+- .cursor/rules/shared/development/backend/database/repositories.mdc
+
 ### Фаза 4. Плагин для WS
 
 12. `apps/api/src/plugins/rate-limit-ws.ts`:
@@ -441,6 +453,13 @@ Stripe сам ведёт dunning. Поведение:
 
 > Если бусты на concurrent понадобятся — добавим `maxConcurrent Int?` в `Boost` отдельной миграцией. В MVP бустим только connect-rate.
 
+#### AI правила
+
+- .cursor/rules/shared/development/backend/api/api.mdc
+- .cursor/rules/shared/development/backend/errors.mdc
+- .cursor/rules/shared/development/backend/logging.mdc
+- .cursor/rules/shared/development/backend/database/repositories.mdc
+
 ### Фаза 5. Маркировка роутов и валидация
 
 13. Расширить тип `FastifySchema` (через `declare module 'fastify'`) полями:
@@ -453,6 +472,11 @@ Stripe сам ведёт dunning. Поведение:
     - если `routeOptions.websocket === true`, дополнительно: `schema['x-default-ws-connections-limit']` задан, число > 0.
       При нарушении — `throw` (fail fast, сервер не поднимается). Без отдельной центральной карты — schema роута сама себе источник правды.
 16. `@fastify/swagger` копирует `x-*` extensions в OpenAPI как есть → фронт читает `paths.<path>.<method>['x-default-rate-limit']` напрямую из `/openapi.json`. Отдельный endpoint типа `/v1/meta/rate-limits` не нужен.
+
+#### AI правила
+
+- .cursor/rules/shared/development/backend/api/api.mdc
+- .cursor/rules/shared/development/backend/api/create-endpoint.mdc
 
 ### Фаза 6. Use-cases для управления (ключи + бусты)
 
@@ -469,7 +493,10 @@ Stripe сам ведёт dunning. Поведение:
 #### AI правила
 
 - .cursor/rules/shared/development/backend/architecture/usecases.mdc
+- .cursor/rules/shared/development/backend/api/api.mdc
 - .cursor/rules/shared/development/backend/api/create-endpoint.mdc
+- .cursor/rules/shared/development/backend/database/repositories.mdc
+- .cursor/rules/shared/development/backend/errors.mdc
 
 ### Фаза 7. Stripe billing
 
@@ -498,8 +525,13 @@ Stripe сам ведёт dunning. Поведение:
 #### AI правила
 
 - .cursor/rules/shared/development/backend/architecture/usecases.mdc
+- .cursor/rules/shared/development/backend/architecture/providers.mdc
+- .cursor/rules/shared/development/backend/api/api.mdc
 - .cursor/rules/shared/development/backend/api/create-endpoint.mdc
 - .cursor/rules/shared/development/backend/database/repositories.mdc
+- .cursor/rules/shared/development/backend/database/create-model.mdc
+- .cursor/rules/shared/development/backend/envs.mdc
+- .cursor/rules/shared/development/backend/errors.mdc
 
 ### Фаза 8. Документация и DX
 
@@ -510,6 +542,10 @@ Stripe сам ведёт dunning. Поведение:
 
 30. Логи warn при 429 (с `userId` / `apiKeyId` / `ip` / `routeId`) — через `errorResponseBuilder` + `request.log.warn`. Плейн-токен в логи **не пишем** (хоть он и хранится в БД — в логах он лишний шум и лишняя поверхность утечки). Логируем `userId` (связь с бустом при дебаге) и `apiKeyId` (какой именно ключ юзера сейчас упирается в лимит).
 31. Metrics (если будет prometheus exporter — пост-MVP).
+
+#### AI правила
+
+- .cursor/rules/shared/development/backend/logging.mdc
 
 ## Чего НЕ делаем в MVP
 
