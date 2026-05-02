@@ -118,8 +118,8 @@ model Boost {
   routeId                  String    @map("route_id")            // = operationId роута, напр. "getCurrentPrice", "askAiDocs"
   rateLimit                Int       @map("rate_limit")
   expiresAt                DateTime? @map("expires_at")           // undefined = бессрочно (активная подписка)
-  stripeSubscriptionItemId String?   @unique @map("stripe_subscription_item_id")
-  stripePriceId            String?   @map("stripe_price_id")
+  paymentSubscriptionItemId String?   @unique @map("payment_subscription_item_id")
+  paymentPlanId             String?   @map("payment_plan_id")
   createdAt                DateTime  @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -333,7 +333,7 @@ API не знает заранее цифры — он читает их из St
    - валидирует подпись, читает `subscription.customer` → `User.stripeCustomerId` → `User`;
    - читает все `items` подписки;
    - для каждого item: достаёт `price.metadata.routeId` и `price.metadata.rateLimit`;
-   - upsert в `Boost` с `(userId, routeId)`, заполняем `stripeSubscriptionItemId`, `stripePriceId`, `expiresAt = current_period_end`;
+   - upsert в `Boost` с `(userId, routeId)`, заполняем `paymentSubscriptionItemId`, `paymentPlanId`, `expiresAt = current_period_end`;
    - `rateLimitConfigService.invalidateBoost(userId, routeId)` для каждого затронутого `routeId`.
 5. На `customer.subscription.deleted` или удалении item — удаляем соответствующий `Boost` + `invalidateBoost(userId, routeId)` для каждого `routeId` из payload'а (одним `MULTI`).
 
@@ -385,8 +385,8 @@ Stripe сам ведёт dunning. Поведение:
 6. `shared/src/repositories/boost.repository.ts` (чистый Postgres):
 
    - `findByUserAndRoute(userId, routeId)` через `findUnique` по `@@unique([userId, routeId])` — без фильтра по `expiresAt` (отсев expired делает наследник в `apps/api`),
-   - `upsert({userId, routeId, rateLimit, expiresAt, stripeSubscriptionItemId, stripePriceId})`,
-   - `deleteByStripeItemId(itemId)`,
+   - `upsert({userId, routeId, rateLimit, expiresAt, paymentSubscriptionItemId, paymentPlanId})`,
+   - `deleteByPaymentSubscriptionItemId(itemId)`,
    - `listByUserId(userId)`.
 
 7. `apps/api/src/repositories/api-key.repository.ts` extends shared:
@@ -401,7 +401,7 @@ Stripe сам ведёт dunning. Поведение:
      - `GET rl:cache:boost:<userId>:<routeId>` → JSON `{rateLimit, expiresAt}` → если валидно (`expiresAt === null || expiresAt > now`) — вернуть `rateLimit`;
      - miss/expired → `super.findByUserAndRoute(userId, routeId)`: если есть и не expired → результат `{rateLimit: boost.rateLimit, expiresAt: boost.expiresAt}`; иначе `{rateLimit: defaultLimit, expiresAt: null}`;
      - `SET rl:cache:boost:<userId>:<routeId> <json> EX 60`, вернуть `rateLimit`.
-   - Переопределяет `upsert(...)` и `deleteByStripeItemId(...)`: после `super.*` делает `DEL rl:cache:boost:<userId>:<routeId>`.
+   - Переопределяет `upsert(...)` и `deleteByPaymentSubscriptionItemId(...)`: после `super.*` делает `DEL rl:cache:boost:<userId>:<routeId>`.
    - `defaultLimit` приходит снаружи (из `schema['x-default-rate-limit']` роута) — никакой центральной карты дефолтов в репозитории нет.
 
 #### AI правила
@@ -480,7 +480,7 @@ Stripe сам ведёт dunning. Поведение:
 
 ### Фаза 6. Use-cases для управления (ключи + бусты)
 
-Все юзкейсы работают только с репозиториями — инвалидация кеша происходит **внутри** репозиторных методов (`setActive`, `delete`, `upsert`, `deleteByStripeItemId`). Снаружи о Redis никто не знает.
+Все юзкейсы работают только с репозиториями — инвалидация кеша происходит **внутри** репозиторных методов (`setActive`, `delete`, `upsert`, `deleteByPaymentSubscriptionItemId`). Снаружи о Redis никто не знает.
 
 17. `apps/api/src/usecases/api-keys/create-api-key.usecase.ts` — генерит токен (cryptographically random, напр. `nanoid(40)` с префиксом `bcn_`), сохраняет через `apiKeyRepository.create(...)`, возвращает целиком.
 18. `apps/api/src/usecases/api-keys/rotate-api-key.usecase.ts` — `apiKeyRepository.delete(oldId)` + `apiKeyRepository.create(...)` с тем же `userId`/`name`. `Boost` **не трогаем** (они привязаны к `userId`). Инвалидация кеша старого токена — внутри `delete`.
@@ -519,7 +519,7 @@ Stripe сам ведёт dunning. Поведение:
     - валидирует подпись через `stripe.webhooks.constructEvent`;
     - обрабатывает `customer.subscription.{created,updated,deleted}`;
     - резолвит `User` через `subscription.customer` → `User.stripeCustomerId`;
-    - для каждого `SubscriptionItem` — `boostRepository.upsert(...)` или `boostRepository.deleteByStripeItemId(...)` (инвалидация кеша происходит внутри репозитория).
+    - для каждого `SubscriptionItem` — `boostRepository.upsert(...)` или `boostRepository.deleteByPaymentSubscriptionItemId(...)` (инвалидация кеша происходит внутри репозитория).
 27. Добавить в `User` поле `stripeCustomerId String? @unique`. Создаётся лениво при первой покупке.
 
 #### AI правила
