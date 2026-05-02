@@ -335,17 +335,6 @@ Stripe сам ведёт dunning. Поведение:
 
 Апгрейд tier-1 → tier-3 в середине периода — Stripe сам считает пропорцию (`proration_behavior: 'create_prorations'`). Нам важно только: на webhook `subscription.updated` обновить `rateLimit` и `invalidateUser(userId)`. Лимит меняется почти мгновенно (LRU TTL 60s + pub/sub invalidate → следующий запрос увидит новый лимит).
 
-### UI
-
-- **MVP**: Stripe Customer Portal — даёт apgrade/cancel/payment method из коробки. Свой UI не пишем.
-- **Позже**: своя страница `/pricing` с Stripe Pricing Tables (embed) или ручной checkout.
-
-### Открытые вопросы по биллингу
-
-- [ ] Минимальный месячный платёж (Stripe не любит <$0.50). Возможно, ввести bundle / floor $5/мес.
-- [ ] Trial period для бустов? (`trial_period_days` на Price.)
-- [ ] Сколько API ключей разрешаем per user. Буст всё равно применяется ко всем ключам, но оптимальный cap (5? 10? без лимита?) стоит решить отдельно. Вопрос «к какому ключу привязать буст» — **снят**: буст принадлежит юзеру.
-
 ## План реализации
 
 ### Фаза 1. Модели и миграция
