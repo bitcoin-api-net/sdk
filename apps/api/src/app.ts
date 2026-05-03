@@ -71,6 +71,8 @@ async function main() {
         { name: 'auth', description: 'Authentication and account management' },
         { name: 'prices', description: 'Cryptocurrency prices' },
         { name: 'docs', description: 'Documentation search and AI assistant' },
+        { name: 'api-keys', description: 'Manage API keys' },
+        { name: 'boosts', description: 'Rate-limit boosts owned by the user' },
       ],
     },
   });
@@ -79,7 +81,7 @@ async function main() {
   });
 
   const scriptPattern = new RegExp(`\\${RUN_FILE_EXTENSION}$`);
-  const ignorePattern = new RegExp(`\\.types\\${RUN_FILE_EXTENSION}$`);
+  const ignorePattern = new RegExp(`\\.(types|mapper)\\${RUN_FILE_EXTENSION}$`);
   await app.register(fastifyAutoload, {
     dir: path.join(import.meta.dirname, 'routes'),
     scriptPattern,
