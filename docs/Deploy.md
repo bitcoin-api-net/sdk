@@ -5,7 +5,7 @@
 ## Контекст
 
 - Сервер: указан в `.env` (Hetzner, Ubuntu, root)
-- Путь на сервере: `/root/bitcoin_api`
+- Путь на сервере: `/var/www/bitcoin_api` (Nginx запускается под `www-data` и не имеет траверс-доступа в `/root` (mode 700) — поэтому проект живёт в `/var/www`, не в `/root`)
 - Стек: Node 22, Postgres 17 + pgvector (PGDG repo), Redis, Fastify (API на :8000), Astro static (web-client), exchanges воркер
 - Домен: `bitcoin-api.net` через Cloudflare (SSL/proxy on)
 - Reverse proxy: **Nginx** + **certbot** с **Let's Encrypt** (DNS-01 challenge через Cloudflare API token, т.к. Proxy ON блокирует HTTP-01)
@@ -100,13 +100,13 @@ SQL
 - `systemctl enable --now redis-server && systemctl restart redis-server`
 - Проверка: `redis-cli ping` → `PONG`, `ss -tlnp | grep 6379` → bind только на 127.0.0.1/::1
 
-### 5. Код проекта (уже на сервере в `/root/bitcoin_api`)
+### 5. Код проекта (уже на сервере в `/var/www/bitcoin_api`)
 
-- `cd /root/bitcoin_api`
+- `cd /var/www/bitcoin_api`
 - `git pull --ff-only origin main`
 - Submodules `.cursor/rules/shared/{development,devops}` — для рантайма НЕ нужны, нужны только если работаешь с правилами с сервера. Если есть доступ к Bitbucket — `git submodule update --init --recursive`, иначе пропустить.
 - `npm ci`
-- Создать `/root/bitcoin_api/.env` (production, не из dev). Минимум что меняется относительно dev:
+- Создать `/var/www/bitcoin_api/.env` (production, не из dev). Минимум что меняется относительно dev:
   - новый `SECRET_KEY` (`openssl rand -base64 64`)
   - `ENVIRONMENT=production`, `NODE_ENV=production`, `HOST=127.0.0.1` (Nginx проксирует с `127.0.0.1:8000`)
   - `DATABASE_URL=postgresql://bitcoin_api:$(cat /root/.pg_password)@localhost:5432/bitcoin_api`
@@ -116,7 +116,7 @@ SQL
   - `CORS_ORIGIN=https://bitcoin-api.net`
   - прод `RESEND_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID/SECRET`
   - `LOG_LEVEL=info`
-- `chmod 600 /root/bitcoin_api/.env`
+- `chmod 600 /var/www/bitcoin_api/.env`
 - `npm run prisma:generate`
 - `npm run prisma:push` (накатит extensions + схему + hnsw indexes одним скриптом)
 - Билд бэкенда. Корневой `npm run build` собирает только `shared` (root [tsconfig.json](../tsconfig.json) ссылается только на `./shared`). Поэтому api/exchanges нужно билдить отдельно:
@@ -184,7 +184,7 @@ server {
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
     gzip_min_length 1024;
 
-    root /root/bitcoin_api/apps/web-client/dist;
+    root /var/www/bitcoin_api/apps/web-client/dist;
     index index.html;
 
     location /api/ {
@@ -235,8 +235,8 @@ After=network.target postgresql.service redis-server.service
 
 [Service]
 Type=simple
-WorkingDirectory=/root/bitcoin_api/apps/api
-EnvironmentFile=/root/bitcoin_api/.env
+WorkingDirectory=/var/www/bitcoin_api/apps/api
+EnvironmentFile=/var/www/bitcoin_api/.env
 ExecStart=/usr/bin/node src/app.js
 Restart=always
 RestartSec=3
@@ -246,7 +246,7 @@ User=root
 WantedBy=multi-user.target
 ```
 
-`/etc/systemd/system/bitcoin-exchanges.service` — аналогично, `ExecStart=/usr/bin/node src/last-price.app.js`, `WorkingDirectory=/root/bitcoin_api/apps/exchanges`.
+`/etc/systemd/system/bitcoin-exchanges.service` — аналогично, `ExecStart=/usr/bin/node src/last-price.app.js`, `WorkingDirectory=/var/www/bitcoin_api/apps/exchanges`.
 
 - `systemctl daemon-reload`
 - `systemctl enable --now bitcoin-api bitcoin-exchanges`
