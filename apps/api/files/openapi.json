@@ -17,6 +17,7 @@
           "health"
         ],
         "description": "Returns \"ok\" if the API is up and running.",
+        "x-default-rate-limit": 120,
         "responses": {
           "200": {
             "description": "Default Response"
@@ -51,6 +52,7 @@
             }
           }
         },
+        "x-default-rate-limit": 3,
         "responses": {
           "200": {
             "description": "Default Response"
@@ -88,6 +90,7 @@
             }
           }
         },
+        "x-default-rate-limit": 10,
         "responses": {
           "200": {
             "description": "Default Response",
@@ -118,6 +121,7 @@
           "auth"
         ],
         "description": "Clears the access cookie for the authenticated user.",
+        "x-default-rate-limit": 30,
         "responses": {
           "200": {
             "description": "Default Response"
@@ -133,6 +137,7 @@
           "auth"
         ],
         "description": "Returns information about the currently authenticated user.",
+        "x-default-rate-limit": 60,
         "responses": {
           "200": {
             "description": "Default Response",
@@ -186,6 +191,7 @@
             }
           }
         },
+        "x-default-rate-limit": 3,
         "responses": {
           "200": {
             "description": "Default Response"
@@ -227,6 +233,7 @@
             }
           }
         },
+        "x-default-rate-limit": 10,
         "responses": {
           "201": {
             "description": "Default Response",
@@ -267,6 +274,7 @@
             "required": true
           }
         ],
+        "x-default-rate-limit": 5,
         "responses": {
           "200": {
             "description": "Default Response"
@@ -292,6 +300,7 @@
             "required": true
           }
         ],
+        "x-default-rate-limit": 10,
         "responses": {
           "200": {
             "description": "Default Response"
@@ -307,6 +316,7 @@
           "auth"
         ],
         "description": "Redirects the user to the Google OAuth consent screen.",
+        "x-default-rate-limit": 10,
         "responses": {
           "200": {
             "description": "Default Response"
@@ -342,9 +352,274 @@
             }
           }
         },
+        "x-default-rate-limit": 5,
         "responses": {
           "200": {
             "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/me/api-keys/": {
+      "post": {
+        "operationId": "createApiKey",
+        "summary": "Create API key",
+        "tags": [
+          "api-keys"
+        ],
+        "description": "Generates a new API key for the authenticated user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "x-default-rate-limit": 10,
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "token",
+                    "isActive",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listApiKeys",
+        "summary": "List API keys",
+        "tags": [
+          "api-keys"
+        ],
+        "description": "Returns all API keys belonging to the authenticated user.",
+        "x-default-rate-limit": 60,
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiKeys": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "token": {
+                            "type": "string"
+                          },
+                          "isActive": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "token",
+                          "isActive",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "apiKeys"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/api-keys/{id}": {
+      "delete": {
+        "operationId": "deleteApiKey",
+        "summary": "Delete API key",
+        "tags": [
+          "api-keys"
+        ],
+        "description": "Permanently deletes an API key belonging to the authenticated user.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "x-default-rate-limit": 10,
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/me/api-keys/{id}/rotate": {
+      "post": {
+        "operationId": "rotateApiKey",
+        "summary": "Rotate API key",
+        "tags": [
+          "api-keys"
+        ],
+        "description": "Replaces the API key with a new token; old token is invalidated.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "x-default-rate-limit": 10,
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "token",
+                    "isActive",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/boosts/": {
+      "get": {
+        "operationId": "listBoosts",
+        "summary": "List active boosts",
+        "tags": [
+          "boosts"
+        ],
+        "description": "Returns rate-limit boosts owned by the authenticated user.",
+        "x-default-rate-limit": 60,
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "boosts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "routeId": {
+                            "type": "string"
+                          },
+                          "rateLimit": {
+                            "type": "integer"
+                          },
+                          "expiresAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "routeId",
+                          "rateLimit",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "boosts"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -370,6 +645,8 @@
             "required": true
           }
         ],
+        "x-default-rate-limit": 60,
+        "x-default-ws-connections-limit": 5,
         "responses": {
           "200": {
             "description": "Default Response",
@@ -436,6 +713,14 @@
     {
       "name": "docs",
       "description": "Documentation search and AI assistant"
+    },
+    {
+      "name": "api-keys",
+      "description": "Manage API keys"
+    },
+    {
+      "name": "boosts",
+      "description": "Rate-limit boosts owned by the user"
     }
   ]
 }

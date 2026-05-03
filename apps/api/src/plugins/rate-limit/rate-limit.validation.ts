@@ -1,3 +1,4 @@
+import { SKIP_PREFIXES } from './shared/constants.js';
 import { FastifyInstance, RouteOptions } from 'fastify';
 import fp from 'fastify-plugin';
 
@@ -28,8 +29,6 @@ function validateRoute(route: RouteOptions, seenOperationIds: Map<string, string
     }
   }
 }
-
-const SKIP_PREFIXES = ['/api/documentation', '/mcp'];
 
 export default fp(async function rateLimitValidationPlugin(fastify: FastifyInstance) {
   const routes: RouteOptions[] = [];
