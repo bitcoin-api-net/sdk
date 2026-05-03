@@ -29,7 +29,7 @@ function validateRoute(route: RouteOptions, seenOperationIds: Map<string, string
   }
 }
 
-const SKIP_PREFIXES = ['/api/documentation', '/api/mcp'];
+const SKIP_PREFIXES = ['/api/documentation', '/mcp'];
 
 export default fp(async function rateLimitValidationPlugin(fastify: FastifyInstance) {
   const routes: RouteOptions[] = [];
