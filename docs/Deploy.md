@@ -264,8 +264,12 @@ WantedBy=multi-user.target
 ### 9. Проверки
 
 - `curl -I https://bitcoin-api.net` → 200 (web-client)
-- `curl https://bitcoin-api.net/api/...` → ответ API (любой существующий health/route)
+- `curl https://bitcoin-api.net/api/ping` → 200 `"ok"`
 - В CF dashboard: Analytics показывает запросы
 - `ufw status` → только 22 + CF IPs на 80/443
 - `ss -tlnp | grep -E '5432|6379'` → bind только 127.0.0.1
 - Прямой доступ `curl http://<IP>:443` с другого хоста → должен **зависнуть/timeout** (UFW режет не-CF)
+
+## Известные issue (не блокеры деплоя)
+
+- `GET /api/documentation/` → 500 (`route /api/documentation/ is missing schema.operationId`). Причина: глобальный `@fastify/rate-limit` (`apps/api/src/plugins/rate-limit/rate-limit.rest.ts`, `global: true`) дёргает `getOperationId(req)` на каждом запросе, swagger-ui роуты схемы не имеют. Фикс: per-route opt-out через `config.rateLimit = false` для префиксов `/api/documentation` и `/mcp`. Отдельная задача.
