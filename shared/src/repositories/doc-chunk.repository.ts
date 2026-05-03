@@ -1,4 +1,4 @@
-import { DocChunk } from '../../../generated/prisma/client.js';
+import { DocChunk } from '#prisma/client.js';
 import { sha256, uuid7 } from '../crypto.js';
 import { googleAiProvider } from '../providers/google-ai.provider.js';
 import { textChunker } from '../services/text-chunker.service.js';

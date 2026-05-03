@@ -1,4 +1,4 @@
-import { ApiKey } from '../../../generated/prisma/client.js';
+import { ApiKey } from '#prisma/client.js';
 import { BaseRepository } from './base.repository.js';
 import { PrismaClient, prismaClient } from './client.js';
 import type { ApiKeyAuthInfo } from './api-key.repository/types.js';

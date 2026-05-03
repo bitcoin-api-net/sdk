@@ -1,4 +1,4 @@
-import { Boost } from '../../../../../generated/prisma/client.js';
+import { Boost } from 'shared/generated/prisma/client.js';
 import { BoostRepository, boostRepository } from '#src/repositories/boost.repository.js';
 
 export type ExecuteParams = {

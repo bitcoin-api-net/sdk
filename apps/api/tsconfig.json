@@ -5,5 +5,5 @@
     "declaration": true,
     "noEmit": false
   },
-  "include": ["../../shared/src/**/*", "../../generated/prisma/**/*", "./src/**/*"]
+  "include": ["../../shared/src/**/*", "../../shared/generated/prisma/**/*", "./src/**/*"]
 }

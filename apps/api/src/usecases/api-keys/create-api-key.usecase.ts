@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { ApiKey } from '../../../../../generated/prisma/client.js';
+import { ApiKey } from 'shared/generated/prisma/client.js';
 import { ApiKeyRepository, apiKeyRepository } from '#src/repositories/api-key.repository.js';
 
 const TOKEN_BYTE_LENGTH = 30;

@@ -1,4 +1,4 @@
-import { ApiChunk } from '../../../generated/prisma/client.js';
+import { ApiChunk } from '#prisma/client.js';
 import { googleAiProvider } from '../providers/google-ai.provider.js';
 import { sha256, uuid7 } from '../crypto.js';
 import { toVectorLiteral } from './shared/utils.js';

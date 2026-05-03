@@ -1,4 +1,4 @@
-import { ApiKey } from '../../../../generated/prisma/client.js';
+import { ApiKey } from 'shared/generated/prisma/client.js';
 import { ApiKeyRepository as SharedApiKeyRepository, apiKeyRepository as sharedApiKeyRepository } from 'shared/src/repositories/api-key.repository.js';
 import type { ApiKeyAuthInfo } from 'shared/src/repositories/api-key.repository/types.js';
 import { logger } from 'shared/src/logging.js';

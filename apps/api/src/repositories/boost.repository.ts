@@ -1,4 +1,4 @@
-import { Boost } from '../../../../generated/prisma/client.js';
+import { Boost } from 'shared/generated/prisma/client.js';
 import { BoostRepository as SharedBoostRepository, boostRepository as sharedBoostRepository } from 'shared/src/repositories/boost.repository.js';
 import type { BoostUpsertInput } from 'shared/src/repositories/boost.repository/types.js';
 import { logger } from 'shared/src/logging.js';

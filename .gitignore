@@ -29,7 +29,7 @@ Thumbs.db
 .env
 
 # Generated
-generated/prisma/
+shared/generated/prisma/
 
 # Notes
 notes/

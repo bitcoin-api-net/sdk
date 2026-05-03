@@ -1,4 +1,4 @@
-import { Boost } from '../../../generated/prisma/client.js';
+import { Boost } from '#prisma/client.js';
 import { BaseRepository } from './base.repository.js';
 import { PrismaClient, prismaClient } from './client.js';
 import type { BoostUpsertInput } from './boost.repository/types.js';

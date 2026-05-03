@@ -1,4 +1,4 @@
-import { ApiKey } from '../../../../../generated/prisma/client.js';
+import { ApiKey } from 'shared/generated/prisma/client.js';
 import { ApiKeyRepository, apiKeyRepository } from '#src/repositories/api-key.repository.js';
 import { CreateApiKeyUsecase, createApiKeyUsecase } from './create-api-key.usecase.js';
 

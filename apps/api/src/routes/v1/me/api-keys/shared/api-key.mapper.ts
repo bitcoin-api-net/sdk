@@ -1,5 +1,5 @@
 import { JSONSchemaType } from '@fastify/ajv-compiler/node_modules/ajv';
-import { ApiKey } from '../../../../../../../../generated/prisma/client.js';
+import { ApiKey } from 'shared/generated/prisma/client.js';
 
 export type ApiKeyView = {
   id: string;

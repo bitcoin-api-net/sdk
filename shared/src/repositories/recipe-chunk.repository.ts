@@ -1,4 +1,4 @@
-import { RecipeChunk } from '../../../generated/prisma/client.js';
+import { RecipeChunk } from '#prisma/client.js';
 import { googleAiProvider } from '../providers/google-ai.provider.js';
 import { textChunker } from '../services/text-chunker.service.js';
 import { sha256, uuid7 } from '../crypto.js';

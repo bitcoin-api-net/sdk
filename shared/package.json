@@ -5,6 +5,9 @@
   "description": "Shared utilities",
   "author": "Bogdan",
   "license": "ISC",
+  "imports": {
+    "#prisma/*": "./generated/prisma/*"
+  },
   "dependencies": {
     "@google/genai": "^1.50.1",
     "@langchain/textsplitters": "^1.0.1",
