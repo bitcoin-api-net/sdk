@@ -42,6 +42,7 @@ export default fp(async function rateLimitValidationPlugin(fastify: FastifyInsta
   fastify.addHook('onReady', async () => {
     for (const route of routes) {
       if (SKIP_PREFIXES.some((p) => route.url.startsWith(p))) continue;
+      if (route.method === 'HEAD' || (Array.isArray(route.method) && route.method.every((m) => m === 'HEAD'))) continue;
       validateRoute(route, seenOperationIds);
     }
   });

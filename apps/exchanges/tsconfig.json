@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.server.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "declaration": true,
+    "noEmit": false
   },
   "include": ["../../shared/src/**/*", "../../shared/generated/prisma/**/*", "./src/**/*"]
 }

@@ -1,4 +1,4 @@
 {
-  "references": [{ "path": "./shared" }, { "path": "./apps/api" }, { "path": ".apps/exchanges" }],
+  "references": [{ "path": "./shared" }, { "path": "./apps/api" }, { "path": "./apps/exchanges" }],
   "files": []
 }
