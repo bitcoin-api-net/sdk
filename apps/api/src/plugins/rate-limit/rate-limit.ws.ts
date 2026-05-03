@@ -1,4 +1,5 @@
 import { boostRepository } from '#src/repositories/boost.repository.js';
+import { SKIP_PREFIXES } from './shared/constants.js';
 import { RedisStore } from './shared/store.js';
 import { buildRateLimitKey, getOperationId, getSchemaLimit } from './shared/utils.js';
 import { FastifyInstance } from 'fastify';
@@ -36,8 +37,7 @@ export default fp(async function rateLimitWsPlugin(fastify: FastifyInstance) {
   fastify.addHook('onRoute', (routeOptions) => {
     const userWsHandler = routeOptions.wsHandler;
     if (!userWsHandler) return;
-
-    routeOptions.config = { ...routeOptions.config, rateLimit: false };
+    if (SKIP_PREFIXES.some((p) => routeOptions.url.startsWith(p))) return;
 
     routeOptions.preHandler = [
       ...(Array.isArray(routeOptions.preHandler)
