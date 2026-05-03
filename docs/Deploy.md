@@ -51,54 +51,79 @@ flowchart LR
 
 ## Шаги
 
+> Сервер: Ubuntu 22.04 LTS (Hetzner). Все шаги под `root`.
+
 ### 1. UFW (Cloudflare-only) — следуя [.cursor/rules/shared/devops/ufw/cloudflare-access-only.mdc](../.cursor/rules/shared/devops/ufw/cloudflare-access-only.mdc)
 
 На сервере:
 
 - `ufw default deny incoming`
 - `ufw default allow outgoing`
-- `ufw allow 22/tcp` (SSH — иначе залочимся!)
-- Скачать CF IPv4/IPv6 в `/tmp/cloudflare_ips_v{4,6}.txt`
-- Применить allow для портов 80/443 только с CF IP (по примеру в правиле)
-- `ufw enable`, `ufw status numbered`
-- Postgres (5432) и Redis (6379) — НЕ открывать наружу (только localhost)
+- `ufw allow 22/tcp comment "SSH"` (иначе залочимся!)
+- Скачать CF IPv4/IPv6: `curl -s https://www.cloudflare.com/ips-v{4,6} > /tmp/cloudflare_ips_v{4,6}.txt`
+- Применить allow на 80/443 только с CF IP: `cat /tmp/cloudflare_ips_v4.txt | xargs -I {} ufw allow from {} to any port 80 proto tcp comment "Cloudflare IPv4"` (аналогично для 443 и v6)
+- `echo y | ufw enable`, `ufw status numbered`
+- Postgres (5432) и Redis (6379) — НЕ открывать наружу (только localhost; UFW сам режет, плюс ниже bind 127.0.0.1)
 
 ### 2. Системные пакеты
 
 - `apt update && apt upgrade -y`
 - `apt install -y curl git build-essential ca-certificates gnupg`
 - Node 22: через NodeSource (`curl -fsSL https://deb.nodesource.com/setup_22.x | bash -` → `apt install -y nodejs`)
-- Проверить `node -v` (>=22.12) и `npm -v` (>=10.9) per [package.json](../package.json) engines
+- Проверить `node -v` (>=22.12) и `npm -v` (>=10.9) per [package.json](../package.json) engines (по факту встаёт Node 22.22.x / npm 10.9.x)
 
 ### 3. Postgres 17 + pgvector (через PGDG)
 
 - `apt install -y postgresql-common`
 - `/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y` (добавит PGDG репо)
 - `apt install -y postgresql-17 postgresql-17-pgvector`
-- `sudo -u postgres psql`:
-  - `CREATE USER bitcoin_api WITH PASSWORD '<сильный пароль>';`
-  - `CREATE DATABASE bitcoin_api OWNER bitcoin_api;`
-  - `\c bitcoin_api` → `CREATE EXTENSION vector;`
-- `pg_hba.conf` (`/etc/postgresql/17/main/pg_hba.conf`) — оставить локальные подключения (scram-sha-256), не трогать `listen_addresses`
+- Сгенерировать сильный пароль и сохранить локально (используется в `.env` ниже): `openssl rand -base64 32 | tr -d '/+=' | head -c 40 > /root/.pg_password && chmod 600 /root/.pg_password`
+- Создать роль/БД/extension:
+
+```bash
+PG_PASS=$(cat /root/.pg_password)
+sudo -u postgres psql -v ON_ERROR_STOP=1 <<SQL
+CREATE USER bitcoin_api WITH PASSWORD '${PG_PASS}';
+CREATE DATABASE bitcoin_api OWNER bitcoin_api;
+\c bitcoin_api
+CREATE EXTENSION IF NOT EXISTS vector;
+SQL
+```
+
+- `pg_hba.conf` (`/etc/postgresql/17/main/pg_hba.conf`) — по умолчанию `host ... 127.0.0.1/32 scram-sha-256` (ок, не трогать). `listen_addresses` оставить `localhost`.
+- Проверка: `PGPASSWORD=$(cat /root/.pg_password) psql -h 127.0.0.1 -U bitcoin_api -d bitcoin_api -c '\dx'` → видно `vector`.
 
 ### 4. Redis
 
-- `apt install -y redis-server`
-- `/etc/redis/redis.conf`: `bind 127.0.0.1`, `protected-mode yes`
-- `systemctl enable --now redis-server`
+- `apt install -y redis-server` (Ubuntu 22.04 ставит 6.0.x)
+- `/etc/redis/redis.conf`: `bind 127.0.0.1 ::1` (именно с пробелом, без `-`), `protected-mode yes`
+- `systemctl enable --now redis-server && systemctl restart redis-server`
+- Проверка: `redis-cli ping` → `PONG`, `ss -tlnp | grep 6379` → bind только на 127.0.0.1/::1
 
 ### 5. Код проекта (уже на сервере в `/root/bitcoin_api`)
 
 - `cd /root/bitcoin_api`
-- `git pull` (на всякий, актуализировать)
-- `git submodule update --init --recursive` (если ещё не сделано)
+- `git pull --ff-only origin main`
+- Submodules `.cursor/rules/shared/{development,devops}` — для рантайма НЕ нужны, нужны только если работаешь с правилами с сервера. Если есть доступ к Bitbucket — `git submodule update --init --recursive`, иначе пропустить.
 - `npm ci`
-- Создать/проверить `/root/bitcoin_api/.env` (production версия, не из dev): новый `SECRET_KEY`, `ENVIRONMENT=production`, `NODE_ENV=production`, `DATABASE_URL=postgresql://bitcoin_api:<password>@localhost:5432/bitcoin_api`, `SITE_URL=https://bitcoin-api.net`, `PUBLIC_API_URL=https://bitcoin-api.net/api`, `GOOGLE_REDIRECT_URL=https://bitcoin-api.net/api/v1/auth/google/callback`, `CORS_ORIGIN=https://bitcoin-api.net`, прод `RESEND_API_KEY`/`GEMINI_API_KEY`/`GOOGLE_*`
-- `chmod 600 .env`
+- Создать `/root/bitcoin_api/.env` (production, не из dev). Минимум что меняется относительно dev:
+  - новый `SECRET_KEY` (`openssl rand -base64 64`)
+  - `ENVIRONMENT=production`, `NODE_ENV=production`, `HOST=127.0.0.1` (Nginx проксирует с `127.0.0.1:8000`)
+  - `DATABASE_URL=postgresql://bitcoin_api:$(cat /root/.pg_password)@localhost:5432/bitcoin_api`
+  - `REDIS_URL=redis://localhost:6379`
+  - `SITE_URL=https://bitcoin-api.net`, `PUBLIC_API_URL=https://bitcoin-api.net/api`, `API_BROWSER_URL=https://bitcoin-api.net/api`, `WS_API_BROWSER_URL=wss://bitcoin-api.net/api`, `VITE_*` аналогично
+  - `GOOGLE_REDIRECT_URL=https://bitcoin-api.net/api/v1/auth/google/callback`
+  - `CORS_ORIGIN=https://bitcoin-api.net`
+  - прод `RESEND_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID/SECRET`
+  - `LOG_LEVEL=info`
+- `chmod 600 /root/bitcoin_api/.env`
 - `npm run prisma:generate`
-- `npm run prisma:push` (накатит схему + extensions + hnsw indexes)
-- `npm run build` (TS build всех воркспейсов)
+- `npm run prisma:push` (накатит extensions + схему + hnsw indexes одним скриптом)
+- Билд бэкенда. Корневой `npm run build` собирает только `shared` (root [tsconfig.json](../tsconfig.json) ссылается только на `./shared`). Поэтому api/exchanges нужно билдить отдельно:
+  - `npx tsc --build apps/api` → `apps/api/src/app.js`
+  - `npx tsc --build apps/exchanges` → `apps/exchanges/src/last-price.app.js` (на момент написания TS6307 warning про `shared/generated/prisma/client.ts` — не блокирует emit; см. [apps/exchanges/tsconfig.json](../apps/exchanges/tsconfig.json))
 - `npm run build --workspace=apps/web-client` (Astro static → `apps/web-client/dist`)
+- TODO для будущего рефакторинга: добавить `apps/api` и `apps/exchanges` в `references` корневого `tsconfig.json`, чтобы `npm run build` собирал всё одной командой; и поправить include в `apps/exchanges/tsconfig.json` (TS6307).
 
 ### 6. Nginx + Let's Encrypt (certbot DNS-01 через Cloudflare API)
 

@@ -3,5 +3,5 @@
   "compilerOptions": {
     "composite": true
   },
-  "include": ["../../shared/src/**/*", "./src/**/*"]
+  "include": ["../../shared/src/**/*", "../../shared/generated/prisma/**/*", "./src/**/*"]
 }
