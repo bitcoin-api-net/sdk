@@ -29,6 +29,8 @@ function validateRoute(route: RouteOptions, seenOperationIds: Map<string, string
   }
 }
 
+const SKIP_PREFIXES = ['/api/documentation', '/api/mcp'];
+
 export default fp(async function rateLimitValidationPlugin(fastify: FastifyInstance) {
   const routes: RouteOptions[] = [];
   const seenOperationIds = new Map<string, string>();
@@ -38,6 +40,9 @@ export default fp(async function rateLimitValidationPlugin(fastify: FastifyInsta
   });
 
   fastify.addHook('onReady', async () => {
-    for (const route of routes) validateRoute(route, seenOperationIds);
+    for (const route of routes) {
+      if (SKIP_PREFIXES.some((p) => route.url.startsWith(p))) continue;
+      validateRoute(route, seenOperationIds);
+    }
   });
 });
