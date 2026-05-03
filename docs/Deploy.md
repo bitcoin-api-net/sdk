@@ -152,6 +152,9 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
+    # Закрыто от индексации до публичного релиза. Снять перед открытием проекта.
+    add_header X-Robots-Tag "noindex, nofollow, noarchive, nosnippet" always;
+
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
     gzip_min_length 1024;
