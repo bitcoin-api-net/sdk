@@ -8,6 +8,7 @@ type BoostView = {
   id: string;
   routeId: string;
   rateLimit: number;
+  wsConnectionsLimit?: number;
   expiresAt?: string;
   createdAt: string;
 };
@@ -22,6 +23,7 @@ const boostViewSchema: JSONSchemaType<BoostView> = {
     id: { type: 'string' },
     routeId: { type: 'string' },
     rateLimit: { type: 'integer' },
+    wsConnectionsLimit: { type: 'integer', nullable: true },
     expiresAt: { type: 'string', nullable: true },
     createdAt: { type: 'string' },
   },
@@ -41,6 +43,7 @@ function toBoostView(boost: Boost): BoostView {
     id: boost.id,
     routeId: boost.routeId,
     rateLimit: boost.rateLimit,
+    wsConnectionsLimit: boost.wsConnectionsLimit ?? undefined,
     expiresAt: boost.expiresAt?.toISOString(),
     createdAt: boost.createdAt.toISOString(),
   };

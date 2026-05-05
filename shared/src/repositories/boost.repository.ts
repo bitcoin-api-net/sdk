@@ -14,11 +14,11 @@ export class BoostRepository extends BaseRepository<PrismaClient['boost']> {
   }
 
   async upsertBoost(input: BoostUpsertInput): Promise<Boost> {
-    const { userId, routeId, rateLimit, expiresAt, paymentSubscriptionItemId, paymentPlanId } = input;
+    const { userId, routeId, rateLimit, wsConnectionsLimit, expiresAt, paymentSubscriptionItemId, paymentPlanId } = input;
     return this.model.upsert({
       where: { userId_routeId: { userId, routeId } },
-      create: { userId, routeId, rateLimit, expiresAt, paymentSubscriptionItemId, paymentPlanId },
-      update: { rateLimit, expiresAt, paymentSubscriptionItemId, paymentPlanId },
+      create: { userId, routeId, rateLimit, wsConnectionsLimit, expiresAt, paymentSubscriptionItemId, paymentPlanId },
+      update: { rateLimit, wsConnectionsLimit, expiresAt, paymentSubscriptionItemId, paymentPlanId },
     });
   }
 

@@ -3,6 +3,7 @@ model Boost {
   userId                    String    @map("user_id")
   routeId                   String    @map("route_id")
   rateLimit                 Int       @map("rate_limit")
+  wsConnectionsLimit        Int?      @map("ws_connections_limit")
   expiresAt                 DateTime? @map("expires_at")
   paymentSubscriptionItemId String?   @unique @map("payment_subscription_item_id")
   paymentPlanId             String?   @map("payment_plan_id")

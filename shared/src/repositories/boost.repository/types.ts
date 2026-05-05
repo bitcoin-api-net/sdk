@@ -7,6 +7,7 @@ export type BoostUpsertInput = {
   userId: string;
   routeId: string;
   rateLimit: number;
+  wsConnectionsLimit?: number;
   expiresAt?: Date;
   paymentSubscriptionItemId?: string;
   paymentPlanId?: string;

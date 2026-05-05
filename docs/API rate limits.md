@@ -555,12 +555,14 @@ apps/api/src/plugins/
 
 **Поле в `User`** — `paymentCustomerId String? @unique` (нейтральное имя — на случай смены/добавления провайдеров). В коде туда пишется Stripe customer id. Создаётся **лениво** при первом checkout. Применили без формальной миграции — `npm run prisma:push`.
 
+**Поле в `Boost`** — `wsConnectionsLimit Int?` (опционально). Один Boost покрывает и REST rate-limit, и WS concurrent-connections limit одновременно — для роутов с `wsHandler` оба лимита подняты одной покупкой. WS rate-limit плагин при наличии `req.userId` берёт лимит через `boostRepository.resolveWsConnectionsLimit(userId, routeId, defaultLimit)` (тот же кеш-объект, что и `resolveRateLimit` — оба значения хранятся в одной записи Redis).
+
 **Юзкейсы** (`apps/api/src/usecases/billing/`):
 - `billing-base.usecase.ts` — базовый класс `BillingBaseUsecase` со Stripe + `userRepository` через DI и общим методом `getOrCreatePaymentCustomer(userId, email)`. Не юзкейс сам по себе — переиспользуемая часть для checkout/portal (отдельный get-or-create не нужен, это вспомогательная инфраструктура).
 - `create-checkout-session.usecase.ts` — наследник `BillingBaseUsecase`. Резолвит customer + price'ы (через приватный `resolvePrice(routeId, tier)`: `stripe.prices.list({ active: true, limit: 100 })` + локальный фильтр по `price.metadata.routeId` и `price.metadata.tier`, без `lookup_keys`, на отсутствие — `NotFoundError`), вызывает `stripe.checkout.sessions.create({ mode: 'subscription', line_items, success_url, cancel_url })`.
 - `create-portal-session.usecase.ts` — наследник `BillingBaseUsecase`. Резолвит customer и вызывает `stripe.billingPortal.sessions.create`.
 - `handle-webhook-event.usecase.ts` — диспетчер событий:
-  - `customer.subscription.created` / `updated`: резолвит `User` по `paymentCustomerId`. Если `subscription.status` ∈ `['active', 'trialing', 'past_due']` — для каждого `item` вычитывает `metadata.routeId` / `metadata.rateLimit` из `item.price` и вызывает `applyBoostUsecase` (с `expiresAt = item.current_period_end`). Иначе (`canceled` / `unpaid` / ...) — итерируется по items и удаляет через `boostRepository.deleteByPaymentSubscriptionItemId`.
+  - `customer.subscription.created` / `updated`: резолвит `User` по `paymentCustomerId`. Если `subscription.status` ∈ `['active', 'trialing', 'past_due']` — для каждого `item` вычитывает `metadata.routeId` / `metadata.rateLimit` / `metadata.wsConnectionsLimit` (опционально) из `item.price` и вызывает `applyBoostUsecase` (с `expiresAt = item.current_period_end`). Иначе (`canceled` / `unpaid` / ...) — итерируется по items и удаляет через `boostRepository.deleteByPaymentSubscriptionItemId`.
   - `customer.subscription.deleted`: итерируется по `subscription.items.data` и удаляет каждый через `boostRepository.deleteByPaymentSubscriptionItemId(item.id)`. Поле `paymentSubscriptionId` в `Boost` не вводилось — обходимся per-item ключом.
   - Остальные events — лог info + skip.
   - Пропавший юзер (нет в БД с таким `paymentCustomerId`) — лог warn + skip (defensive, не падаем).

@@ -53,7 +53,10 @@ export default fp(async function rateLimitWsPlugin(fastify: FastifyInstance) {
 
     routeOptions.wsHandler = async function wsHandlerWithGauge(socket, req) {
       const operationId = getOperationId(req);
-      const limit = getSchemaLimit(req, 'x-default-ws-connections-limit');
+      const defaultLimit = getSchemaLimit(req, 'x-default-ws-connections-limit');
+      const limit = req.userId
+        ? await boostRepository.resolveWsConnectionsLimit(req.userId, operationId, defaultLimit)
+        : defaultLimit;
       const gaugeKey = `${GAUGE_PREFIX}${buildRateLimitKey(req, operationId)}`;
 
       const [current] = await redis.client.multi().incr(gaugeKey).expire(gaugeKey, GAUGE_TTL_SECONDS, 'NX').exec();

@@ -34,3 +34,5 @@ shared/generated/prisma/
 # Notes
 notes/
 
+# Typescript
+tsconfig.tsbuildinfo

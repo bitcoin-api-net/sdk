@@ -54,6 +54,12 @@ export class HandleWebhookEventUsecase {
     const routeId = price.metadata?.routeId;
     const rateLimitRaw = price.metadata?.rateLimit;
     const rateLimit = rateLimitRaw ? Number(rateLimitRaw) : NaN;
+    const wsConnectionsLimitRaw = price.metadata?.wsConnectionsLimit;
+    const wsConnectionsLimitParsed = wsConnectionsLimitRaw ? Number(wsConnectionsLimitRaw) : undefined;
+    const wsConnectionsLimit =
+      wsConnectionsLimitParsed !== undefined && Number.isFinite(wsConnectionsLimitParsed) && wsConnectionsLimitParsed > 0
+        ? wsConnectionsLimitParsed
+        : undefined;
 
     if (!routeId || !Number.isFinite(rateLimit) || rateLimit <= 0) {
       logger.warn(
@@ -67,6 +73,7 @@ export class HandleWebhookEventUsecase {
       userId,
       routeId,
       rateLimit,
+      wsConnectionsLimit,
       paymentSubscriptionItemId: item.id,
       paymentPlanId: price.id,
       expiresAt: new Date(item.current_period_end * 1000),
