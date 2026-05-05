@@ -73,6 +73,7 @@ async function main() {
         { name: 'docs', description: 'Documentation search and AI assistant' },
         { name: 'api-keys', description: 'Manage API keys' },
         { name: 'boosts', description: 'Rate-limit boosts owned by the user' },
+        { name: 'billing', description: 'Subscriptions, checkout & webhooks' },
       ],
     },
   });

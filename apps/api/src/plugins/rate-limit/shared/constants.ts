@@ -1,1 +1,1 @@
-export const SKIP_PREFIXES = ['/api/documentation', '/mcp'];
+export const SKIP_PREFIXES = ['/api/documentation', '/mcp', '/api/v1/billing/webhook'];

@@ -1,8 +1,9 @@
 model User {
-  id       String  @id @default(uuid(7))
-  email    String  @unique
-  password String
-  isActive Boolean @default(false) @map("is_active")
+  id                String  @id @default(uuid(7))
+  email             String  @unique
+  password          String
+  isActive          Boolean @default(false) @map("is_active")
+  paymentCustomerId String? @unique @map("payment_customer_id")
 
   apiKeys ApiKey[]
   boosts  Boost[]

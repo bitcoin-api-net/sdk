@@ -33,6 +33,7 @@
     "fastify": "^5.7.4",
     "fastify-plugin": "^5.1.0",
     "shared": "^0.0.1",
+    "stripe": "^22.1.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

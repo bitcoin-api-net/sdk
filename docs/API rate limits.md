@@ -537,8 +537,9 @@ apps/api/src/plugins/
 
 ### Фаза 7. Stripe billing
 
-- Установить `stripe` (Node SDK) — спросить про депу. Singleton клиента в `shared/src/stripe.ts`.
-- **Products/Prices создаются вручную в Stripe Dashboard** для MVP. Конвенция:
+Зависимость `stripe` (Node SDK) ставится в `apps/api`. Singleton клиента — `apps/api/src/shared/stripe.ts` (читает `STRIPE_SECRET_KEY` через `shared/src/env.ts`).
+
+**Products/Prices создаются вручную в Stripe Dashboard** для MVP. Конвенция:
   - Один Product на каждый платный роут (имя = `operationId`).
   - Три Price'а на Product, recurring monthly, по tier'ам:
     - tier 1 — **$1/мес**
@@ -551,14 +552,28 @@ apps/api/src/plugins/
     - `tier: "1" | "2" | "3"`
   - Никаких минимальных платежей и bundle'ов. Юзер платит только за то, что купил.
   - Когда роутов станет много — переедем на idempotent sync-скрипт (см. «Чего НЕ делаем в MVP»).
-- `apps/api/src/usecases/billing/create-checkout-session.usecase.ts` — создаёт Checkout Session для апгрейда подписки на конкретные items.
-- `apps/api/src/usecases/billing/create-portal-session.usecase.ts` — Stripe Customer Portal для управления подпиской.
-- `apps/api/src/routes/v1/billing/webhook.ts` — endpoint `POST /v1/billing/webhook`:
-  - валидирует подпись через `stripe.webhooks.constructEvent`;
-  - обрабатывает `customer.subscription.{created,updated,deleted}`;
-  - резолвит `User` через `subscription.customer` → `User.stripeCustomerId`;
-  - для каждого `SubscriptionItem` — `boostRepository.upsert(...)` или `boostRepository.deleteByPaymentSubscriptionItemId(...)` (инвалидация кеша происходит внутри репозитория).
-- Добавить в `User` поле `stripeCustomerId String? @unique`. Создаётся лениво при первой покупке.
+
+**Поле в `User`** — `paymentCustomerId String? @unique` (нейтральное имя — на случай смены/добавления провайдеров). В коде туда пишется Stripe customer id. Создаётся **лениво** при первом checkout. Применили без формальной миграции — `npm run prisma:push`.
+
+**Юзкейсы** (`apps/api/src/usecases/billing/`):
+- `billing-base.usecase.ts` — базовый класс `BillingBaseUsecase` со Stripe + `userRepository` через DI и общим методом `getOrCreatePaymentCustomer(userId, email)`. Не юзкейс сам по себе — переиспользуемая часть для checkout/portal (отдельный get-or-create не нужен, это вспомогательная инфраструктура).
+- `create-checkout-session.usecase.ts` — наследник `BillingBaseUsecase`. Резолвит customer + price'ы (через приватный `resolvePrice(routeId, tier)`: `stripe.prices.list({ active: true, limit: 100 })` + локальный фильтр по `price.metadata.routeId` и `price.metadata.tier`, без `lookup_keys`, на отсутствие — `NotFoundError`), вызывает `stripe.checkout.sessions.create({ mode: 'subscription', line_items, success_url, cancel_url })`.
+- `create-portal-session.usecase.ts` — наследник `BillingBaseUsecase`. Резолвит customer и вызывает `stripe.billingPortal.sessions.create`.
+- `handle-webhook-event.usecase.ts` — диспетчер событий:
+  - `customer.subscription.created` / `updated`: резолвит `User` по `paymentCustomerId`. Если `subscription.status` ∈ `['active', 'trialing', 'past_due']` — для каждого `item` вычитывает `metadata.routeId` / `metadata.rateLimit` из `item.price` и вызывает `applyBoostUsecase` (с `expiresAt = item.current_period_end`). Иначе (`canceled` / `unpaid` / ...) — итерируется по items и удаляет через `boostRepository.deleteByPaymentSubscriptionItemId`.
+  - `customer.subscription.deleted`: итерируется по `subscription.items.data` и удаляет каждый через `boostRepository.deleteByPaymentSubscriptionItemId(item.id)`. Поле `paymentSubscriptionId` в `Boost` не вводилось — обходимся per-item ключом.
+  - Остальные events — лог info + skip.
+  - Пропавший юзер (нет в БД с таким `paymentCustomerId`) — лог warn + skip (defensive, не падаем).
+
+**REST роуты** (`apps/api/src/routes/v1/billing/`, prefix — `/api/v1/billing`):
+- `POST /checkout` (JWT, `operationId: createBillingCheckoutSession`) — body `{ items: [{ routeId, tier }] }`, reply `{ url }`. `returnUrl` берётся из env.
+- `POST /portal` (JWT, `operationId: createBillingPortalSession`) — body пусто, reply `{ url }`.
+- `POST /webhook` — без auth. Валидирует подпись через `stripe.webhooks.constructEvent` с `STRIPE_WEBHOOK_SECRET`. Сырое тело получаем через **encapsulated content-type parser** (`addContentTypeParser('application/json', { parseAs: 'buffer' }, ...)` прямо в файле роуты — autoload изолирует scope, остальные JSON роуты не трогаем; `req.rawBody: Buffer`). На invalid signature — 400. Путь добавлен в `SKIP_PREFIXES` rate-limit плагинов (`/api/v1/billing/webhook`), чтобы не валидировать отсутствующий `operationId` / `x-default-rate-limit` и не считать лимит для трафика от Stripe.
+
+**Env** (корневой `.env`, читаются через `shared/src/env.ts`):
+- `STRIPE_SECRET_KEY` — секретный ключ.
+- `STRIPE_WEBHOOK_SECRET` — secret подписи webhook'а.
+- `STRIPE_BILLING_RETURN_URL` — общий `return_url` для checkout success/cancel и Customer Portal (например `http://localhost:4321/billing/return`).
 
 #### AI правила
 
