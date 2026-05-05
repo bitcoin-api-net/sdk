@@ -540,24 +540,26 @@ apps/api/src/plugins/
 Зависимость `stripe` (Node SDK) ставится в `apps/api`. Singleton клиента — `apps/api/src/shared/stripe.ts` (читает `STRIPE_SECRET_KEY` через `shared/src/env.ts`).
 
 **Products/Prices создаются вручную в Stripe Dashboard** для MVP. Конвенция:
-  - Один Product на каждый платный роут (имя = `operationId`).
-  - Три Price'а на Product, recurring monthly, по tier'ам:
-    - tier 1 — **$1/мес**
-    - tier 2 — **$3/мес**
-    - tier 3 — **$6/мес**
-  - **Metadata на Price** (обязательно, читается webhook'ом):
-    - `routeId: "<operationId>"`
-    - `rateLimit: <число req/min>`
-    - `wsConnectionsLimit: <число>` — опционально, только для WS-роутов (concurrent gauge)
-    - `tier: "1" | "2" | "3"`
-  - Никаких минимальных платежей и bundle'ов. Юзер платит только за то, что купил.
-  - Когда роутов станет много — переедем на idempotent sync-скрипт (см. «Чего НЕ делаем в MVP»).
+
+- Один Product на каждый платный роут (имя = `operationId`).
+- Три Price'а на Product, recurring monthly, по tier'ам:
+  - tier 1 — **$1/мес**
+  - tier 2 — **$3/мес**
+  - tier 3 — **$6/мес**
+- **Metadata на Price** (обязательно, читается webhook'ом):
+  - `routeId: "<operationId>"`
+  - `rateLimit: <число req/min>`
+  - `wsConnectionsLimit: <число>` — опционально, только для WS-роутов (concurrent gauge)
+  - `tier: "1" | "2" | "3"`
+- Никаких минимальных платежей и bundle'ов. Юзер платит только за то, что купил.
+- Когда роутов станет много — переедем на idempotent sync-скрипт (см. «Чего НЕ делаем в MVP»).
 
 **Поле в `User`** — `paymentCustomerId String? @unique` (нейтральное имя — на случай смены/добавления провайдеров). В коде туда пишется Stripe customer id. Создаётся **лениво** при первом checkout. Применили без формальной миграции — `npm run prisma:push`.
 
 **Поле в `Boost`** — `wsConnectionsLimit Int?` (опционально). Один Boost покрывает и REST rate-limit, и WS concurrent-connections limit одновременно — для роутов с `wsHandler` оба лимита подняты одной покупкой. WS rate-limit плагин при наличии `req.userId` берёт лимит через `boostRepository.resolveWsConnectionsLimit(userId, routeId, defaultLimit)` (тот же кеш-объект, что и `resolveRateLimit` — оба значения хранятся в одной записи Redis).
 
 **Юзкейсы** (`apps/api/src/usecases/billing/`):
+
 - `billing-base.usecase.ts` — базовый класс `BillingBaseUsecase` со Stripe + `userRepository` через DI и общим методом `getOrCreatePaymentCustomer(userId, email)`. Не юзкейс сам по себе — переиспользуемая часть для checkout/portal (отдельный get-or-create не нужен, это вспомогательная инфраструктура).
 - `create-checkout-session.usecase.ts` — наследник `BillingBaseUsecase`. Резолвит customer + price'ы (через приватный `resolvePrice(routeId, tier)`: `stripe.prices.list({ active: true, limit: 100 })` + локальный фильтр по `price.metadata.routeId` и `price.metadata.tier`, без `lookup_keys`, на отсутствие — `NotFoundError`), вызывает `stripe.checkout.sessions.create({ mode: 'subscription', line_items, success_url, cancel_url })`.
 - `create-portal-session.usecase.ts` — наследник `BillingBaseUsecase`. Резолвит customer и вызывает `stripe.billingPortal.sessions.create`.
@@ -568,11 +570,13 @@ apps/api/src/plugins/
   - Пропавший юзер (нет в БД с таким `paymentCustomerId`) — лог warn + skip (defensive, не падаем).
 
 **REST роуты** (`apps/api/src/routes/v1/billing/`, prefix — `/api/v1/billing`):
+
 - `POST /checkout` (JWT, `operationId: createBillingCheckoutSession`) — body `{ items: [{ routeId, tier }] }`, reply `{ url }`. `returnUrl` берётся из env.
 - `POST /portal` (JWT, `operationId: createBillingPortalSession`) — body пусто, reply `{ url }`.
 - `POST /webhook` — без auth. Валидирует подпись через `stripe.webhooks.constructEvent` с `STRIPE_WEBHOOK_SECRET`. Сырое тело получаем через **encapsulated content-type parser** (`addContentTypeParser('application/json', { parseAs: 'buffer' }, ...)` прямо в файле роуты — autoload изолирует scope, остальные JSON роуты не трогаем; `req.rawBody: Buffer`). На invalid signature — 400. Путь добавлен в `SKIP_PREFIXES` rate-limit плагинов (`/api/v1/billing/webhook`), чтобы не валидировать отсутствующий `operationId` / `x-default-rate-limit` и не считать лимит для трафика от Stripe.
 
 **Env** (корневой `.env`, читаются через `shared/src/env.ts`):
+
 - `STRIPE_SECRET_KEY` — секретный ключ.
 - `STRIPE_WEBHOOK_SECRET` — secret подписи webhook'а.
 - `STRIPE_BILLING_RETURN_URL` — общий `return_url` для checkout success/cancel и Customer Portal (например `http://localhost:4321/billing/return`).
@@ -587,20 +591,6 @@ apps/api/src/plugins/
 - .cursor/rules/shared/development/backend/database/create-model.mdc
 - .cursor/rules/shared/development/backend/envs.mdc
 - .cursor/rules/shared/development/backend/errors.mdc
-
-### Фаза 8. Документация и DX
-
-- `apps/web-client/src/content/docs/rate-limits.mdx` — описание дефолтных лимитов (таблица по роутам, сгруппированная UI-категориями), как читать `x-ratelimit-*` headers, как покупать буст на конкретный роут, как ротировать ключи. Явно указать: **лимит считается на аккаунт** — все ключи юзера делят один и тот же счётчик и один и тот же активный буст.
-- Пример рецепта `apps/web-client/src/content/recipes/handle-rate-limit.mdx` — экспоненциальный backoff на основе `retry-after`.
-
-### Фаза 9. Наблюдаемость
-
-- Логи warn при 429 (с `userId` / `apiKeyId` / `ip` / `routeId`) — через `errorResponseBuilder` + `request.log.warn`. Плейн-токен в логи **не пишем** (хоть он и хранится в БД — в логах он лишний шум и лишняя поверхность утечки). Логируем `userId` (связь с бустом при дебаге) и `apiKeyId` (какой именно ключ юзера сейчас упирается в лимит).
-- Metrics (если будет prometheus exporter — пост-MVP).
-
-#### AI правила
-
-- .cursor/rules/shared/development/backend/logging.mdc
 
 ## Чего НЕ делаем в MVP
 
