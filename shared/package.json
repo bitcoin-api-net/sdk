@@ -8,6 +8,11 @@
   "imports": {
     "#prisma/*": "./generated/prisma/*"
   },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "type-check": "tsc --build --noEmit"
+  },
   "dependencies": {
     "@google/genai": "^1.50.1",
     "@langchain/textsplitters": "^1.0.1",
