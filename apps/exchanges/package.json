@@ -12,7 +12,7 @@
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "type-check": "tsc --build --noEmit",
-    "last-price-monitoring:dev": "tsx watch src/last-price.app.ts"
+    "price-monitoring:dev": "tsx watch src/price.app.ts"
   },
   "engines": {
     "node": ">=22.12.0",
