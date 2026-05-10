@@ -1,0 +1,18 @@
+---
+globs: apps/admin/**/*.ts
+alwaysApply: false
+---
+
+- Use `import type { DataProvider } from "@refinedev/core";` to create data providers
+- Create separate endpoints in `apps/api/src/routes/admin/v1/` for admin panel
+- Use in `Refine` component resources `name` for human readable name and `meta.resource` for API endpoint. Example bellow (Replace names to appropriate)
+
+```tsx
+<Refine
+    routerProvider={routerProvider}
+    dataProvider={dataProvider}
+    resources={[{ name: 'Users', list: '/users', meta: { resource: 'admin/v1/users' } }]}
+    >
+```
+
+- Use selects (`useSelect`) with `onSearch: (value) => [{ field: 'search', operator: 'contains', value }],` for objects from database

@@ -1,0 +1,32 @@
+---
+alwaysApply: false
+---
+
+- Ask user project name
+
+Step 1 (Install Refine)
+
+- Install Refine with Vite and Ant design in `apps/admin`
+- Change base url to `/admin` (`basename="/admin"` to `BrowserRouter`, `base: '/admin/'` to `vite.config.ts`,)
+- Target `vite.config.ts` `env` to .env in the project root
+- Remove from `apps/admin/package.json` dependencies existing in root `package.json`
+- Reinstall dependencies
+
+Step 2 (Add environment variables)
+
+- Add to root `.env` `VITE_API_URL=http://localhost:8000/api`
+- Add to root `.evn` `CORS_ORIGIN=http://localhost:5173`
+
+Step 3 (Add theme)
+
+- Add `ThemedLayout`
+
+Step 4 (Change project name)
+
+- Change admin panel `title`
+- Change name in sidebar
+
+Step 5 (Verification)
+
+- Make `npm run build` for `apps/admin` to ensure all types are correct
+- Fix types issues

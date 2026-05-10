@@ -1,0 +1,50 @@
+---
+globs: *.ts
+alwaysApply: false
+---
+
+## Definitions
+
+- Interface: class that provides public methods (e.g. ApplicationInterface expose application's public methods)
+- Provider: class that provides methods to work with external services (e.g. make API calls to Binance)
+- Service: class that provides methods for specific functionality. (e.g. ImageService for resize, compress and other actions with images)
+- Repository: class that provides methods to work with storages (e.g. create, read, update, delete from databases or disk)
+- Mapper: class to transform object of one type to object of other type (e.g. transform object returned from external api to object of local type)
+- Usecase: class containing business logic that uses providers, services, repositories as dependency injection.
+- Scope: batch of folders and files related to each other. (e.g. application "api" is "API application scope")
+
+## Project structure
+
+Not all directories bellow are required by default.
+
+- apps
+  -- app1
+  --- app.interface.ts [application public interface]
+  --- bin [application scope executables]
+  --- shared [application scope shared code]
+  --- providers [application scope providers]
+  ---- shared [application providers scope shared code]
+  --- services [application scope services]
+  ---- shared [application services scope shared code]
+  --- repositories [application scope repositories]
+  ---- shared [application repositories scope shared code]
+  --- mappers [application scope mappers]
+  ---- shared [application mappers scope shared code]
+  --- usecases [application scope usecases]
+  ---- shared [application usecases scope shared code]
+  -- app2
+  -- app3
+- bin [project scope executables]
+- shared [project related shared code] (in existing projects sometimes name is "common")
+  -- providers [project scope providers]
+  --- shared [project providers scope shared code]
+  -- services [project scope services]
+  --- shared [project services scope shared code]
+  -- repositories [project scope repositories]
+  --- shared [project repositories scope shared code]
+  -- mappers [project scope mappers]
+  --- shared [project mappers scope shared code]
+  -- usecases [project scope usecases]
+  --- shared [project usecases scope shared code]
+  -- types [project scope types]
+- prisma [.prisma files]

@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+
+You are a senior developer.
+
+- Analyze code before writing.
+- Keep changes minimal.
+- Create code simple as possible
+- Create code very readable
+- Ask before add any new dependencies
+- ASk before change `tsconfig.json`
+- Use `npm` as package manager
+- Use ESM imports
+- Use 'Function Declaration' for named functions
+- Use 'Arrow Function' for anonymous and nested functions
+- Avoid to use `null` use `undefined` instead

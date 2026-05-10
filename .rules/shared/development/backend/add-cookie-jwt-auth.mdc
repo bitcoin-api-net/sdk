@@ -1,0 +1,54 @@
+---
+alwaysApply: false
+---
+
+Step 1 (Install plugins)
+
+- Install `@fastify/jwt` to `apps/api`
+- Install `@fastify/cookie` to `apps/api`
+
+Step 2 (Add environment variables)
+
+- Add `SECRET_KEY` to root `.env` if not exists
+
+Step 3 (Add auth plugin)
+
+- Create plugin with name `jwt-auth` with options bellow (use in `@fastify/jwt` and `@fastify/cookie`)
+
+```ts
+{
+  interface FastifyContextConfig {
+    auth?: boolean;
+  },
+  payload: {
+    email: string;
+  },
+  user: {
+    email: string;
+  },
+  cookie: {
+    cookieName: 'access',
+    signed: false,
+  },
+  httpOnly: true,
+  sameSite: 'lax',
+  secure: NODE_ENV === 'production',
+  maxAge: 60 * 60 * 2,
+}
+```
+
+- Add throw `UnauthorizedError` from `shared/src/errors.ts` if endpoint closed by auth (`auth:true`) but token is not valid.
+- Register plugin on Fastify instance
+
+Step 5 (Add api endpoints)
+
+- Refer `.cursor/rules/backend/create-endpoint.mdc` rules
+- Install `bcrypt` to `apps/api`
+- Add login endpoint `apps/api/src/routes/v1/auth/login.ts` (use `bcrypt` for password comparison)
+- Add logout endpoint `apps/api/src/routes/v1/auth/logout.ts`
+- Add "me" endpoint `apps/api/src/routes/v1/auth/me.ts`
+
+Step 5 (Verification)
+
+- Make `npm run type-check` for `apps/api` to ensure all types are correct
+- Fix types issues

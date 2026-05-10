@@ -1,0 +1,50 @@
+---
+globs: *.usecase.ts
+alwaysApply: false
+---
+
+Usecase is class containing business logic that uses providers, services, repositories as dependency injection.
+
+- Use `shared/usecases` directory for usecases used in multiple applications
+- Use `shared/usecases` directory for usecases used as parent usecase for multiple applications usecases
+- Use `#src/usecases` directory for application scope usecases
+- Use `<name>.usecase.ts` template for naming usecase files
+- Use example bellow for usecase creation
+
+```ts
+export type ExecuteParams = {
+  tgId: string;
+  tgUsername?: string;
+  tgLang: Locales;
+  botStartParameter?: StartParameter;
+};
+
+export class JoinBotUseCase {
+  constructor(private readonly userRepository: UserRepository) {}
+
+  async execute(params: ExecuteParams) {
+    const { tgId, tgUsername, tgLang, botStartParameter } = params;
+
+    const existingUser = await this.userRepository.findFirstOrThrow({ tgId });
+  }
+
+  async doStep1OfBusinessLogic() {
+    // Fist part of business logic
+  }
+
+  async doStep2OfBusinessLogic() {
+    // Second part of business logic
+  }
+
+  async doStep3OfBusinessLogic() {
+    // Third part of business logic
+  }
+}
+
+export const joinBotUseCase = new JoinBotUseCase(userRepository);
+```
+
+- Use `execute` function as entrypoint of usecase
+- Use other functions for steps of business logic
+- Do NOT use instances, classes as a type of any field in `ExecuteParams`
+- Use any types for prams of "steps" functions

@@ -1,0 +1,314 @@
+---
+alwaysApply: false
+---
+
+Use rules:
+
+- .cursor/rules/backend/architecture.mdc
+
+Step 1 (Add .git and .gitignore)
+
+- Make `git init`
+- Add to `.gitignore` default Nodejs rules
+
+Step 2 (NPM initialization):
+
+- Make `npm init`
+- Add in `package.json` `type` key with `module` value
+- Add in `package.json` `engines` key with user's current versions of `node -v` and `npm -v`
+- Add in `package.json` `workspaces` key with `["shared", "apps/*"]`
+- Add to `package.json` in `shared` setting `"type": "module"`
+
+Step 3 (Add Typescript)
+
+- Install `typescript`
+- Add in `package.json` `scripts` key with `"build": "tsc --build"`,`"clean": "tsc --build --clean"`, `"type-check": "tsc --build --noEmit"`
+- Install `@types/node`
+- Install `tsx`
+- Add to file `tsconfig.json` settings bellow
+
+```json
+{
+  "references": [{ "path": "./shared" }],
+  "files": []
+}
+```
+
+- Add to file `tsconfig.server.json` settings bellow
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "types": ["node"]
+  },
+  "exclude": ["node_modules"]
+}
+```
+
+- Add to `tsconfig.json` files in `shared` settings bellow
+
+```json
+{
+  "extends": "../tsconfig.server.json",
+  "compilerOptions": {
+    "composite": true
+  },
+  "include": ["./src/**/*"]
+}
+```
+
+Step 4 (Add prettier)
+
+- Install `prettier`
+- Install `@trivago/prettier-plugin-sort-imports`
+- Add to file `.prettierrc` settings bellow
+
+```json
+{
+  "printWidth": 120,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "bracketSameLine": true,
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"]
+}
+```
+
+- Add to `.vscode/extensions.json` settings bellow
+
+```json
+{
+  "recommendations": ["esbenp.prettier-vscode", "editorconfig.editorconfig"]
+}
+```
+
+-Add to `.vscode/settings.json` settings bellow
+
+```json
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  "prettier.requireConfig": true,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "volar.format.initialIndent": {
+    "html": false
+  },
+  "volar.autoCompleteRefs": false,
+  "prettier.prettierPath": "./node_modules/prettier"
+}
+```
+
+Step 5 (Add eslint)
+
+- Install `eslint`
+- Install `eslint-config-prettier`
+- install `eslint-plugin-prettier`
+- Install `@typescript-eslint/parser`
+- Install `@typescript-eslint/eslint-plugin`
+- Add to `.vscode/extensions.json` `recommendations` `"dbaeumer.vscode-eslint"`
+- Add to file .eslintrc` settings bellow (replace <> to appropriate)
+
+```json
+{
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "tsconfig.json",
+    "tsconfigRootDir": "<user's project's root dir>",
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-empty-object-type": "off"
+  }
+}
+```
+
+- Add to `.vscode/settings.json` settings bellow
+
+```json
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
+}
+```
+
+Step 6 (Add .nvmrc)
+
+- Create `.nvmrc` file with user's current versions of `node -v`
+
+Step 7 (Add Makefile)
+
+- Create Makefile with content bellow
+
+```Makefile
+.PHONY: help
+#? help: Get more info on make commands
+help: Makefile
+	@echo " Choose a command to run:"
+	@sed -n 's/^#?//p' $< | column -t -s ':' |  sort | sed -e 's/^/ /'
+```
+
+Step 8 (Add .env file)
+
+- Create `.env` file with content bellow
+
+```text
+PROJECT_DIR=<<user's project's root dir>
+NODE_ENV=development
+```
+
+Step 9 (Add predefined errors)
+
+- Create `errors.ts` in `shared/src` with content bellow
+
+```ts
+export interface AppErrorOptions extends ErrorOptions {
+  code?: string;
+  httpCode?: number;
+  data?: Record<string, unknown>;
+}
+
+export class AppError extends Error {
+  code: string = 'APP_ERROR';
+  httpCode: number = 500;
+  data: Record<string, unknown> = {};
+
+  constructor(message?: string, options?: AppErrorOptions) {
+    super(message, { ...options, cause: options?.cause });
+    this.code = options?.code ?? this.code;
+    this.httpCode = options?.httpCode ?? this.httpCode;
+    this.data = options?.data ?? this.data;
+
+    Object.setPrototypeOf(this, new.target.prototype); // restore prototype chain
+
+    Error.captureStackTrace(this);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  code: string = 'FORBIDDEN';
+  httpCode: number = 403;
+}
+
+export class NotFoundError extends AppError {
+  code: string = 'NOT_FOUND';
+  httpCode: number = 404;
+}
+
+export class UnauthorizedError extends AppError {
+  code: string = 'UNAUTHORIZED';
+  httpCode: number = 401;
+}
+
+export class ValidationError extends AppError {
+  code: string = 'VALIDATION_ERROR';
+  httpCode: number = 400;
+}
+
+export function tryCatch<T>(mainFn: () => T): T | undefined;
+export function tryCatch<T, ET>(mainFn: () => T, errorFn: (error: Error) => ET): T | ET;
+export function tryCatch<T, ET>(mainFn: () => T, errorFn?: (error: Error) => ET): T | ET | undefined {
+  try {
+    return mainFn();
+  } catch (error) {
+    return errorFn?.(error as Error);
+  }
+}
+```
+
+Step 10 (Add `env.ts` utils)
+
+- Install `dotenv` to `shared` workspace
+- Create `env.ts` in `shared` with content bellow
+
+```ts
+import dotenv from 'dotenv';
+import assert from 'node:assert/strict';
+import path from 'node:path';
+
+const ENV_FILE = path.join(import.meta.dirname.split(path.sep).slice(0, -2).join(path.sep), '.env');
+
+export function loadEnvs() {
+  dotenv.config({ path: ENV_FILE, override: false });
+  process.env.RUN_FILE_EXTENSION = getRunFileExtension();
+}
+
+export function required(variable?: string): string {
+  assert(variable, 'Required variable is not set');
+  return variable;
+}
+
+export function getRunFileExtension(): string {
+  const scriptPath = process.argv[1];
+  if (!scriptPath) {
+    return '';
+  }
+  return path.extname(scriptPath);
+}
+
+loadEnvs();
+export default process.env;
+```
+
+Step 11 (Add pino logger)
+
+- Install `pino` and `pino-pretty` to `shared` workspace
+- Add `LOG_LEVEL=debug` to root `.env`
+- Create `logging.ts` with content bellow
+
+```ts
+import env, { required } from 'lib/src/env.js';
+import { Logger, pino } from 'pino';
+
+const NODE_ENV = required(env.NODE_ENV);
+const LOG_LEVEL = required(env.LOG_LEVEL);
+
+const pinoPrettyTarget = { target: 'pino-pretty', level: LOG_LEVEL, options: { destination: 1 } };
+const pinoFileTarget = { target: 'pino/file', level: LOG_LEVEL, options: { destination: 1 } };
+
+export const defaultOptions = {
+  level: LOG_LEVEL,
+  timestamp: pino.stdTimeFunctions.isoTime,
+  transport: {
+    targets: NODE_ENV === 'development' ? [pinoPrettyTarget] : [pinoFileTarget],
+  },
+  redact: {
+    censor: '[REDACTED]',
+    paths: ['payload.password'],
+  },
+};
+
+export const logger = pino(defaultOptions);
+
+export function logProcessErrors(_process?: NodeJS.Process, _logger?: Logger) {
+  const __logger = _logger ?? logger;
+  const __process = _process ?? process;
+  __process.on('unhandledRejection', (reason) => {
+    __logger.error(reason, 'Unhandled rejection');
+  });
+  __process.on('uncaughtException', (error) => {
+    __logger.error(error, 'Uncaught exception');
+  });
+}
+```

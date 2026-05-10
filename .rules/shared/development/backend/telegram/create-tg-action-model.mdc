@@ -1,0 +1,23 @@
+---
+alwaysApply: false
+---
+
+Step 1 (Create Telegram action type)
+
+- Create type in `shared/src/types` as in example bellow
+
+```ts
+export interface TgAction {
+  userId: number;
+  username: string;
+  botName: string;
+  type: 'command' | 'callback' | 'message';
+  name: string;
+  data: Record<string, string>;
+  createdAt: Date;
+}
+```
+
+Step 2 (Create database model)
+
+- Use `.cursor/rules/backend/database/create-model.mdc` rules to create database model from type `TgAction`
