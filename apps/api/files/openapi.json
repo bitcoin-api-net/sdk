@@ -708,6 +708,10 @@
                           "rateLimit": {
                             "type": "integer"
                           },
+                          "wsConnectionsLimit": {
+                            "type": "integer",
+                            "nullable": true
+                          },
                           "expiresAt": {
                             "type": "string",
                             "nullable": true
@@ -727,6 +731,146 @@
                   },
                   "required": [
                     "boosts"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prices/candles": {
+      "get": {
+        "operationId": "getCandles",
+        "summary": "Get historical and current candles (klines)",
+        "tags": [
+          "prices"
+        ],
+        "description": "Returns historical klines and the current open kline for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/candles?interval=1m",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "btcusdt"
+              ],
+              "nullable": true,
+              "default": "btcusdt"
+            },
+            "in": "query",
+            "name": "symbol",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "6h",
+                "12h",
+                "1d"
+              ]
+            },
+            "in": "query",
+            "name": "interval",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "nullable": true
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "in": "query",
+            "name": "from",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "in": "query",
+            "name": "to",
+            "required": false
+          }
+        ],
+        "x-default-rate-limit": 20,
+        "x-default-ws-connections-limit": 1,
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "klines": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "openTime": {
+                            "type": "string"
+                          },
+                          "closeTime": {
+                            "type": "string"
+                          },
+                          "open": {
+                            "type": "string"
+                          },
+                          "high": {
+                            "type": "string"
+                          },
+                          "low": {
+                            "type": "string"
+                          },
+                          "close": {
+                            "type": "string"
+                          },
+                          "volume": {
+                            "type": "string"
+                          },
+                          "trades": {
+                            "type": "integer"
+                          },
+                          "isClosed": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "openTime",
+                          "closeTime",
+                          "open",
+                          "high",
+                          "low",
+                          "close",
+                          "volume",
+                          "trades",
+                          "isClosed"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "klines"
                   ]
                 }
               }
@@ -776,6 +920,342 @@
                   "required": [
                     "price",
                     "time"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prices/klines": {
+      "get": {
+        "operationId": "getKlines",
+        "summary": "Get historical and current klines (candles)",
+        "tags": [
+          "prices"
+        ],
+        "description": "Returns historical klines and the current open kline for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/klines?interval=1m",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "btcusdt"
+              ],
+              "nullable": true,
+              "default": "btcusdt"
+            },
+            "in": "query",
+            "name": "symbol",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "6h",
+                "12h",
+                "1d"
+              ]
+            },
+            "in": "query",
+            "name": "interval",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "nullable": true
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "in": "query",
+            "name": "from",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "in": "query",
+            "name": "to",
+            "required": false
+          }
+        ],
+        "x-default-rate-limit": 20,
+        "x-default-ws-connections-limit": 1,
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "klines": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "openTime": {
+                            "type": "string"
+                          },
+                          "closeTime": {
+                            "type": "string"
+                          },
+                          "open": {
+                            "type": "string"
+                          },
+                          "high": {
+                            "type": "string"
+                          },
+                          "low": {
+                            "type": "string"
+                          },
+                          "close": {
+                            "type": "string"
+                          },
+                          "volume": {
+                            "type": "string"
+                          },
+                          "trades": {
+                            "type": "integer"
+                          },
+                          "isClosed": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "openTime",
+                          "closeTime",
+                          "open",
+                          "high",
+                          "low",
+                          "close",
+                          "volume",
+                          "trades",
+                          "isClosed"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "klines"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prices/candles/current": {
+      "get": {
+        "operationId": "getCurrentCandle",
+        "summary": "Get current open candle (kline)",
+        "tags": [
+          "prices"
+        ],
+        "description": "Returns the current open kline (candle) for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/current?interval=1m",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "btcusdt"
+              ],
+              "nullable": true,
+              "default": "btcusdt"
+            },
+            "in": "query",
+            "name": "symbol",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "6h",
+                "12h",
+                "1d"
+              ]
+            },
+            "in": "query",
+            "name": "interval",
+            "required": true
+          }
+        ],
+        "x-default-rate-limit": 20,
+        "x-default-ws-connections-limit": 1,
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "openTime": {
+                      "type": "string"
+                    },
+                    "closeTime": {
+                      "type": "string"
+                    },
+                    "open": {
+                      "type": "string"
+                    },
+                    "high": {
+                      "type": "string"
+                    },
+                    "low": {
+                      "type": "string"
+                    },
+                    "close": {
+                      "type": "string"
+                    },
+                    "volume": {
+                      "type": "string"
+                    },
+                    "trades": {
+                      "type": "integer"
+                    },
+                    "isClosed": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "openTime",
+                    "closeTime",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "trades",
+                    "isClosed"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prices/klines/current": {
+      "get": {
+        "operationId": "getCurrentKline",
+        "summary": "Get current open kline (candle)",
+        "tags": [
+          "prices"
+        ],
+        "description": "Returns the current open kline (candle) for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/current?interval=1m",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "btcusdt"
+              ],
+              "nullable": true,
+              "default": "btcusdt"
+            },
+            "in": "query",
+            "name": "symbol",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "6h",
+                "12h",
+                "1d"
+              ]
+            },
+            "in": "query",
+            "name": "interval",
+            "required": true
+          }
+        ],
+        "x-default-rate-limit": 20,
+        "x-default-ws-connections-limit": 1,
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "openTime": {
+                      "type": "string"
+                    },
+                    "closeTime": {
+                      "type": "string"
+                    },
+                    "open": {
+                      "type": "string"
+                    },
+                    "high": {
+                      "type": "string"
+                    },
+                    "low": {
+                      "type": "string"
+                    },
+                    "close": {
+                      "type": "string"
+                    },
+                    "volume": {
+                      "type": "string"
+                    },
+                    "trades": {
+                      "type": "integer"
+                    },
+                    "isClosed": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "openTime",
+                    "closeTime",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "trades",
+                    "isClosed"
                   ]
                 }
               }
