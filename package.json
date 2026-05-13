@@ -13,7 +13,7 @@
     "type-check": "tsc --build --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db execute --file prisma/manual/01-extensions.sql && prisma db push && prisma db execute --file prisma/manual/02-hnsw-indexes.sql",
-    "web-client+api": "npm run dev --workspace=apps/web-client & npm run start:dev --workspace=apps/api"
+    "web-client+api": "npm run dev --workspace=apps/web-client & npm run dev --workspace=apps/api"
   },
   "workspaces": [
     "shared",
