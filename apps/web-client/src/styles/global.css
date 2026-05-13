@@ -115,4 +115,43 @@
   .syntax-number {
     color: #d19a66;
   }
+
+  /* ── CTA Buttons ── */
+  .docs-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .docs-cta-btn--primary {
+    background: var(--color-accent);
+    color: white;
+    border-color: var(--color-accent);
+  }
+
+  .docs-cta-btn--primary:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    color: white;
+  }
+
+  .docs-cta-btn--outline {
+    background: transparent;
+    border-color: #e2e8f0;
+    color: var(--color-text);
+  }
+
+  .docs-cta-btn--outline:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
 }
