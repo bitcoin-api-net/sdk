@@ -24,7 +24,7 @@
     - Открывает: импорт в Postman/Insomnia/Bruno одной кнопкой, n8n HTTP Request node (curl import), Cursor/Windsurf "import API", любые кодогенераторы клиентов.
 
 - **1.2. MCP server — допилить и продвинуть** (~1-2 дня)
-    - Уже есть тулзы для docs. Добавить тулзы для **самих API** (`get_btc_price`, `get_address_balance` и т.д.) — это превращает Bitcoin API в нативные tools для Cursor/Claude/Windsurf.
+    - Текущего набора тулзов (поиск и чтение док, навигация по OpenAPI) достаточно. Агенты (Cursor/Claude/Windsurf) сами находят нужные эндпоинты и делают к ним HTTP-запросы. Делать отдельные тулзы под каждый API эндпоинт не нужно — это сильно раздувает контекст (system prompt) LLM.
     - Добавить варианты установки: `npx @bitcoinapi/mcp` обёртка (для тех у кого нет HTTP MCP), one-click ссылки `cursor://mcp/install`, deeplinks для Claude Desktop.
     - Это **главное оружие** для vibe coders — твоя ЦА.
 
