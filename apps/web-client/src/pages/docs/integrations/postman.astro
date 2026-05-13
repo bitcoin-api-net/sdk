@@ -1,0 +1,249 @@
+---
+import DocsLayout from '@layouts/DocsLayout.astro';
+const publicApiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000/api';
+const openApiUrl = `${publicApiUrl}/openapi.json`;
+const runInPostmanUrl =
+  'https://www.postman.com/bitcoin-api-net/bitcoin-api/collection/59qe4sl/bitcoin-api?action=share&creator=12471752';
+---
+
+<DocsLayout>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/docs">Docs</a>
+    <span class="breadcrumbs__sep">›</span>
+    <span>Integrations</span>
+    <span class="breadcrumbs__sep">›</span>
+    <span>Postman</span>
+  </nav>
+
+  <h1 class="docs-page-title">Postman</h1>
+  <p class="docs-page-lead">
+    Import the Bitcoin API into Postman in one click. If the deep link doesn't work, use the OpenAPI URL or download
+    the schema file as a fallback.
+  </p>
+
+  <h2 id="open-in-postman">Open in Postman</h2>
+  <p class="docs-page-text">
+    Click the button below to fork the public Bitcoin API collection into your Postman workspace. Works in both the
+    desktop app and Postman web.
+  </p>
+
+  <div class="cta-group">
+    <a href={runInPostmanUrl} target="_blank" rel="noopener" class="docs-cta-btn docs-cta-btn--primary">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line
+          x1="21"
+          y1="3"
+          x2="14"
+          y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg
+      >
+      Run in Postman
+    </a>
+  </div>
+  <p class="cta-hint">
+    Works with Postman desktop and web. If nothing happens, try the URL method below.
+  </p>
+
+  <h2 id="import-url">Import via URL</h2>
+  <p class="docs-page-text">
+    If the button above didn't work — for example, you don't have a Postman account yet — copy the OpenAPI URL and
+    import it manually.
+  </p>
+
+  <div class="cta-group">
+    <button id="copy-postman-url" class="docs-cta-btn docs-cta-btn--outline" data-url={openApiUrl}>
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path
+          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg
+      >
+      <span>Copy URL</span>
+    </button>
+  </div>
+
+  <div class="instruction-list">
+    <div class="instruction-item">
+      <h3>Steps in Postman</h3>
+      <p>
+        Open Postman, then go to <code>File</code> → <code>Import</code> → <code>Link</code>, paste the URL, and click
+        <code>Continue</code>. Postman will generate a collection from the OpenAPI schema.
+      </p>
+    </div>
+  </div>
+
+  <h2 id="download-file">Download schema file</h2>
+  <p class="docs-page-text">
+    If your network blocks Postman from fetching external URLs, download the OpenAPI schema as a file and import it
+    locally.
+  </p>
+
+  <div class="cta-group">
+    <a
+      href={`${openApiUrl}?download=true`}
+      download="openapi.json"
+      target="_blank"
+      class="docs-cta-btn docs-cta-btn--primary">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line
+          x1="12"
+          y1="15"
+          x2="12"
+          y2="3"></line></svg
+      >
+      Download openapi.json
+    </a>
+  </div>
+
+  <div class="instruction-list">
+    <div class="instruction-item">
+      <h3>Steps in Postman</h3>
+      <p>
+        Open Postman, then go to <code>File</code> → <code>Import</code> and drag-and-drop the downloaded
+        <code>openapi.json</code> (or pick it via the <code>Files</code> tab).
+      </p>
+    </div>
+  </div>
+</DocsLayout>
+
+<script>
+  const copyBtn = document.getElementById('copy-postman-url');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const url = copyBtn.getAttribute('data-url');
+      if (!url) return;
+
+      try {
+        await navigator.clipboard.writeText(url);
+        const span = copyBtn.querySelector('span');
+        if (span) {
+          const originalText = span.textContent;
+          span.textContent = 'Copied!';
+          setTimeout(() => {
+            span.textContent = originalText;
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+      }
+    });
+  }
+</script>
+
+<style>
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .breadcrumbs a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover {
+    color: var(--color-accent);
+  }
+
+  .breadcrumbs__sep {
+    opacity: 0.4;
+  }
+
+  .docs-page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.75rem;
+    color: var(--color-text);
+  }
+
+  .docs-page-lead {
+    font-size: 1.0625rem;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    margin: 0 0 2.5rem;
+    max-width: 640px;
+  }
+
+  .docs-page-text {
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    margin: 0 0 1rem;
+    max-width: 640px;
+  }
+
+  h2 {
+    font-size: 1.375rem;
+    margin: 2.5rem 0 1rem;
+  }
+
+  .cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .cta-hint {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin: 0 0 2rem;
+  }
+
+  .instruction-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .instruction-item {
+    border-left: 2px solid #e2e8f0;
+    padding-left: 1.25rem;
+  }
+
+  .instruction-item h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+  }
+
+  .instruction-item p {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  code {
+    background: #f1f5f9;
+    padding: 0.125rem 0.25rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+</style>
