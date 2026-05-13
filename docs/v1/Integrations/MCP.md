@@ -6,7 +6,7 @@
 
 1. Сделать страницу `setup-mcp` **видимой** в сайдбаре доков (раздел Integrations).
 2. Поднять видимость **npx-установки** через `mcp-remote` для тулов без Streamable HTTP.
-3. **Засветить** сервер в трёх ключевых публичных каталогах MCP.
+3. **Засветить** сервер в официальном реестре MCP (Anthropic).
 
 Тулзы MCP **не трогаем** — текущего набора из 6 хватает (см. [Integrations (Not ready).md:27](./Integrations%20%28Not%20ready%29.md#L27): отдельные тулзы под каждый endpoint раздуют context window).
 
@@ -67,17 +67,11 @@ This works in any client that supports stdio-based MCP servers.
 
 Сейчас этот же сниппет повторяется в Windsurf и Codex CLI — оставляем дубликаты как есть (per-tool секции остаются полными, юзер не вынужден прыгать вверх).
 
-### 3. Засветить сервер в каталогах MCP
+### 3. Засветить сервер в официальном реестре MCP
 
-Три площадки — больше пока не нужно, можно догнать по сигналам. Все каталоги принимают одну заявку и публикуют сами, нам нужно только подать.
+Одна заявка — PR в [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) в README, раздел «Community Servers», одна строка. Это официальный реестр Anthropic, максимальная видимость; остальные каталоги (Smithery, mcpservers.org, Pulse, Glama, awesome-mcp-servers) — догоняем по сигналам.
 
-| # | Каталог | Как засветиться | Что получаем |
-|---|---|---|---|
-| 1 | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | PR в README, раздел «Community Servers», одна строка | Официальный реестр от Anthropic, максимальная видимость |
-| 2 | [Smithery](https://smithery.ai/) | Submit формой / GitHub-приложение | Smithery сам индексирует и даёт нам install-кнопку — потом её можно вставить на страницу setup-mcp как четвёртую CTA |
-| 3 | [mcpservers.org](https://mcpservers.org/) | Submit-форма / PR в их репо | Каталог, явно упомянутый в тикете |
-
-**Что готовим один раз** (одинаково для всех трёх):
+**Что готовим:**
 
 - Имя: `bitcoin-api-docs`.
 - Одна строка: `"Search Bitcoin API docs, recipes and OpenAPI schema from your AI agent."`
@@ -86,13 +80,11 @@ This works in any client that supports stdio-based MCP servers.
 - Лого: тот же что фавикон, 512×512 PNG.
 - Tags: `finance`, `crypto`, `bitcoin`, `documentation`, `openapi`.
 
-Состояние подач трекаем прямо здесь в `MCP.md` — добавим `- [ ]` чекбоксы под таблицу, когда начнём отправлять. Отдельный файл-чек-лист пока избыточен.
-
 ## Verification
 
 1. `bun run dev` в `apps/web-client` → sidebar показывает `INTEGRATIONS → OpenAPI / Postman / MCP`, ссылка на `/docs/setup-mcp` подсвечена.
 2. На странице `/docs/setup-mcp` появилась секция «Tools without Streamable HTTP» между «Manual setup» и блоком Cursor.
-3. После Smithery (§3.2) — добавляем install-кнопку Smithery в `<p>` one-click секции MDX (доп.правка, не блокирует §1-3).
+3. PR в `modelcontextprotocol/servers` открыт — линк сюда в коммите/задаче.
 
 ## Что НЕ делать в этом раунде
 
@@ -101,5 +93,5 @@ This works in any client that supports stdio-based MCP servers.
 - **Перенос URL `/docs/setup-mcp` → `/docs/integrations/mcp`.** Косметика. Сайдбар уже решает задачу discovery.
 - **Конвертация MDX → `.astro`** под стиль `openapi.astro` / `postman.astro`. Текущий MDX функционален; визуальное единообразие — не задача T1.2.
 - **OAuth / per-user auth** на MCP. Эндпоинт публичный и read-only.
-- **Pulse MCP / Glama / awesome-mcp-servers.** Догоним по запросу, если первые три не дадут трафика.
+- **Smithery / mcpservers.org / Pulse MCP / Glama / awesome-mcp-servers.** Догоним по запросу, если официальный реестр не даст трафика.
 - **Переименование `get_recepies_for_endpoint` → `get_recipes_for_endpoint`.** Сломает уже подключённые у юзеров конфиги; депрекейт через alias — отдельный тикет.
