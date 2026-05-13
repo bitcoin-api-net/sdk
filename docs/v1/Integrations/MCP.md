@@ -1,55 +1,55 @@
-# MCP — план интеграции
+# MCP — интеграция (реализовано)
 
-Реализация пункта **T1.2** из [Integrations (Not ready).md](./Integrations%20%28Not%20ready%29.md): MCP server уже работает и описан, но не виден из сайдбара доков и не засвечен в публичных каталогах. Закрываем эти три пробела.
+Реализация пункта **T1.2** из [Integrations (Not ready).md](./Integrations%20%28Not%20ready%29.md): MCP server работает, его страница теперь в сайдбаре доков, `mcp-remote` поднят в видимое место, остался один внешний шаг — заявка в официальный реестр MCP.
 
-## Цель
+## Архитектура
 
-1. Сделать страницу `setup-mcp` **видимой** в сайдбаре доков (раздел Integrations).
-2. Поднять видимость **npx-установки** через `mcp-remote` для тулов без Streamable HTTP.
-3. **Засветить** сервер в официальном реестре MCP (Anthropic).
+- **MCP server**: `POST/GET/DELETE /mcp` на API, Streamable HTTP, stateless ([apps/api/src/plugins/mcp.ts](../../../apps/api/src/plugins/mcp.ts)).
+- **Production endpoint**: `https://api.bitcoinapi.dev/mcp`.
+- **Tools** (6, см. [apps/api/src/mcp/](../../../apps/api/src/mcp/)):
+    - `get_docs_list` — листинг чанков документации;
+    - `get_doc(url)` — содержимое страницы;
+    - `get_api_endpoints_list` — листинг эндпоинтов API;
+    - `api_endpoint(operationId)` — OpenAPI-операция;
+    - `get_recepies_for_endpoint(operationId)` — рецепты для эндпоинта (опечатка `recepies` сохранена осознанно, см. «Что НЕ делать»);
+    - `get_recipe(url)` — содержимое рецепта.
+- **Auth**: нет, эндпоинт публичный и read-only.
 
-Тулзы MCP **не трогаем** — текущего набора из 6 хватает (см. [Integrations (Not ready).md:27](./Integrations%20%28Not%20ready%29.md#L27): отдельные тулзы под каждый endpoint раздуют context window).
+## Что сделано
 
-Объём задачи — **~0.5 дня кода** + регистрация в каталогах async (модерация не зависит от нас).
+### 1. Страница `/docs/integrations/mcp` в сайдбаре
 
-## Текущее состояние (что уже есть)
+**Файл:** [apps/web-client/src/content/docs/integrations/mcp.mdx](../../../apps/web-client/src/content/docs/integrations/mcp.mdx) — был `setup-mcp.mdx` в корне коллекции `docs`, перенесён в подпапку `integrations/`, slug сменился на `integrations/mcp` → роутится через [apps/web-client/src/pages/docs/[...slug].astro](../../../apps/web-client/src/pages/docs/[...slug].astro). URL: `/docs/integrations/mcp`.
 
-- MCP server на `POST/GET/DELETE /mcp` ([apps/api/src/plugins/mcp.ts](../../../apps/api/src/plugins/mcp.ts)), Streamable HTTP, stateless.
-- 6 тулзов в [apps/api/src/mcp/](../../../apps/api/src/mcp/): `get_docs_list`, `get_doc`, `get_api_endpoints_list`, `api_endpoint`, `get_recepies_for_endpoint`, `get_recipe`.
-- Готовая страница [apps/web-client/src/content/docs/setup-mcp.mdx](../../../apps/web-client/src/content/docs/setup-mcp.mdx) → URL `/docs/setup-mcp`. Уже содержит:
-    - one-click кнопки для Cursor + VS Code + VS Code Insiders;
-    - manual setup для 8 тулов (включая Windsurf/Codex CLI через `mcp-remote`);
-    - описание тулзов + Troubleshooting.
-- Sidebar понимает раздел `INTEGRATIONS` ([apps/web-client/src/layouts/DocsLayout.astro:22-32](../../../apps/web-client/src/layouts/DocsLayout.astro#L22)); сейчас там `OpenAPI` + `Postman`. **MCP отсутствует** — основной баг.
-
-## План работ
-
-### 1. Сайдбар: пункт `MCP` в `INTEGRATIONS`
-
-**Файл:** [apps/web-client/src/layouts/DocsLayout.astro:22-32](../../../apps/web-client/src/layouts/DocsLayout.astro#L22).
-
-В группу `INTEGRATIONS` третьим пунктом (после Postman):
+**Файл:** [apps/web-client/src/layouts/DocsLayout.astro](../../../apps/web-client/src/layouts/DocsLayout.astro) — в `docSections.INTEGRATIONS` третьим пунктом (после `OpenAPI` и `Postman`):
 
 ```ts
 {
   title: 'MCP',
-  href: '/docs/setup-mcp',
+  href: '/docs/integrations/mcp',
 },
 ```
 
-URL оставляем `/docs/setup-mcp` — переезд на `/docs/integrations/mcp` принесёт только редирект и риск сломать внешние ссылки, при том что юзер дойдёт из сайдбара одинаково.
+Также обновлена ссылка в `docs-sidebar-card` (правый сайдбар-CTA, тот же файл).
 
-### 2. Поднять видимость npx-fallback в setup-mcp.mdx
+Старый URL `/docs/setup-mcp` теперь возвращает 404 — редирект не ставили: страница не успела разойтись по внешним ссылкам.
 
-`mcp-remote` уже упоминается в [setup-mcp.mdx:124-138, 156-164](../../../apps/web-client/src/content/docs/setup-mcp.mdx#L124) — но спрятан в секциях Windsurf и Codex CLI. Это сбивает: у юзера какой-нибудь Continue/Cline, он не находит свой тул, бросает.
+### 2. Структура страницы `mcp.mdx`
 
-**Правка:** новая секция **сразу после «Manual setup»** перед per-tool разбивкой:
+Порядок секций:
 
-````md
-### Tools without Streamable HTTP
+1. Lead-абзац + «public, read-only and free».
+2. **Server details** — Name / URL / Transport.
+3. **One-click install** — `<p>` с тремя кнопками (Cursor, VS Code, VS Code Insiders).
+4. **Manual setup** — общий JSON-конфиг для тулов, поддерживающих Streamable HTTP.
+5. **Tools without Streamable HTTP** ⭐ (новое) — `mcp-remote` stdio-bridge как универсальный fallback. См. §3 ниже.
+6. Per-tool секции (8 шт.): Cursor, VS Code (GitHub Copilot), Claude Code, Claude Desktop, Windsurf, Zed, Codex CLI, Gemini CLI.
+7. Available tools — описание шести MCP tools.
+8. Try it / Troubleshooting.
 
-If your MCP client doesn't support HTTP transport yet (Windsurf, Codex CLI,
-older Claude Desktop builds, …), use the `mcp-remote` stdio bridge:
+### 3. Секция «Tools without Streamable HTTP»
+
+Поднята из per-tool разбивки на уровень рядом с общим Manual setup, чтобы юзер с несписочным клиентом (Continue, Cline, …) сразу видел универсальное решение. Сниппет:
 
 ```json
 {
@@ -62,36 +62,41 @@ older Claude Desktop builds, …), use the `mcp-remote` stdio bridge:
 }
 ```
 
-This works in any client that supports stdio-based MCP servers.
-````
+Тот же блок ещё дублируется в секциях Windsurf и Codex CLI (per-tool инструкции остаются полными, чтобы можно было копипастить целиком, не прыгая).
 
-Сейчас этот же сниппет повторяется в Windsurf и Codex CLI — оставляем дубликаты как есть (per-tool секции остаются полными, юзер не вынужден прыгать вверх).
+### 4. Дублирование one-click кнопок в per-tool секции
 
-### 3. Засветить сервер в официальном реестре MCP
+- В `### Cursor` под заголовком — `<p>` c кнопкой `Add to Cursor` (Cursor deeplink + лого с `cursor.com/deeplink/mcp-install-dark.svg`).
+- В `### VS Code (GitHub Copilot)` под заголовком — `<p>` с двумя кнопками: VS Code stable (`vscode.dev/redirect`) + VS Code Insiders (`insiders.vscode.dev/redirect`).
+- Лид-тексты этих секций изменены с `Add to …` / `Either click the button above` на `Or add manually to …` — кнопка стала primary действием, JSON-конфиг — fallback.
+- Остальные тулы (Claude Code, Claude Desktop, Windsurf, Zed, Codex CLI, Gemini CLI) кнопок не имеют — там CLI-команда или ручной конфиг.
 
-Одна заявка — PR в [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) в README, раздел «Community Servers», одна строка. Это официальный реестр Anthropic, максимальная видимость; остальные каталоги (Smithery, mcpservers.org, Pulse, Glama, awesome-mcp-servers) — догоняем по сигналам.
+Кнопки физически продублированы (а не вынесены) — верхний блок `## One-click install` сохранён как сводный, нижние — контекстные.
 
-**Что готовим:**
+## Что осталось вручную (внешнее)
 
-- Имя: `bitcoin-api-docs`.
-- Одна строка: `"Search Bitcoin API docs, recipes and OpenAPI schema from your AI agent."`
-- Endpoint: `https://api.bitcoinapi.dev/mcp`.
-- Install page: `https://bitcoinapi.dev/docs/setup-mcp`.
-- Лого: тот же что фавикон, 512×512 PNG.
-- Tags: `finance`, `crypto`, `bitcoin`, `documentation`, `openapi`.
+PR в [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) — одна строка в README, раздел «Community Servers». Поля заявки:
 
-## Verification
+- **Имя**: `bitcoin-api-docs`.
+- **Одна строка**: `"Search Bitcoin API docs, recipes and OpenAPI schema from your AI agent."`
+- **Endpoint**: `https://api.bitcoinapi.dev/mcp`.
+- **Install page**: `https://bitcoinapi.dev/docs/integrations/mcp`.
+- **Лого**: тот же что фавикон, 512×512 PNG.
+- **Tags**: `finance`, `crypto`, `bitcoin`, `documentation`, `openapi`.
 
-1. `bun run dev` в `apps/web-client` → sidebar показывает `INTEGRATIONS → OpenAPI / Postman / MCP`, ссылка на `/docs/setup-mcp` подсвечена.
-2. На странице `/docs/setup-mcp` появилась секция «Tools without Streamable HTTP» между «Manual setup» и блоком Cursor.
-3. PR в `modelcontextprotocol/servers` открыт — линк сюда в коммите/задаче.
+## Verification (прошло)
 
-## Что НЕ делать в этом раунде
+- `npm run dev` в `apps/web-client` → sidebar (desktop + mobile) показывает `INTEGRATIONS → OpenAPI / Postman / MCP`; на `/docs/integrations/mcp` пункт MCP с `aria-current="page"`.
+- HTTP-коды: `/docs/integrations/mcp` 200, `/docs/integrations/openapi` 200, `/docs/integrations/postman` 200, `/docs/setup-mcp` 404 (старый URL удалён).
+- На странице секция «Tools without Streamable HTTP» лежит между «Manual setup» и блоком Cursor.
+- В DOM страницы каждый deeplink (Cursor, VS Code, VS Code Insiders) встречается ровно по 2 раза: в верхнем сводном блоке + в своей per-tool секции.
 
-- **Отдельные MCP-тулзы под каждый API endpoint.** Раздувает system prompt LLM, см. roadmap T1.2.
-- **npm-пакет `@bitcoinapi/mcp`.** Достаточно документации `npx -y mcp-remote …` — обёртка не даёт ничего сверху, кроме маркетингового бренда.
-- **Перенос URL `/docs/setup-mcp` → `/docs/integrations/mcp`.** Косметика. Сайдбар уже решает задачу discovery.
-- **Конвертация MDX → `.astro`** под стиль `openapi.astro` / `postman.astro`. Текущий MDX функционален; визуальное единообразие — не задача T1.2.
-- **OAuth / per-user auth** на MCP. Эндпоинт публичный и read-only.
+## Что НЕ делать (решения зафиксированы)
+
+- **Отдельные MCP-тулзы под каждый API endpoint.** Раздувает system prompt LLM, см. roadmap T1.2. Агент и так делает HTTP-запросы поверх OpenAPI.
+- **npm-пакет `@bitcoinapi/mcp`.** Документации `npx -y mcp-remote https://api.bitcoinapi.dev/mcp` достаточно — обёртка не даёт ничего сверху, кроме маркетингового бренда.
+- **Редирект `/docs/setup-mcp` → `/docs/integrations/mcp`.** Страница новая, внешних ссылок ещё нет. Если позже появятся жалобы — добавим однострочный `.astro` с `Astro.redirect(...)`.
+- **Конвертация MDX → `.astro`** под стиль `openapi.astro` / `postman.astro` (breadcrumbs, CTA-кнопки в едином дизайне). Текущий MDX функционален; визуальное единообразие — отдельный round полировки, не часть T1.2.
+- **OAuth / per-user auth** на MCP. Эндпоинт публичный и read-only — auth не нужен.
 - **Smithery / mcpservers.org / Pulse MCP / Glama / awesome-mcp-servers.** Догоним по запросу, если официальный реестр не даст трафика.
-- **Переименование `get_recepies_for_endpoint` → `get_recipes_for_endpoint`.** Сломает уже подключённые у юзеров конфиги; депрекейт через alias — отдельный тикет.
+- **Переименование `get_recepies_for_endpoint` → `get_recipes_for_endpoint`.** Сломает уже подключённые у юзеров конфиги. Депрекейт через alias — отдельный тикет.
