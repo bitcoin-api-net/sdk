@@ -15,21 +15,49 @@ const openApiUrl = `${publicApiUrl}/openapi.json`;
 
   <h1 class="docs-page-title">OpenAPI specification</h1>
   <p class="docs-page-lead">
-    Our entire API is defined using the OpenAPI 3.x specification. This standard format allows you to import the API surface into your developer tools, generate client SDKs, or enable AI agents to understand our endpoints.
+    Our entire API is defined using the OpenAPI 3.x specification. This standard format allows you to import the API
+    surface into your developer tools, generate client SDKs, or enable AI agents to understand our endpoints.
   </p>
 
   <h2 id="connect">Connect</h2>
-  <p class="docs-page-text">
-    Use the direct link to the specification or download the JSON file to your machine.
-  </p>
+  <p class="docs-page-text">Use the direct link to the specification or download the JSON file to your machine.</p>
 
   <div class="cta-group">
-    <a href={openApiUrl} download="openapi.json" class="docs-cta-btn docs-cta-btn--primary">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+    <a
+      href={`${openApiUrl}?download=true`}
+      download="openapi.json"
+      target="_blank"
+      class="docs-cta-btn docs-cta-btn--primary">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line
+          x1="12"
+          y1="15"
+          x2="12"
+          y2="3"></line></svg
+      >
       Download OpenAPI
     </a>
     <button id="copy-openapi-url" class="docs-cta-btn docs-cta-btn--outline" data-url={openApiUrl}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path
+          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg
+      >
       <span>Copy URL</span>
     </button>
   </div>
@@ -38,21 +66,61 @@ const openApiUrl = `${publicApiUrl}/openapi.json`;
   <div class="feature-grid">
     <div class="feature-card">
       <div class="feature-card__icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg
+        >
       </div>
       <h3>Type Safety</h3>
-      <p>Import the schema into your TypeScript project to get full autocompletion and type checking for all requests and responses.</p>
+      <p>
+        Import the schema into your TypeScript project to get full autocompletion and type checking for all requests and
+        responses.
+      </p>
     </div>
     <div class="feature-card">
       <div class="feature-card__icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"></path><path d="m16.2 4.2 2.8 2.8"></path><path d="M18 12h4"></path><path d="m16.2 19.8 2.8-2.8"></path><path d="M12 18v4"></path><path d="m4.2 19.8 2.8-2.8"></path><path d="M2 12h4"></path><path d="m4.2 4.2 2.8 2.8"></path></svg>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><path d="M12 2v4"></path><path d="m16.2 4.2 2.8 2.8"></path><path d="M18 12h4"></path><path
+            d="m16.2 19.8 2.8-2.8"></path><path d="M12 18v4"></path><path d="m4.2 19.8 2.8-2.8"></path><path d="M2 12h4"
+          ></path><path d="m4.2 4.2 2.8 2.8"></path></svg
+        >
       </div>
       <h3>Auto-generated SDKs</h3>
-      <p>Use tools like OpenAPI Generator or Fern to create high-quality client libraries in any programming language.</p>
+      <p>
+        Use tools like OpenAPI Generator or Fern to create high-quality client libraries in any programming language.
+      </p>
     </div>
     <div class="feature-card">
       <div class="feature-card__icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><circle cx="15.5" cy="10" r="1.5"></circle><path d="M8 15h8"></path></svg>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><circle
+            cx="15.5"
+            cy="10"
+            r="1.5"></circle><path d="M8 15h8"></path></svg
+        >
       </div>
       <h3>AI Agent Integration</h3>
       <p>Connect Bitcoin API to ChatGPT Actions, Cursor, or Windsurf by providing the OpenAPI URL.</p>
@@ -62,16 +130,18 @@ const openApiUrl = `${publicApiUrl}/openapi.json`;
   <h2 id="how-to-use">How to use</h2>
   <div class="instruction-list">
     <div class="instruction-item">
-      <h3>Cursor / Windsurf</h3>
-      <p>Open your editor and run the command <code>import API spec</code> (or use the AI chat). Provide the OpenAPI URL to let the AI understand the available endpoints.</p>
-    </div>
-    <div class="instruction-item">
       <h3>Postman</h3>
-      <p>Go to <code>Import</code> → <code>Link</code> → paste the OpenAPI URL. Postman will automatically generate a collection with all endpoints and documentation.</p>
+      <p>
+        Go to <code>Import</code> → <code>Link</code> → paste the OpenAPI URL. Postman will automatically generate a collection
+        with all endpoints and documentation.
+      </p>
     </div>
     <div class="instruction-item">
       <h3>Insomnia / Bruno</h3>
-      <p>Select <code>Create</code> → <code>Import from URL</code> and provide the link. You'll get a pre-configured workspace ready for testing.</p>
+      <p>
+        Select <code>Create</code> → <code>Import from URL</code> and provide the link. You'll get a pre-configured workspace
+        ready for testing.
+      </p>
     </div>
   </div>
 </DocsLayout>
