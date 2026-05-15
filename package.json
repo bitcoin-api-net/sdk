@@ -17,7 +17,8 @@
   },
   "workspaces": [
     "shared",
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "author": "Bogdan",
   "license": "ISC",

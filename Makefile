@@ -31,14 +31,24 @@ pb-web:
 	if ! git diff --quiet HEAD@{1} HEAD -- package-lock.json; then npm ci; fi
 	npm run build --workspace=apps/web-client
 
+.PHONY: pb-sdk
+#? pb-sdk: Pull, install (if lock changed) and build sdk
+pb-sdk:
+	git pull --ff-only origin main
+	if ! git diff --quiet HEAD@{1} HEAD -- package-lock.json; then npm ci; fi
+	npm run generate:types --workspace=packages/sdk
+	npm run build --workspace=packages/sdk
+
 .PHONY: pb-all
-#? pb-all: Pull once, build api/exchanges/web-client and restart both services
+#? pb-all: Pull once, build api/exchanges/web-client/sdk and restart both services
 pb-all:
 	git pull --ff-only origin main
 	if ! git diff --quiet HEAD@{1} HEAD -- package-lock.json; then npm ci; fi
 	npx tsc --build apps/api
 	npx tsc --build apps/exchanges
 	npm run build --workspace=apps/web-client
+	npm run generate:types --workspace=packages/sdk
+	npm run build --workspace=packages/sdk
 	systemctl restart bitcoin-api bitcoin-exchanges
 	sleep 5
 	systemctl status bitcoin-api bitcoin-exchanges --no-pager

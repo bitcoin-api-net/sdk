@@ -1,0 +1,31 @@
+{
+  "name": "@bitcoinapi/sdk",
+  "version": "0.0.1",
+  "description": "Bitcoin API TypeScript SDK",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "generate:types": "openapi-typescript ../../apps/api/files/openapi.json -o ./src/schema.d.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  }
+}
