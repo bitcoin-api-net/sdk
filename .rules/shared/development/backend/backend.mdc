@@ -1,8 +1,0 @@
----
-globs: *.ts
-alwaysApply: false
----
-
-- Use kebab-case for file names (e.g. `api-chunk.ts`)
-- For `shared/`, `#src/`, `#<any>` use workspace imports (e.g. `import env from "shared/src/env.js"`;)
-- Use `import assert from 'node:assert/strict'` for type narrowing instead of `as` and `!.` TS operators.

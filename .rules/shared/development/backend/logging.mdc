@@ -1,6 +1,0 @@
----
-globs: *.ts
-alwaysApply: false
----
-
-- Use `logger` from `shared/src/logging.ts` as default logger

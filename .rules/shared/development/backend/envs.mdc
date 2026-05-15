@@ -1,6 +1,0 @@
----
-alwaysApply: false
----
-
-- Use `env` and `required` from `shared/src/env.ts`
-- Define all environment variables on top of the file with `required` (e.g. `const NODE_ENV = required(env.NODE_ENV)`)

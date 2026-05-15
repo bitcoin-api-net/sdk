@@ -1,8 +1,0 @@
----
-globs: *.prisma
-alwaysApply: false
----
-
-- Use kebab-case for file names (e.g. `api-chunk.prisma`)
-- Use `@@map()` to map table names from camelCase to snake_case (e.g. `@@map("table_name")`)
-- Use `@map()` to map fields names from camelCase to snake_case (e.g. `requestSchema Json? @map("request_schema")`)
