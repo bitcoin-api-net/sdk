@@ -1,6 +1,6 @@
 {
   "name": "@bitcoin-api-net/sdk",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Bitcoin API TypeScript SDK",
   "type": "module",
   "engines": {
@@ -26,6 +26,7 @@
     "test": "npm run build && node --test dist/**/*.test.js"
   },
   "devDependencies": {
+    "@types/node": "^18.19.130",
     "openapi-typescript": "^7.13.0",
     "typescript": "^5.9.3"
   },
