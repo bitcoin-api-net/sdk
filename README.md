@@ -5,13 +5,13 @@ A lightweight, type-safe TypeScript SDK for the [Bitcoin API](https://bitcoin-ap
 ## Installation
 
 ```bash
-npm install @bitcoin-api/sdk
+npm install @bitcoin-api-net/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { createBitcoinClient } from '@bitcoin-api/sdk';
+import { createBitcoinClient } from '@bitcoin-api-net/sdk';
 
 const client = createBitcoinClient({
   apiKey: 'your-api-key-here',
