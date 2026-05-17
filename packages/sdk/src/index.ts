@@ -24,4 +24,4 @@ export function createBitcoinClient(options: BitcoinApiClientOptions = {}) {
 }
 
 export type BitcoinApiClient = ReturnType<typeof createBitcoinClient>;
-export * from './schema.js';
+export type * from './schema.js';
