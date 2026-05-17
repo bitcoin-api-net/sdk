@@ -1,5 +1,5 @@
 {
-  "name": "@bitcoinapi/sdk",
+  "name": "@bitcoin-api/sdk",
   "version": "0.0.1",
   "description": "Bitcoin API TypeScript SDK",
   "type": "module",
