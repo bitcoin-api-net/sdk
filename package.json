@@ -1,6 +1,6 @@
 {
   "name": "@bitcoin-api-net/sdk",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Bitcoin API TypeScript SDK",
   "type": "module",
   "engines": {
