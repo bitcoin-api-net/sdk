@@ -25,6 +25,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
+    "sdk:dev": "tsc --watch",
     "generate:types": "openapi-typescript ../../apps/api/files/openapi.json -o ./src/schema.d.ts",
     "type-check": "tsc --noEmit",
     "test": "npm run build && node --test dist/**/*.test.js"
