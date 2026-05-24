@@ -24,6 +24,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current user
+         * @description Returns information about the currently authenticated user.
+         */
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete user account
+         * @description Permanently deletes user account. Requires no active subscriptions.
+         */
+        delete: operations["deleteUser"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -78,26 +102,6 @@ export interface paths {
          * @description Clears the access cookie for the authenticated user.
          */
         post: operations["logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get current user
-         * @description Returns information about the currently authenticated user.
-         */
-        get: operations["getMe"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -338,7 +342,11 @@ export interface paths {
         delete: operations["deleteApiKey"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update API key
+         * @description Updates settings (like name, rate limits) for an existing API key.
+         */
+        patch: operations["updateApiKey"];
         trace?: never;
     };
     "/api/v1/me/api-keys/{id}/rotate": {
@@ -355,6 +363,26 @@ export interface paths {
          * @description Replaces the API key with a new token; old token is invalidated.
          */
         post: operations["rotateApiKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/boosts/{operationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get boost details
+         * @description Returns details for a specific rate-limit boost.
+         */
+        get: operations["getBoost"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -578,6 +606,47 @@ export interface operations {
             };
         };
     };
+    getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        email: string;
+                        createdAt: string;
+                    };
+                };
+            };
+        };
+    };
+    deleteUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     forgotPassword: {
         parameters: {
             query?: never;
@@ -647,28 +716,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    getMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Default Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        email: string;
-                    };
-                };
             };
         };
     };
@@ -796,10 +843,11 @@ export interface operations {
             content: {
                 "application/json": {
                     items: {
-                        routeId: string;
-                        /** @enum {string} */
-                        tier: "1" | "2" | "3";
+                        operationId: string;
+                        /** @enum {integer} */
+                        tier: 1 | 2 | 3;
                     }[];
+                    returnUrl: string;
                 };
             };
         };
@@ -824,7 +872,13 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    returnUrl: string;
+                };
+            };
+        };
         responses: {
             /** @description Default Response */
             200: {
@@ -884,6 +938,8 @@ export interface operations {
                             name: string;
                             token: string;
                             isActive: boolean;
+                            perIpRateLimit?: number | null;
+                            perIpWsConnectionsLimit?: number | null;
                             createdAt: string;
                         }[];
                     };
@@ -902,6 +958,8 @@ export interface operations {
             content: {
                 "application/json": {
                     name: string;
+                    perIpRateLimit?: number | null;
+                    perIpWsConnectionsLimit?: number | null;
                 };
             };
         };
@@ -917,6 +975,8 @@ export interface operations {
                         name: string;
                         token: string;
                         isActive: boolean;
+                        perIpRateLimit?: number | null;
+                        perIpWsConnectionsLimit?: number | null;
                         createdAt: string;
                     };
                 };
@@ -943,6 +1003,44 @@ export interface operations {
             };
         };
     };
+    updateApiKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string | null;
+                    perIpRateLimit?: number | null;
+                    perIpWsConnectionsLimit?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        name: string;
+                        token: string;
+                        isActive: boolean;
+                        perIpRateLimit?: number | null;
+                        perIpWsConnectionsLimit?: number | null;
+                        createdAt: string;
+                    };
+                };
+            };
+        };
+    };
     rotateApiKey: {
         parameters: {
             query?: never;
@@ -965,7 +1063,51 @@ export interface operations {
                         name: string;
                         token: string;
                         isActive: boolean;
+                        perIpRateLimit?: number | null;
+                        perIpWsConnectionsLimit?: number | null;
                         createdAt: string;
+                    };
+                };
+            };
+        };
+    };
+    getBoost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                operationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Default Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        operationId: string;
+                        tier: number;
+                        rateLimit: number;
+                        wsConnectionsLimit?: number | null;
+                        expiresAt?: string | null;
+                        createdAt: string;
+                        isActiveSubscription: boolean;
+                    };
+                };
+            };
+            /** @description Default Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        message?: string;
                     };
                 };
             };
@@ -989,11 +1131,13 @@ export interface operations {
                     "application/json": {
                         boosts: {
                             id: string;
-                            routeId: string;
+                            operationId: string;
+                            tier: number;
                             rateLimit: number;
                             wsConnectionsLimit?: number | null;
                             expiresAt?: string | null;
                             createdAt: string;
+                            isActiveSubscription: boolean;
                         }[];
                     };
                 };
@@ -1015,7 +1159,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Default Response */
+            /** @description Success Response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1023,16 +1167,92 @@ export interface operations {
                 content: {
                     "application/json": {
                         klines: {
+                            /**
+                             * @description Opening time of the kline interval
+                             * @example 2024-05-23T12:00:00.000Z
+                             */
                             openTime: string;
+                            /**
+                             * @description Closing time of the kline interval
+                             * @example 2024-05-23T12:01:00.000Z
+                             */
                             closeTime: string;
+                            /**
+                             * @description Opening price
+                             * @example 65000.00
+                             */
                             open: string;
+                            /**
+                             * @description Highest price during the interval
+                             * @example 65100.00
+                             */
                             high: string;
+                            /**
+                             * @description Lowest price during the interval
+                             * @example 64900.00
+                             */
                             low: string;
+                            /**
+                             * @description Closing price
+                             * @example 65050.00
+                             */
                             close: string;
+                            /**
+                             * @description Trading volume during the interval
+                             * @example 1.25
+                             */
                             volume: string;
+                            /**
+                             * @description Number of trades
+                             * @example 150
+                             */
                             trades: number;
+                            /**
+                             * @description Whether the kline is fully closed
+                             * @example true
+                             */
                             isClosed: boolean;
                         }[];
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example VALIDATION_ERROR
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example querystring/symbol must be equal to one of the allowed values
+                         */
+                        message: string;
+                    };
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example RATE_LIMIT_EXCEEDED
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example Rate limit exceeded, retry in 1 minute
+                         */
+                        message: string;
                     };
                 };
             };
@@ -1049,15 +1269,63 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Default Response */
+            /** @description Too Many Requests */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        price: string;
-                        time: string;
+                        /**
+                         * @description Error code
+                         * @example RATE_LIMIT_EXCEEDED
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example Rate limit exceeded, retry in 1 minute
+                         */
+                        message: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example VALIDATION_ERROR
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example querystring/symbol must be equal to one of the allowed values
+                         */
+                        message: string;
+                    };
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example RATE_LIMIT_EXCEEDED
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example Rate limit exceeded, retry in 1 minute
+                         */
+                        message: string;
                     };
                 };
             };
@@ -1078,7 +1346,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Default Response */
+            /** @description Success Response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1086,16 +1354,92 @@ export interface operations {
                 content: {
                     "application/json": {
                         klines: {
+                            /**
+                             * @description Opening time of the kline interval
+                             * @example 2024-05-23T12:00:00.000Z
+                             */
                             openTime: string;
+                            /**
+                             * @description Closing time of the kline interval
+                             * @example 2024-05-23T12:01:00.000Z
+                             */
                             closeTime: string;
+                            /**
+                             * @description Opening price
+                             * @example 65000.00
+                             */
                             open: string;
+                            /**
+                             * @description Highest price during the interval
+                             * @example 65100.00
+                             */
                             high: string;
+                            /**
+                             * @description Lowest price during the interval
+                             * @example 64900.00
+                             */
                             low: string;
+                            /**
+                             * @description Closing price
+                             * @example 65050.00
+                             */
                             close: string;
+                            /**
+                             * @description Trading volume during the interval
+                             * @example 1.25
+                             */
                             volume: string;
+                            /**
+                             * @description Number of trades
+                             * @example 150
+                             */
                             trades: number;
+                            /**
+                             * @description Whether the kline is fully closed
+                             * @example true
+                             */
                             isClosed: boolean;
                         }[];
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example VALIDATION_ERROR
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example querystring/symbol must be equal to one of the allowed values
+                         */
+                        message: string;
+                    };
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example RATE_LIMIT_EXCEEDED
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example Rate limit exceeded, retry in 1 minute
+                         */
+                        message: string;
                     };
                 };
             };
