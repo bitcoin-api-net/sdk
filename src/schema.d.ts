@@ -409,26 +409,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/prices/candles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get historical and current candles (klines)
-         * @description Returns historical klines and the current open kline for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/candles?interval=1m
-         */
-        get: operations["getCandles"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/prices/current": {
         parameters: {
             query?: never;
@@ -458,29 +438,9 @@ export interface paths {
         };
         /**
          * Get historical and current klines (candles)
-         * @description Returns historical klines and the current open kline for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/klines?interval=1m
+         * @description Returns historical klines (candles) and the current open kline (candle) for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/klines?interval=1m
          */
         get: operations["getKlines"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/prices/candles/current": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get current open candle (kline)
-         * @description Returns the current open kline (candle) for a given trading pair and interval. For websocket use: wscat -c ws://localhost:8000/api/v1/prices/current?interval=1m
-         */
-        get: operations["getCurrentCandle"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1144,14 +1104,10 @@ export interface operations {
             };
         };
     };
-    getCandles: {
+    getCurrentPrice: {
         parameters: {
-            query: {
+            query?: {
                 symbol?: "btcusdt" | null;
-                interval: "1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "6h" | "12h" | "1d";
-                limit?: number | null;
-                from?: string | null;
-                to?: string | null;
             };
             header?: never;
             path?: never;
@@ -1166,126 +1122,16 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        klines: {
-                            /**
-                             * @description Opening time of the kline interval
-                             * @example 2024-05-23T12:00:00.000Z
-                             */
-                            openTime: string;
-                            /**
-                             * @description Closing time of the kline interval
-                             * @example 2024-05-23T12:01:00.000Z
-                             */
-                            closeTime: string;
-                            /**
-                             * @description Opening price
-                             * @example 65000.00
-                             */
-                            open: string;
-                            /**
-                             * @description Highest price during the interval
-                             * @example 65100.00
-                             */
-                            high: string;
-                            /**
-                             * @description Lowest price during the interval
-                             * @example 64900.00
-                             */
-                            low: string;
-                            /**
-                             * @description Closing price
-                             * @example 65050.00
-                             */
-                            close: string;
-                            /**
-                             * @description Trading volume during the interval
-                             * @example 1.25
-                             */
-                            volume: string;
-                            /**
-                             * @description Number of trades
-                             * @example 150
-                             */
-                            trades: number;
-                            /**
-                             * @description Whether the kline is fully closed
-                             * @example true
-                             */
-                            isClosed: boolean;
-                        }[];
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
                         /**
-                         * @description Error code
-                         * @example VALIDATION_ERROR
+                         * @description Current price of the trading pair
+                         * @example 50000.00
                          */
-                        code: string;
+                        price: string;
                         /**
-                         * @description Error message
-                         * @example querystring/symbol must be equal to one of the allowed values
+                         * @description ISO 8601 timestamp of the price recording
+                         * @example 2024-01-01T00:00:00.000Z
                          */
-                        message: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Error code
-                         * @example RATE_LIMIT_EXCEEDED
-                         */
-                        code: string;
-                        /**
-                         * @description Error message
-                         * @example Rate limit exceeded, retry in 1 minute
-                         */
-                        message: string;
-                    };
-                };
-            };
-        };
-    };
-    getCurrentPrice: {
-        parameters: {
-            query: {
-                symbol: "btcusdt";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Too Many Requests */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Error code
-                         * @example RATE_LIMIT_EXCEEDED
-                         */
-                        code: string;
-                        /**
-                         * @description Error message
-                         * @example Rate limit exceeded, retry in 1 minute
-                         */
-                        message: string;
+                        time: string;
                     };
                 };
             };
@@ -1355,12 +1201,12 @@ export interface operations {
                     "application/json": {
                         klines: {
                             /**
-                             * @description Opening time of the kline interval
+                             * @description Opening time of the kline (candle) interval
                              * @example 2024-05-23T12:00:00.000Z
                              */
                             openTime: string;
                             /**
-                             * @description Closing time of the kline interval
+                             * @description Closing time of the kline (candle) interval
                              * @example 2024-05-23T12:01:00.000Z
                              */
                             closeTime: string;
@@ -1395,7 +1241,7 @@ export interface operations {
                              */
                             trades: number;
                             /**
-                             * @description Whether the kline is fully closed
+                             * @description Whether the kline (candle) is fully closed
                              * @example true
                              */
                             isClosed: boolean;
@@ -1445,39 +1291,6 @@ export interface operations {
             };
         };
     };
-    getCurrentCandle: {
-        parameters: {
-            query: {
-                symbol?: "btcusdt" | null;
-                interval: "1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "6h" | "12h" | "1d";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Default Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        openTime: string;
-                        closeTime: string;
-                        open: string;
-                        high: string;
-                        low: string;
-                        close: string;
-                        volume: string;
-                        trades: number;
-                        isClosed: boolean;
-                    };
-                };
-            };
-        };
-    };
     getCurrentKline: {
         parameters: {
             query: {
@@ -1490,22 +1303,98 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Default Response */
+            /** @description Success Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
+                        /**
+                         * @description Opening time of the kline (candle) interval
+                         * @example 2024-05-23T12:00:00.000Z
+                         */
                         openTime: string;
+                        /**
+                         * @description Closing time of the kline (candle) interval
+                         * @example 2024-05-23T12:01:00.000Z
+                         */
                         closeTime: string;
+                        /**
+                         * @description Opening price
+                         * @example 65000.00
+                         */
                         open: string;
+                        /**
+                         * @description Highest price during the interval
+                         * @example 65100.00
+                         */
                         high: string;
+                        /**
+                         * @description Lowest price during the interval
+                         * @example 64900.00
+                         */
                         low: string;
+                        /**
+                         * @description Closing price
+                         * @example 65050.00
+                         */
                         close: string;
+                        /**
+                         * @description Trading volume during the interval
+                         * @example 1.25
+                         */
                         volume: string;
+                        /**
+                         * @description Number of trades
+                         * @example 150
+                         */
                         trades: number;
+                        /**
+                         * @description Whether the kline (candle) is fully closed
+                         * @example false
+                         */
                         isClosed: boolean;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example VALIDATION_ERROR
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example querystring/symbol must be equal to one of the allowed values
+                         */
+                        message: string;
+                    };
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error code
+                         * @example RATE_LIMIT_EXCEEDED
+                         */
+                        code: string;
+                        /**
+                         * @description Error message
+                         * @example Rate limit exceeded, retry in 1 minute
+                         */
+                        message: string;
                     };
                 };
             };
